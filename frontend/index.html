@@ -222,8 +222,8 @@
 <link rel="stylesheet" href="calls.css?v=20261121-type">
 <link rel="stylesheet" href="watchlists.css?v=20261121-fill">
 <link rel="stylesheet" href="strategy-lab.css?v=20261121-type">
-<link rel="stylesheet" href="picks.css?v=20261127-catalysts">
-<script src="picks.js?v=20261127-catalysts"></script>
+<link rel="stylesheet" href="picks.css?v=20261127-three">
+<script src="picks.js?v=20261127-review"></script>
 <script src="universe-voyage.js?v=20261120-seo"></script>
 <script src="universe-scan.js?v=20261121-type"></script>
 </template>
@@ -257,7 +257,7 @@
 <script src="investors.js?v=20261121-type" defer></script>
 <script src="funds.js" defer></script>
 <script src="lenses.js?v=20261120-market" defer></script>
-<script src="screens.js?v=20260925" defer></script>
+<script src="screens.js?v=20261127-units" defer></script>
 <script src="query.js?v=20261121-type" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
@@ -1851,21 +1851,21 @@
   <div id="view-ideas" style="display:none">
     <header class="tabhead">
       <h2>Stock picks</h2>
-      <p>Ten lists: five by how long you hold, five by what the chart or the money is doing.</p>
+      <p>Eight lists: three by how long a pick is held, five by what the chart or the money is doing.</p>
     </header>
     <!-- The pick lists (picks.js). The list comes first and the scan that
          makes it comes after: a reader came for stocks, and used to scroll
          past a full screen of planets to reach one. -->
-    <!-- The same chooser as the Ideas page (picks.js, tabsHTML): two labelled
-         rows, each chip saying how long the list is held. -->
+    <!-- The same chooser as the Ideas page (picks.js, tabsHTML, LISTS): two
+         labelled rows, each chip saying how long the list is held. The three
+         by holding time share their row equally. Kept in step with LISTS by
+         hand: same keys, names and chips. -->
     <div class="pk-chooser page">
       <div class="pk-group"><span class="pk-group-h" aria-hidden="true">By holding time</span>
-      <div class="pk-tabs page" id="hzseg" role="tablist" aria-label="Holding period">
-        <button type="button" role="tab" class="pk-tab hz" data-h="week"><span><i>This </i>week</span><small>~ a week</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="month"><span><i>This </i>month</span><small>~ a month</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="results"><span><i>After </i>results</span><small>~ a month</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="momentum"><span>Momentum</span><small>~ 3 months</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="long"><span>Long term</span><small>~ a year</small></button>
+      <div class="pk-tabs page hold" id="hzseg" role="tablist" aria-label="Holding period">
+        <button type="button" role="tab" class="pk-tab hz" data-h="month" aria-label="Swing / This month"><span>Swing<i class="pk-tail"> / This month</i></span><small>~ 2–4 weeks</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="results" aria-label="After results"><span>After results</span><small>~ 1 month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="long" aria-label="Long term"><span>Long term</span><small>~ 1 year</small></button>
       </div></div>
       <div class="pk-group"><span class="pk-group-h" aria-hidden="true">By chart setup</span>
       <div class="pk-tabs page setups" id="hzseg2" role="tablist" aria-label="Setup">
@@ -1876,7 +1876,7 @@
         <button type="button" role="tab" class="pk-tab hz" data-h="emerging"><span>Emerging</span><small>~ 4 months</small></button>
       </div></div>
     </div>
-    <p class="pk-brief"><a href="brief.html">Today&rsquo;s policy brief</a>: every new DGFT, RBI, SEBI and government circular, and the stocks it touches.</p>
+    <p class="pk-brief"><a href="brief.html">Today&rsquo;s policy brief</a><span class="pk-brief-more">: every new DGFT, RBI, SEBI and government circular, and the stocks it touches.</span></p>
     <div id="scan-results">
     <div id="pickhead"></div>
     <div class="ideas-note" id="hznote"></div>
@@ -3658,8 +3658,9 @@ $("rcallist").addEventListener("click", e => {
 });
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
-/* One of week, month, momentum, long (picks.js). The server still answers
-   to short and medium, which is what older links ask for. */
+/* One of the lists in picks.js: month, results or long by holding time, or a
+   setup list. The server still answers to the names those replaced (week,
+   momentum, short, medium...), which is what older links ask for. */
 /* universe-scan.js draws the scan's progress, and on the homepage it arrives
    after this script has already asked the engine where the scan stands. What
    it is told before then is kept, and it starts from that. */
@@ -3668,6 +3669,23 @@ function universeUpdate(s){
   else window.AltahaUniversePending = s;
 }
 let horizon = (window.AltahaPicks ? window.AltahaPicks.chosen() : "month"), pollTimer = null, ideasReq = 0;
+/* An address can name a list: #research/ideas/long, or #ideas/week from
+   before the lists changed, which opens the list that replaced it (picks.js,
+   fromAddress). The list it names becomes the chosen one, and the address is
+   rewritten to the list it opened. Once an address names a list, a tab keeps
+   it in step, so a reload opens what was on screen. */
+function ideasAddress(k){
+  if(!k || !/^#(research\/ideas|ideas)\/[^\/]/.test(location.hash || "")) return;
+  const want = "#research/ideas/" + k;
+  if(location.hash !== want) history.replaceState(history.state, "", want);
+}
+function ideasFromAddress(){
+  const PK = window.AltahaPicks;
+  const k = PK && PK.fromAddress ? PK.fromAddress(location.hash) : null;
+  if(!k) return;
+  PK.remember(k);
+  ideasAddress(k);
+}
 function markHorizon(){
   document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(x=>{
     const on = x.dataset.h === horizon;
@@ -3753,16 +3771,20 @@ function renderContext(ctx){
    believed. */
 function evidenceHTML(rows){
   if(!rows || !rows.length) return "";
+  /* Each part in the reader's words: the three lists by holding time send
+     the part's key beside its label (picks.js, factorLabel). */
+  const PK = window.AltahaPicks;
+  const label = e => PK && PK.factorLabel ? PK.factorLabel(e) : e.factor;
   return `<div class="evwrap">` + rows.map(e => {
     /* A setup list's ledger: a condition met or not, or a plain measurement. */
     if(e.points == null || e.share_pct === null && e.of === 1){
       const mark = e.points == null ? "" : (e.points ? "Yes" : "No");
-      return `<div class="evrow"><b>${esc(e.factor)}</b><i class="${e.points===0?"neg":""}">${mark}</i><span>${esc(e.detail||"")}</span></div>`;
+      return `<div class="evrow"><b>${esc(label(e))}</b><i class="${e.points===0?"neg":""}">${mark}</i><span>${esc(e.detail||"")}</span></div>`;
     }
     const neg = e.points < 0;
     const width = e.of ? Math.max(0, Math.min(100, (e.points / e.of) * 100)) : 0;
     return `<div class="evrow">
-      <b>${esc(e.factor)}</b>
+      <b>${esc(label(e))}</b>
       <i class="${neg?"neg":""}">${neg?"":"+"}${scoreTxt(e.points)}${e.of?` / ${scoreTxt(e.of, 0)}`:""}
         ${e.of?`<span class="evbar"><i style="width:${width}%"></i></span>`:""}</i>
       <span>${esc(e.detail||"")}</span>
@@ -3800,10 +3822,10 @@ function newsHTML(s){
 }
 
 async function loadIdeas(){
-  /* The door and this tab share one chosen list. Picking Momentum on the
-     door and pressing "See all" has to open Momentum here, not whichever
-     list this tab last showed. */
-  if(window.AltahaPicks){ horizon = window.AltahaPicks.chosen(); markHorizon(); }
+  /* The door and this tab share one chosen list. Picking Long term on the
+     door and pressing "See all" has to open Long term here, not whichever
+     list this tab last showed. A list named in the address wins. */
+  if(window.AltahaPicks){ ideasFromAddress(); horizon = window.AltahaPicks.chosen(); markHorizon(); }
   const req = ++ideasReq;
   $("idearows").innerHTML = SKEL(4);
   if($("pickaim")) $("pickaim").innerHTML = "";
@@ -3867,7 +3889,7 @@ async function loadIdeas(){
          reading before the list, so they are folded. */
       const why = d.selection_notes || [];
       $("pickhead").innerHTML = `<p class="pk-idea">${esc(d.idea||"")} <span>Hold ${esc(d.hold_text||"")}.</span></p>`
-        + PK.recordHTML(d) + (PK.recipeHTML ? PK.recipeHTML(d) : "") + PK.liveHTML(d)
+        + PK.recordHTML(d) + (PK.studyHTML ? PK.studyHTML(d) : "") + (PK.recipeHTML ? PK.recipeHTML(d) : "") + PK.liveHTML(d)
         + (PK.marketHTML ? PK.marketHTML(d) : "")
         + `<p class="pk-updated">${esc(PK.updatedText(d))}${d.universe ? ` · ${d.universe} stocks compared` : ""}${d.partial ? " · scan still running" : ""}</p>`
         + (why.length ? `<details class="pk-notes"><summary>${why.length} note${why.length>1?"s":""} on this list</summary><ul>`
@@ -3880,7 +3902,7 @@ async function loadIdeas(){
       if(PK) $("pickhead").innerHTML = `<p class="pk-quiet">These are from the last scan, made the old way. The tested lists appear after the next scan.</p>`;
     }
 
-    /* Staleness. A momentum idea nine days old is not the same object as a
+    /* Staleness. A swing pick nine days old is not the same object as a
        fresh one, and the old UI showed them identically. */
     if(d.staleness && d.staleness.warn){
       $("stalebox").innerHTML = `<div class="staleflag"><b>Stale.</b> ${esc(d.staleness.text)}</div>`;
@@ -3956,10 +3978,11 @@ async function loadIdeas(){
             ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
             ${catalystChips(s)}
             <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
-              <span>Fundamental ${scoreTxt(s.fundamental, 0)}</span><span>Piotroski ${s.f_score ?? "—"}/9</span>${s.avg_turnover_cr!=null?`<span>₹${s.avg_turnover_cr}cr/day</span>`:""}</div>
+              <span>Fundamental ${scoreTxt(s.fundamental, 0)}</span>${picks && s.leader && s.leader.fundamentals ? "" : `<span>Piotroski ${s.f_score ?? "—"}/9</span>`}${s.avg_turnover_cr!=null?`<span>₹${s.avg_turnover_cr}cr/day</span>`:""}</div>
             ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
             ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
             ${newsHTML(s)}
+            ${picks && PK.fundamentalsHTML ? PK.fundamentalsHTML(s) : ""}
             ${picks && PK.chartHTML ? PK.chartHTML(s, d.chart_note) : ""}
             <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">${picks ? `How it scored ${scoreTxt(s.conviction)}` : `Why this scored ${scoreTxt(s.conviction)}: show the ledger`}</button>
             ${evidenceHTML(s.evidence)}
@@ -5070,6 +5093,7 @@ document.querySelectorAll(".hint [data-t]").forEach(b=>b.addEventListener("click
 document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
   horizon = b.dataset.h;
   if(window.AltahaPicks) window.AltahaPicks.remember(horizon);
+  ideasAddress(horizon);
   markHorizon();
   loadIdeas();
 }));
@@ -5386,14 +5410,14 @@ if(fcSymParam){
 <script src="premium.js" defer></script>
 <script src="premium-plus.js?v=20261124-logos" defer></script>
 <script>AltahaBoot.late(9)</script>
-<script src="nav.js?v=20261121-type" defer></script>
+<script src="nav.js?v=20261127-ideas" defer></script>
 <script>AltahaBoot.late(10)</script>
 <script src="motion.js" defer></script>
 <script>AltahaBoot.late(11)</script>
-<script src="shell.js?v=20261124-logos" defer></script>
+<script src="shell.js?v=20261127-three" defer></script>
 <script src="home.js" defer></script>
 <script>AltahaBoot.late(12)</script>
-<script src="doors.js?v=20261123-accounts" defer></script>
+<script src="doors.js?v=20261127-three" defer></script>
 <script>AltahaBoot.late(13)</script>
 <script src="experience.js?v=20261121-type" defer></script>
 <script>AltahaBoot.late(14)</script>

@@ -10,6 +10,15 @@ The Ideas study: what picked well on NSE from 2017 to 2026, and what did not.
 Everything the Ideas page prints about its own record comes out of --study.
 backend/leaders.py reads the JSON; it holds no number of its own.
 
+SINCE DECEMBER 2026
+The three lists the page leads with (Swing / This month, After results,
+Long-term compounders) read each company's filings, and their records are
+the engine itself replayed point in time by research/fundamental_ideas_lab.py
+(--publish writes them into the same file; --study takes them from there).
+There is no second implementation of them here. The price recipes below stay
+for what the lab compares the new lists with and for the two lists retired
+then (this week and momentum, kept under "retired" as measured).
+
 DATA
 The exchange's own daily bhavcopy, one file per session, read from
 archives.nseindia.com. It lists every security that traded that day, so a
@@ -461,20 +470,16 @@ def load_results(P):
     return df.drop_duplicates(["symbol", "d0"], keep="last").sort_values(["i", "filed"]).reset_index(drop=True)
 
 
-def results_picks(P, U, R, dates, n=15):
-    """
-    The results list on each date, exactly as the engine builds it: the
-    liquid companies whose results were first priced in the last ten
-    sessions, ordered by that session's move less the average liquid stock's.
-    Returns (picks, pools): pools maps a date to every company that was
-    ranked, which is what the list is compared with.
-    """
+def result_moves(P, U, R, dates):
+    """{date: {symbol: move less the average liquid stock's}} for the liquid
+    companies whose results were first priced in the ten sessions to each
+    date, on the session they were priced: what the results lists rank on."""
     ret = (P.C / P.C.shift(1) - 1).values
     Uv = U.values
     col = {name: j for j, name in enumerate(P.C.columns)}
     row = {d: i for i, d in enumerate(P.C.index)}
     pos_all, sym_all = R["i"].values, R["symbol"].values
-    picks, pools = [], {}
+    out = {}
     for d in dates:
         i = row[d]
         a, b = np.searchsorted(pos_all, i - (RESULTS_WINDOW - 1), "left"), np.searchsorted(pos_all, i, "right")
@@ -484,7 +489,7 @@ def results_picks(P, U, R, dates, n=15):
         members = np.flatnonzero(Uv[i])
         inside = set(members.tolist())
         market = {}
-        cand = []
+        got = {}
         for sym, pos in latest.items():
             j = col[sym]
             move = ret[pos, j]
@@ -492,7 +497,23 @@ def results_picks(P, U, R, dates, n=15):
                 continue
             if pos not in market:
                 market[pos] = float(np.nanmean(ret[pos, members]))
-            cand.append((float(move - market[pos]), sym))
+            got[sym] = float(move - market[pos])
+        out[d] = got
+    return out
+
+
+def results_picks(P, U, R, dates, n=15):
+    """
+    The results list on each date as it ran until December 2026: the liquid
+    companies whose results were first priced in the last ten sessions,
+    ordered by that session's move less the average liquid stock's.
+    Returns (picks, pools): pools maps a date to every company that was
+    ranked, which is what the list is compared with.
+    """
+    moves = result_moves(P, U, R, dates)
+    picks, pools = [], {}
+    for d in dates:
+        cand = [(r, sym) for sym, r in moves[d].items()]
         pools[d] = [sym for _r, sym in cand]
         if len(cand) >= RESULTS_MIN_POOL:
             cand.sort(key=lambda t: (-t[0], t[1]))
@@ -745,9 +766,27 @@ def old_picks(P, base):
 # --------------------------------------------------------------------------
 
 LISTS = {"week": (5, 7.0), "month": (21, 12.0), "momentum": (63, 15.0), "long": (252, 30.0)}
-# The fifth list is made from results filings, not from the price recipes
-# above, so it is run on its own in study() and joins the same output.
+# The fifth list, as it ran until December 2026, is made from results
+# filings, not from the price recipes above: results_picks() builds it, for
+# the fundamental lab's comparison and for the parity check below.
 RESULTS_LIST = ("results", 21, 12.0)
+# December 2026. The four price lists above and the results list are no
+# longer what the page shows: this week and momentum were folded into the
+# fundamental lists, and month, results and long were rebuilt on filings
+# under the same keys (their records are research/fundamental_ideas_lab.py's).
+# The recipes stay here as what each new list is measured against, and the
+# two retired lists' records are kept under "retired", as they were measured.
+RETIRED = {
+    "week": ("month", "Replaced by Swing / This month in December 2026; kept as measured, a list every five "
+                      "sessions from 2017 held 5 sessions with a close 7% under as the exit."),
+    "momentum": ("long", "Replaced by Long-term compounders in December 2026; kept as measured, a list every "
+                         "five sessions from 2017 held 63 sessions with a close 15% under as the exit."),
+}
+LISTS_NOTE = ("month, results and long are the three fundamental lists of December 2026, recipe '{recipe}': "
+              "the site's own engine replayed point in time on prices and filings by "
+              "research/fundamental_ideas_lab.py, each the version a rule declared before the run chose (see "
+              "each list's lab). The setup lists are the engine's own replay too (ideas_study.py --setups). "
+              "This week and momentum, which they replaced, are under retired as last measured.")
 # Brokerage, STT, exchange charges, stamp duty, GST and a little slippage for
 # one buy and one sell of a delivery trade: the figure the Strategy lab uses.
 ROUND_TRIP_COST_PCT = 0.49
@@ -804,11 +843,44 @@ def benchmark_at(P, i):
     return {"ret_1m": float(n5[i] / n5[i - 21] - 1), "ret_3m": float(n5[i] / n5[i - 63] - 1)}
 
 
+def _measures_at(P, U, i):
+    """What the price recipes are made of on session i, as recipes() reads
+    it: each established liquid stock's leader score, calm, five-session
+    and month dips (percentiles among the universe) and its uptrend."""
+    u = U.iloc[i]
+
+    def pr(x):
+        return x.where(u).rank(pct=True)
+    at = {k: getattr(P, k).iloc[i] for k in ("mom_12_1", "mom_6_1", "vol_252", "near_high", "trend_q",
+                                             "ret_5", "ret_21", "C", "sma50", "sma200")}
+    leader = (pr(at["mom_12_1"] / at["vol_252"]) + pr(at["mom_6_1"] / at["vol_252"])
+              + pr(at["near_high"]) + pr(at["trend_q"])) / 4
+    return {"names": set(u.index[u.values]), "leader": leader, "calm": pr(-at["vol_252"]),
+            "dip": pr(-at["ret_5"]), "dip21": pr(-at["ret_21"]),
+            "up": (at["C"] > at["sma200"]) & (at["sma50"] > at["sma200"])}
+
+
 def parity(P, U, scores, R=None, results=None, W=None, Y=None):
-    """backend/leaders.py must pick what this file picked, or the page is
-    printing the record of a recipe the site does not run. `W` is the
-    universe the lists are picked from (the established and the young), `Y`
-    the young alone; `U` stays the established universe."""
+    """
+    What backend/leaders.py and this file still compute alike.
+
+    Until December 2026 the four price lists and the results list were
+    replayed here and held equal to the engine pick for pick. The engine no
+    longer runs them: this week and momentum were retired, and month,
+    results and long were rebuilt on filings, whose records are the engine
+    itself replayed (research/fundamental_ideas_lab.py) and need no twin.
+    What the two still share is what the recipes here are made of, and that
+    is checked, stock by stock, on the dates the pick-for-pick check used:
+    the established liquid universe; each stock's leader score (to the
+    decimal the engine prints), its uptrend and calm gates and its two dips
+    (to the whole percentile it prints); each young company's place, read
+    through its momentum score where it passed the gates; and, on six dates
+    the results list was made, which companies' results were priced in the
+    last ten sessions and how each moved against the average stock that
+    session (to the decimal). `W` is the universe the lists are picked from
+    (the established and the young), `Y` the young alone; `U` stays the
+    established universe. Returns (stocks that agree, stocks compared).
+    """
     import leaders
     W = U if W is None else W
     same = total = 0
@@ -824,15 +896,32 @@ def parity(P, U, scores, R=None, results=None, W=None, Y=None):
     for i in sorted(set(spots)):
         if i >= len(P.C):
             continue
-        d = P.C.index[i]
         blocks = leaders.rank(_engine_candidates(P, i, Y))
-        for key in scores:
-            want = set((list_picks(scores, W, [d], key) or [(d, [])])[0][1])
-            got = {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 99) <= 15}
-            same += len(want & got)
-            total += 15
-    # The results list, on six dates it made a list. The engine is told only
-    # what had reached the exchange by each date, with the real timestamps.
+        m = _measures_at(P, U, i)
+        est = {s: b for s, b in blocks.items() if not b.get("young")}
+        for sym in set(est) | m["names"]:
+            total += 1
+            b = est.get(sym)
+            if b is None or sym not in m["names"]:
+                continue
+            same += int(abs(b["score"] - 100 * m["leader"][sym]) <= 0.051
+                        and b["uptrend"] == bool(m["up"][sym])
+                        and b["calm"] == bool(m["calm"][sym] >= leaders.CALM_FLOOR)
+                        and abs(b["parts"]["dip"] - 100 * m["dip"][sym]) <= 0.501
+                        and abs(b["parts"]["dip_month"] - 100 * m["dip21"][sym]) <= 0.501)
+        if Y is not None:
+            young = {s: b for s, b in blocks.items() if b.get("young")}
+            ys = set(Y.columns[Y.values[i]])
+            mom = scores["momentum"].iloc[i]
+            for sym in set(young) | ys:
+                total += 1
+                if sym not in young or sym not in ys:
+                    continue
+                b, v = young[sym], float(mom.get(sym, np.nan))
+                same += int(abs(b["score"] - 100 * v) <= 0.051 and b["uptrend"] and b["calm"]
+                            if np.isfinite(v) else not (b["uptrend"] and b["calm"]))
+    # The results list's input, on six dates it was made. The engine is told
+    # only what had reached the exchange by each date, with the real times.
     if R is not None and results:
         row = {d: i for i, d in enumerate(P.C.index)}
         made = dict(results)
@@ -841,10 +930,12 @@ def parity(P, U, scores, R=None, results=None, W=None, Y=None):
             known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
             filed = {sym: {"filed_at": str(when)[:19]} for sym, when in zip(known["symbol"], known["filed"])}
             blocks = leaders.rank(_engine_candidates(P, i, Y), results=filed)
-            want = set(made[d])
-            got = {s for s, b in blocks.items() if (b["lists"]["results"]["rank"] or 99) <= 15}
-            same += len(want & got)
-            total += max(len(want), len(got))
+            got = {s: b["results"] for s, b in blocks.items() if b.get("results") and not b.get("young")}
+            want = result_moves(P, U, R, [d])[d]
+            for sym in set(got) | set(want):
+                total += 1
+                same += int(sym in got and sym in want
+                            and abs(got[sym]["reaction_pct"] - 100 * want[sym]) <= 0.051)
     return same, total
 
 
@@ -1061,56 +1152,30 @@ def setups_only():
             json.dump(result, f, indent=1)
 
 
-def study():
-    P = Panel()
-    U = P.universe(10)
-    plain = recipes(P, U)                      # the four lists on established companies alone
-    scores, W, Y = add_young(P, U, plain)      # W: who a list may pick; U: who it is compared with
-    try:
-        with open(OUT, encoding="utf-8") as f:
-            previous = json.load(f)
-    except Exception:
-        previous = {}
-    R = load_results(P)
-    r_key, r_hold, r_exit = RESULTS_LIST
-    r_picks = r_pools = r_dates = None
-    if R is not None:
-        first = max(262, int(R["i"].min()) + RESULTS_WINDOW)
-        first += (-(first - 262)) % 5                  # on the same five-session grid as the others
-        r_dates = P.C.index[first:-(r_hold + 1):5]
-        r_picks, r_pools = results_picks(P, U, R, r_dates)
-    same, total = parity(P, U, scores, R, r_picks, W, Y)
-    print(f"engine parity: {same} of {total} picks identical")
-    assert same == total, "backend/leaders.py no longer matches the tested recipes"
+def price_exits(P, picks, hold, exit_pct):
+    """A price list's picks on other exit lines: none, half its own, its
+    own, one and a half times; and sold at a high as far above the entry as
+    the line is below it, and twice as far (what leaders.target_tested reads)."""
+    out = {"no exit line": describe(run_list(P, picks, hold))}
+    for alt in sorted({exit_pct / 2, exit_pct, exit_pct * 1.5}):
+        out[f"close {alt:g}% under"] = describe(run_list(P, picks, hold, alt))
+    # A target as far above as the exit line is below, and one twice as far.
+    for mult in (1, 2):
+        out[f"close {exit_pct:g}% under, target {exit_pct * mult:g}% over"] = describe(
+            run_list(P, picks, hold, exit_pct, target_pct=exit_pct * mult))
+    return out
 
-    result = {
-        "generated": dt.date.today().isoformat(),
-        "source": "NSE daily bhavcopy, every session, delisted companies included",
-        "from": str(P.C.index[262].date()), "to": str(P.C.index[-1].date()),
-        "sessions": int(len(P.C)), "companies": int(P.C.shape[1]),
-        "universe": "NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
-        "universe_median": int(U.iloc[262:].sum(axis=1).median()),
-        "rules": "Bought at the next session's open, held for the period, left on a close "
-                 "under the exit line. Price returns before costs and tax. Index: Nifty 500.",
-        "engine_parity": f"{same}/{total}",
-        "round_trip_cost_pct": ROUND_TRIP_COST_PCT,
-        "lists": {}, "exits": {}, "before": {}, "score": {}, "factors": {},
-    }
 
-    # How many names the lists share, as run and as first built.
-    shared = recipes(P, U, shared=True)
-    every = P.C.index[262:-1:5]
-    result["overlap"] = {"now": overlap(scores, W, every),
-                         "first version": overlap(shared, U, every, gives_way={})}
-    print("overlap:", json.dumps(result["overlap"], indent=1))
-    result["first_version"] = {
-        "what": ("The lists as first built: this month was three parts leader score and one "
-                 "part five-day dip, and momentum did not give way to long term. Same dates, "
-                 "same rules."),
-        "lists": {},
-    }
-
-    for key, (hold, exit_pct) in LISTS.items():
+def retired_records(P, U, scores, plain, W, Y):
+    """
+    This week and momentum, as they ran until December 2026: {key:
+    {"replaced_by", "note", "record", "exits"}}. Each record is built as
+    every list's is, with the young companies they admitted measured beside
+    it. Nothing is asserted of those any more: no list admits them now.
+    """
+    out = {}
+    for key, (to, note) in RETIRED.items():
+        hold, exit_pct = LISTS[key]
         dates = P.C.index[262:-(hold + 1):5]
         picks = list_picks(scores, W, dates, key)
         ran = run_list(P, picks, hold, exit_pct)
@@ -1125,7 +1190,7 @@ def study():
             was = run_list(P, list_picks(plain, U, dates, key), hold, exit_pct)
             yo = young_only(ran, Y)
             d_yo, v_yo = describe(yo), vs_average_stock(P, U, yo, hold)
-            rec["young"] = {
+            rec["young"] = None if d_yo is None else {
                 "what": "Companies listed six to twelve months, their 6-month return standing in "
                         "for the 12-month one, placed against the established universe.",
                 "picks": d_yo["picks"], "list_dates": d_yo["list_dates"], "up_pct": d_yo["up_pct"],
@@ -1135,52 +1200,101 @@ def study():
                 "list_without_them": {**{k: describe(was)[k] for k in ("picks", "up_pct", "avg_pct")},
                                       "vs_average_stock": vs_average_stock(P, U, was, hold)},
             }
-            led = all((v_yo["by_half"][h]["excess_pct"] or -9) > 0 for h in ("2017-21", "2022-26"))
-            assert led, f"young companies did not lead on the {key} list in both halves; do not admit them"
-        result["lists"][key] = rec
+        out[key] = {"replaced_by": to, "note": note, "record": rec, "exits": price_exits(P, picks, hold, exit_pct)}
+        print(f"\nretired {key}: hold {hold}, exit {exit_pct}%")
+        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
+    return out
+
+
+def fundamental_records(P, U, R, previous):
+    """
+    The three fundamental lists' records, exit lines, overlap and recipe
+    stamp: research/fundamental_ideas_lab.py's replay of the engine itself,
+    built by its publish step (which first checks that leaders.py still ranks
+    what was replayed, and stops if not). Without a replay on disk, the
+    records the file last held are kept if they are this recipe's; else
+    None, and the page shows no record beside those three lists.
+    """
+    import leaders
+    # Run as a script this module is __main__; the lab imports it by name.
+    sys.modules.setdefault("ideas_study", sys.modules[__name__])
+    import fundamental_ideas_lab as FIL
+    if R is not None and os.path.exists(FIL.PICKS_FILE) and os.path.exists(FIL.OUT):
+        return FIL.published(P, U, R)
+    if previous.get("recipe") == leaders.RECIPE:
+        keys = [k for k in FIL.TABS if k in (previous.get("lists") or {})]
+        print("\nno replay of the fundamental lists on disk: the records last written are kept.")
+        return {"lists": {k: dict(previous["lists"][k], carried_over=True) for k in keys},
+                "exits": {k: previous["exits"][k] for k in keys if k in (previous.get("exits") or {})},
+                "overlap": previous.get("overlap"), "recipe": leaders.RECIPE}
+    print("\nno replay of the fundamental lists on disk, and none on file for this recipe: "
+          "those three lists get no record.")
+    return None
+
+
+def study():
+    P = Panel()
+    U = P.universe(10)
+    plain = recipes(P, U)                      # the four lists on established companies alone
+    scores, W, Y = add_young(P, U, plain)      # W: who a list may pick; U: who it is compared with
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            previous = json.load(f)
+    except Exception:
+        previous = {}
+    R = load_results(P)
+    r_hold = RESULTS_LIST[1]
+    r_picks = None
+    if R is not None:
+        first = max(262, int(R["i"].min()) + RESULTS_WINDOW)
+        first += (-(first - 262)) % 5                  # on the same five-session grid as the others
+        r_picks, _pools = results_picks(P, U, R, P.C.index[first:-(r_hold + 1):5])
+    same, total = parity(P, U, scores, R, r_picks, W, Y)
+    print(f"engine parity: {same} of {total} stocks read alike")
+    assert same == total, "backend/leaders.py no longer reads the market the way the price recipes here do"
+
+    # The three lists the page leads with: the engine itself, replayed.
+    fund = fundamental_records(P, U, R, previous)
+
+    result = {
+        "generated": dt.date.today().isoformat(),
+        "source": "NSE daily bhavcopy, every session, delisted companies included",
+        "from": str(P.C.index[262].date()), "to": str(P.C.index[-1].date()),
+        "sessions": int(len(P.C)), "companies": int(P.C.shape[1]),
+        "universe": "NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+        "universe_median": int(U.iloc[262:].sum(axis=1).median()),
+        "rules": "Bought at the next session's open, held for the period, left on a close "
+                 "under the exit line. Price returns before costs and tax. Index: Nifty 500.",
+        "engine_parity": f"{same}/{total}",
+        "round_trip_cost_pct": ROUND_TRIP_COST_PCT,
+    }
+    if fund:
+        result["recipe"] = fund["recipe"]
+    result.update({"lists_note": LISTS_NOTE.format(recipe=(fund or {}).get("recipe") or "not yet replayed"),
+                   "lists": dict((fund or {}).get("lists") or {}), "exits": dict((fund or {}).get("exits") or {}),
+                   "retired": retired_records(P, U, scores, plain, W, Y),
+                   "before": {}, "score": {}, "factors": {}})
+
+    # How many names the lists share: the three lists now, and the four price
+    # lists they replaced, as run and as first built.
+    shared = recipes(P, U, shared=True)
+    every = P.C.index[262:-1:5]
+    if (fund or {}).get("overlap"):
+        result["overlap"] = fund["overlap"]
+    result["overlap_before"] = {"now": overlap(scores, W, every),
+                                "first version": overlap(shared, U, every, gives_way={})}
+    print("overlap before:", json.dumps(result["overlap_before"], indent=1))
+    result["first_version"] = {
+        "what": ("The lists as first built: this month was three parts leader score and one "
+                 "part five-day dip, and momentum did not give way to long term. Same dates, "
+                 "same rules."),
+        "lists": {},
+    }
+    for key, (hold, exit_pct) in LISTS.items():
+        dates = P.C.index[262:-(hold + 1):5]
         first = run_list(P, top_picks(shared[key], U, dates), hold, exit_pct)
         result["first_version"]["lists"][key] = {**describe(first),
                                                  "vs_average_stock": vs_average_stock(P, U, first, hold)}
-        result["exits"][key] = {"no exit line": describe(run_list(P, picks, hold))}
-        for alt in sorted({exit_pct / 2, exit_pct, exit_pct * 1.5}):
-            result["exits"][key][f"close {alt:g}% under"] = describe(run_list(P, picks, hold, alt))
-        # A target as far above as the exit line is below, and one twice as far.
-        for mult in (1, 2):
-            result["exits"][key][f"close {exit_pct:g}% under, target {exit_pct * mult:g}% over"] = describe(
-                run_list(P, picks, hold, exit_pct, target_pct=exit_pct * mult))
-        print(f"\n{key}: hold {hold}, exit {exit_pct}%")
-        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
-
-    # The results list: made from filings, so it has its own picker.
-    if r_picks is not None:
-        ran = run_list(P, r_picks, r_hold, r_exit)
-        rec = with_breakdowns(ran, first="2018-21")
-        rec.update(hold_sessions=r_hold, exit_pct=r_exit,
-                   avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
-                   vs_average_stock=vs_average_stock(P, U, ran, r_hold, first="2018-21"),
-                   vs_reporters=vs_pool(P, ran, r_hold, r_pools),
-                   market=by_market(P, ran),
-                   **{"from": str(r_dates[0].date()),
-                      "dates_tried": int(len(r_dates)),
-                      "filings": int(len(R)), "companies": int(R["symbol"].nunique()),
-                      "window_sessions": RESULTS_WINDOW, "min_companies": RESULTS_MIN_POOL,
-                      "what": ("Liquid companies whose quarterly results were first priced in the last "
-                               f"{RESULTS_WINDOW} sessions, ordered by that session's move less the average "
-                               "liquid stock's. A list is made only when eight or more qualify."),
-                      "bias": ("The results table holds companies listed today. vs_reporters compares the "
-                               "list with every company it was chosen from, which shares that bias.")})
-        result["lists"][r_key] = rec
-        result["exits"][r_key] = {"no exit line": describe(run_list(P, r_picks, r_hold))}
-        for alt in sorted({r_exit / 2, r_exit, r_exit * 1.5}):
-            result["exits"][r_key][f"close {alt:g}% under"] = describe(run_list(P, r_picks, r_hold, alt))
-        print(f"\n{r_key}: hold {r_hold}, exit {r_exit}%")
-        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
-    elif (previous.get("lists") or {}).get(r_key):
-        # No results table on this machine: keep the record last written, and say so.
-        result["lists"][r_key] = dict(previous["lists"][r_key], carried_over=True)
-        if (previous.get("exits") or {}).get(r_key):
-            result["exits"][r_key] = previous["exits"][r_key]
-        print(f"\n{r_key}: no results table at {RESULTS_CSV}; the last record is kept.")
 
     # The setup lists, replayed through the engine itself.
     s_recs, s_exits = setup_records(P, U, Y, R)

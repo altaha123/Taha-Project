@@ -758,7 +758,8 @@ def market_context(horizon: str = "short"):
 
 
 # ---------------------------------------------------------------------------
-# The four tested lists: this week, this month, momentum, long term
+# The tested lists: Swing / This month, After results, Long-term compounders,
+# and the setup lists
 #
 # leaders.py ranks every liquid stock in phase 1 of the scan and each analysed
 # row carries the result. This is the layer that turns those ranks into a
@@ -769,12 +770,26 @@ def market_context(horizon: str = "short"):
 # ---------------------------------------------------------------------------
 
 PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
-PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14,
+# How old a scan may be before a list warns that it is stale: about a quarter
+# of each list's hold, and a day for a trade held a few days.
+PICK_STALE_DAYS = {"month": 5, "results": 3, "long": 14,
                    "short": 2, "breakout": 2, "technical": 3, "quick": 1, "flow": 5, "emerging": 5}
-# A long-term pick with these on its record is left out. Not measured by the
-# price study (no ten-year fundamentals history exists to test it on); kept as
-# a plain safety screen and reported in the notes whenever it removes a name.
-LONG_MIN_PIOTROSKI = 4
+PICK_STALE_DEFAULT = 5
+# Horizon names that, on a scan from before the tested lists, meant the old
+# short (weeks to a few months) archetype list.
+_LEGACY_SHORT_NAMES = ("week", "momentum", "trade", "position")
+# The long-term list used to drop, here, a pick with a Piotroski score under 4
+# or a trailing loss, read from Yahoo and never tested. Since December 2026
+# the long-term list's own gates in leaders.rank read the company's filings
+# (an F-score of 5 or more, no loss over four quarters) and were replayed
+# point in time, so that screen is gone.
+
+# The mixes the three fundamental lists had before December 2026. A scan
+# ranked then carries no breakdown, and its ledger is rebuilt from these so it
+# still adds up to the score beside it until the next scan.
+_EARLIER_MIX = {"month": {"dip21": 0.5, "high": 0.5},
+                "long": {"m12": 1 / 3, "high": 1 / 3, "trend": 1 / 3},
+                "results": {"reaction": 1.0}}
 
 _EVIDENCE = (
     ("m12", "momentum_12m", "12-month return for its risk"),
@@ -1025,9 +1040,22 @@ def market_test(key, regime):
 
 
 def has_picks(payload):
-    """Does this scan carry the leader ranks the four lists are built from?"""
+    """Does this scan carry the leader ranks the tested lists are built from?"""
     rows = (payload or {}).get("factor_universe") or (payload or {}).get("rankings") or []
     return any((r.get("leader") or {}).get("lists") for r in rows)
+
+
+def _stamps(rows):
+    """The leaders.RECIPE stamps a scan's ranked rows carry."""
+    return {(r.get("leader") or {}).get("recipe") for r in rows or () if (r.get("leader") or {}).get("lists")}
+
+
+def scan_recipe(payload):
+    """The recipe a scan's leader ranks were made under: the one stamp its
+    ranked rows carry, or None (no ranks, or rows of more than one stamp)."""
+    rows = (payload or {}).get("factor_universe") or (payload or {}).get("rankings") or []
+    stamps = _stamps(rows)
+    return next(iter(stamps)) if len(stamps) == 1 else None
 
 
 def breakout_pattern(block):
@@ -1159,12 +1187,40 @@ def _setup_evidence(key, block):
     return out
 
 
+def _tab_evidence(key, block):
+    """
+    The ledger of one of the three fundamental lists, read from the
+    breakdown leaders.rank wrote beside the score: one row per part of the
+    mix (pull, high, fundmom, secflow, catalyst; reaction, volume, growth;
+    quality, compounding, governance, valuation, trendq), each with what it
+    read, its weight and the points it adds, so the rows add up to the
+    conviction printed beside them. None for a block ranked before the lists
+    carried a breakdown.
+    """
+    entry = (((block or {}).get("lists") or {}).get(key)) or {}
+    rows = entry.get("breakdown")
+    if rows is None:
+        return None
+    out = []
+    for b in rows:
+        k = b.get("factor")
+        detail = str(b.get("detail") or "").strip().rstrip(".")
+        out.append({"factor": b.get("label") or leaders.FACTOR_LABELS.get(k, k), "key": k,
+                    "points": round(leaders._finite(b.get("points")) or 0.0, 1),
+                    "of": round((leaders._finite(b.get("weight")) or 0.0) * 100, 1),
+                    "share_pct": b.get("value"), "detail": (detail + ".") if detail else ""})
+    return out
+
+
 def _pick_evidence(key, block):
     """The ledger: each measurement's percentile and its share of the score."""
     spec = leaders.LISTS[key]
     if spec.get("kind") == "setup":
         return _setup_evidence(key, block)
-    mix = dict(spec["mix"])
+    tab = _tab_evidence(key, block)
+    if tab is not None:
+        return tab
+    mix = dict(_EARLIER_MIX.get(key) or spec["mix"])
     if "leader" in mix:                       # the leader score is four parts
         w = mix.pop("leader")
         for k in ("m12", "m6", "high", "trend"):
@@ -1222,10 +1278,10 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
 
     Cheap on purpose (no news, no regime, no sector feed), so a list that
     gives way to another can work out what that list shows. Returns
-    (chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe,
+    (chosen, excluded_adverse, capped, gave_way, per_sector, universe,
     considered), where each chosen item is (row, entry, filing, adverse).
     """
-    pool, excluded_adverse, weak, gave_way = [], [], [], []
+    pool, excluded_adverse, gave_way = [], [], []
     universe = None
     for r in rows_all:
         block = r.get("leader") or {}
@@ -1249,11 +1305,6 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
                                      "line": filing.get("line"),
                                      "setup_fit": r.get("setup_fit")})
             continue
-        if key == "long":
-            f, eps = r.get("f_score"), r.get("trailing_eps")
-            if (f is not None and f < LONG_MIN_PIOTROSKI) or (eps is not None and eps < 0):
-                weak.append(sym)
-                continue
         pool.append((r, entry, filing, adverse))
 
     pool.sort(key=lambda t: t[1]["rank"])
@@ -1270,7 +1321,7 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
             continue
         per_sector[sec] = per_sector.get(sec, 0) + 1
         chosen.append(item)
-    return chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe, len(pool)
+    return chosen, excluded_adverse, capped, gave_way, per_sector, universe, len(pool)
 
 
 _REPLAYED = (" The record beside the list is this rule replayed on NSE prices from 2017 to 2026: "
@@ -1342,6 +1393,106 @@ SETUP_NOTE = {
 }
 
 
+def _tab_method(key):
+    """
+    How one of the three fundamental lists is made, in words, from the recipe
+    the engine is running now (leaders.MONTH, RESULTS, LONG), so the page
+    never describes a threshold the engine does not use. None for any other
+    list.
+    """
+    cfg = leaders.recipe_of(key)
+    if cfg is None:
+        return None
+    if key == "month":
+        floor = cfg["leader_floor"]
+        pull = cfg.get("pull_mix") or {}
+        pulled = (" and the week" if pull.get("dip") else "") if pull.get("dip21") else (
+            " over the week" if pull.get("dip") else "")
+        top = cfg.get("sector_top", 0.5)
+        return (f"A stock is here when it is a market leader (a leader score of {floor * 100:.0f} or more out "
+                "of 100), in an uptrend and outside the most volatile "
+                "fifth" + ((", in an industry in the top half on money flow" if top == 0.5 else
+                            f", in an industry in the top {top * 100:.0f}% on money flow")
+                           if cfg["sector_gate"] else "")
+                + (", with no loss and no fall in profit in its last quarter" if cfg["profit_guard"] else "")
+                + (f", no results the market sold (more than {abs(cfg['bad_reaction']) * 100:.0f}% under the "
+                   f"average stock that day) in the last {cfg['result_lookback']} sessions"
+                   if cfg["result_guard"] else "")
+                + f", and promoters pledging {cfg['pledge_max']:g}% of the company or less. It is ordered "
+                + (f"on its pullback over the month{pulled}" if pull.get("dip21") else f"on its pullback{pulled}")
+                + ", its closeness to the 52-week high, its last "
+                "quarter's sales and margin growth (sales alone for a bank or lender), its industry's money flow and a live catalyst (heavy "
+                "deliveries on a falling week, or a large order), with at most "
+                f"{cfg['sector_cap']} stocks from one industry. A figure a company has not filed counts as "
+                "the middle of the field.")
+    if key == "results":
+        floor = {"sma200_85": (f", nor more than {(1 - leaders.RESULTS_SMA200_FLOOR) * 100:.0f}% under its "
+                               "200-day average"),
+                 "sma50": ", nor under its 50-day average"}.get(cfg["floor"], "")
+        return (f"Every liquid NSE company whose quarterly results were first priced in the last "
+                f"{leaders.RESULTS_WINDOW} sessions is ranked against the others that reported, on how its "
+                "stock moved that session against the average stock, the volume behind the move and the "
+                "growth itself"
+                + ((f". Only results that were real growth are listed: sales up {cfg['rev_min']:g}% or more on "
+                    "a year ago, profit up and operating profit up with one-off items left out, other income "
+                    f"no more than {cfg['other_income_max']:g}% of profit before tax, no exceptional gain over "
+                    f"{cfg['exceptional_max'] * 100:.0f}% of it and cash from operations positive in the last "
+                    "full year (for a bank or lender: sales, profit and the exceptional test only)")
+                   if cfg["quality_gate"] else "")
+                + f", and a stock not already up more than {cfg['chase_max'] * 100:.0f}% that day{floor}. With fewer "
+                f"than {cfg['min_qualified']} such companies there is no list, and at most "
+                f"{cfg['sector_cap']} come from one industry.")
+    return ("A company is here when it is above its 200-day average and outside the most volatile fifth, made "
+            f"money over the last four quarters, scores {cfg['f_score_min']} or more of 9 on Piotroski's "
+            f"F-score and has promoters pledging {cfg['pledge_max']:g}% of it or less"
+            + ((f"; it earns {cfg['roce_min']:g}% or more on its capital, with cash from operations at least "
+                f"{cfg['cfo_to_pat_min']:g} times its profit and debt no more than {cfg['de_max']:g} times its "
+                f"equity (a bank or lender: {cfg['roe_min_fin']:g}% or more on its equity), and its "
+                "shareholders' equity is positive")
+               if cfg["floors"] else "")
+            + ((f"; and it is priced at a P/E of {cfg['pe_max']:g} or under, unless its PEG is "
+                f"{cfg['peg_escape']:g} or under on profit growing {cfg['cagr_escape']:g}% a year")
+               if cfg["valuation_ceiling"] else "")
+            + ". It is ordered on returns and cash, three-year growth, pledges and holdings, its valuation "
+            "against its own industry and its year-long trend, with at most "
+            f"{cfg['sector_cap']} stocks from one industry. A figure a company has not filed counts as the "
+            "middle of the field.")
+
+
+def _study_current(key):
+    """
+    Is the record in the study file the record of the recipe running now?
+    The setup lists' records are the engine's own replay and always are. The
+    three fundamental lists were rebuilt in December 2026: their record is the
+    one research/fundamental_ideas_lab.py stamps with leaders.RECIPE, and until
+    the study file carries that stamp the page shows none rather than the
+    replaced lists' record beside the new ones.
+    """
+    if leaders.recipe_of(key) is None:
+        return True
+    return (leaders.TESTED or {}).get("recipe") == leaders.RECIPE
+
+
+def _results_empty_text(reported, qualified, day):
+    """Why the After results list is empty, and when it fills in: during a
+    results season as more results are priced, else from the next one."""
+    start, running = leaders.next_results_season(day)
+    season = ("Companies are reporting now; the list fills in as more results are priced and pass its tests."
+              if running else
+              f"Companies report again from about {start.day} {start.strftime('%B')}; this list fills in then.")
+    window, pool = leaders.RESULTS_WINDOW, leaders.RESULTS_MIN_POOL
+    if not reported:
+        return f"No liquid company's results were priced in the last {window} sessions. {season}"
+    if reported < pool:
+        return (f"Only {reported} liquid compan{'y has' if reported == 1 else 'ies have'} had results priced in "
+                f"the last {window} sessions, and the list needs {pool} to rank. {season}")
+    need = leaders.RESULTS["min_qualified"]
+    if qualified >= need:
+        return "Nothing passed every test in this scan."
+    return (f"{reported} liquid companies had results priced in the last {window} sessions and {qualified} "
+            f"passed every test; the list needs {need}. {season}")
+
+
 def _watch_with_catalysts(rows, news_idx):
     """The breakout watch list with each base's live catalyst, if any: a
     base with a fresh order or earnings call behind it is the one to watch."""
@@ -1355,7 +1506,7 @@ def _watch_with_catalysts(rows, news_idx):
 
 
 def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
-    """One of the four tested lists, from a scan that carries leader ranks."""
+    """One of the tested lists, from a scan that carries leader ranks."""
     spec = leaders.LISTS[key]
     rows_all = payload.get("factor_universe") or payload.get("rankings") or []
     regime, _ok = _soft("regime", market_regime, None)
@@ -1369,7 +1520,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     _leaders = _leaders_laggards(outlook)
     stale = _staleness(payload.get("scanned_at"))
     if stale and stale.get("days") is not None:
-        limit_days = PICK_STALE_DAYS[key]
+        limit_days = PICK_STALE_DAYS.get(key, PICK_STALE_DEFAULT)
         stale = dict(stale, warn=stale["days"] > limit_days)
         if stale["warn"]:
             stale["text"] = (f"This list is {stale['days']} days old. "
@@ -1383,12 +1534,15 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         shown = _choose_picks(rows_all, other, limit, o_hours)[0]
         exclude = {(t[0].get("symbol") or "").upper() for t in shown}
 
-    (picked, excluded_adverse, weak, capped, gave_way, per_sector,
+    (picked, excluded_adverse, capped, gave_way, per_sector,
      universe, considered) = _choose_picks(rows_all, key, limit, hours, exclude)
     # A scan ranked under an earlier recipe (made before the last deploy) still
     # answers, but the tested record printed beside it would be another list's.
-    stamps = {(r.get("leader") or {}).get("recipe") for r in rows_all if (r.get("leader") or {}).get("lists")}
+    stamps = _stamps(rows_all)
     recipe_current = stamps == {leaders.RECIPE}
+    # And the study file must have measured the recipe this scan ran.
+    study_current = _study_current(key)
+    show_record = recipe_current and study_current
     chosen = []
     for r, entry, filing, adverse in picked:
         sym = (r.get("symbol") or "").upper()
@@ -1453,9 +1607,6 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     if excluded_adverse:
         notes.append("Removed for a serious adverse filing: "
                      + ", ".join(f"{e['symbol']} ({e['category']})" for e in excluded_adverse[:4]) + ".")
-    if weak:
-        notes.append("Left out of the long-term list for weak fundamentals "
-                     f"(Piotroski under {LONG_MIN_PIOTROSKI} or a loss): " + ", ".join(weak[:6]) + ".")
     caps = money_flow_caps()
     if capped:
         notes.append(f"{capped} more qualified but would have put more than "
@@ -1468,20 +1619,25 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         notes.append(f"Stocks on the {leaders.LISTS[other]['label'].lower()} list are left off "
                      "this one, so the two lists show different stocks.")
     if not recipe_current:
-        notes.append("This scan was ranked with an earlier recipe, so its tested record is not "
-                     "shown. The next scan ranks it the current way.")
+        # Only the three lists by holding time were rebuilt: a setup list's
+        # picks are chosen as they were, and only its record is held back.
+        notes.append("This scan was ranked with an earlier recipe: these picks were chosen the earlier "
+                     "way, not as described above, and its tested record is not shown. The next scan "
+                     "ranks it the current way." if leaders.recipe_of(key) is not None else
+                     "This scan was ranked with an earlier recipe, so its tested record is not shown. "
+                     "The next scan ranks it the current way.")
+    elif not study_current:
+        notes.append("This list was rebuilt on company filings in December 2026 and the replay of the new "
+                     "recipe is not in the study file yet, so no tested record is shown beside it.")
     event = spec.get("event") == "results"
-    reported = max([((r.get("leader") or {}).get("results") or {}).get("reported") or 0
-                    for r in rows_all] or [0])
+    held = [((r.get("leader") or {}).get("results") or {}) for r in rows_all]
+    reported = max([h.get("reported") or 0 for h in held] or [0])
+    qualified = max([h.get("qualified") or 0 for h in held] or [0])
     empty_text = "Nothing passed every test in this scan."
-    if event and not chosen:
-        empty_text = (
-            f"Only {reported} liquid compan{'y has' if reported == 1 else 'ies have'} had results priced in "
-            f"the last {leaders.RESULTS_WINDOW} sessions, and the list needs {leaders.RESULTS_MIN_POOL} to rank. "
-            "It fills in the weeks companies report."
-            if reported else
-            f"No liquid company's results were priced in the last {leaders.RESULTS_WINDOW} sessions. "
-            "The list fills in the weeks companies report.")
+    # An earlier recipe counted no results against the tests above, so its
+    # counts would say none passed them.
+    if event and not chosen and recipe_current:
+        empty_text = _results_empty_text(reported, qualified, called_on)
     setup = spec.get("kind") == "setup"
     if setup and not chosen:
         empty_text = SETUP_EMPTY.get(key, empty_text)
@@ -1492,10 +1648,11 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         notes.append("Listed under a year, ranked on six months of prices in place of twelve: "
                      + ", ".join(young_shown[:6]) + ". In the test such companies led the average "
                      "stock on this list in both halves.")
-    if event and chosen:
+    if event and chosen and recipe_current:
         notes.append(f"{reported} liquid companies had results priced in the last "
-                     f"{leaders.RESULTS_WINDOW} sessions; these moved the most that day against the "
-                     "average stock. Not limited to stocks in an uptrend: that is how it was tested.")
+                     f"{leaders.RESULTS_WINDOW} sessions and {qualified} passed every test of real growth; "
+                     "these are ranked on the day's move against the average stock, the volume behind it "
+                     "and the growth itself.")
     if not chosen:
         notes.append(empty_text)
 
@@ -1519,11 +1676,15 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                          if spec.get("sell_rule") == "sma50" else
                          (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
                           f"{spec['exit_pct']:.0f}% under the call price.")),
-        "tested": tested_record(key) if recipe_current else None,
+        "tested": tested_record(key) if show_record else None,
         # Each pick carries a mark above its price (plan.aim). This is what the
         # study found on selling there, for the lists it tested that way.
-        "target_test": leaders.target_tested(key) if recipe_current else None,
+        "target_test": leaders.target_tested(key) if show_record else None,
         "recipe_current": recipe_current,
+        # The stamp the rows were ranked under, so the call log can date a
+        # rebuilt list from its first scan (call_log.recipe_since).
+        "recipe": next(iter(stamps)) if len(stamps) == 1 else None,
+        "study_current": study_current,
         # The study's header only. Its tables are in research/ideas-study.json;
         # sending them with every list would triple the response for nobody.
         "study": {k: (leaders.TESTED or {}).get(k) for k in
@@ -1554,14 +1715,14 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "regime": regime,
         # What the test found for this list in a market like today's. The page
         # shows this where it used to show a warning the test did not bear out.
-        "market_test": market_test(key, regime) if recipe_current else None,
+        "market_test": market_test(key, regime) if show_record else None,
         # On a setup list the chart IS the reason, so the disclaimer is dropped.
         "chart_note": None if spec.get("kind") == "setup" else CHART_NOTE,
         "empty_text": None if chosen else empty_text,
         "event": spec.get("event"),
         "market_context": {"regime": regime, "leaders": _leaders[0], "laggards": _leaders[1],
                            "sectors_measured": _leaders[2], "headlines": headlines},
-        "weights": spec["mix"],
+        "weights": leaders.mix_of(key),
         "conviction_floor": 0,
         "layers": {"sector_outlook": bool(outlook), "market_regime": bool(regime),
                    "news": bool(news_idx or headlines), "filings": ann is not None,
@@ -1578,13 +1739,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "gives_way_to": other if other in leaders.LISTS else None,
         "gave_way": gave_way,
         "method": (SETUP_METHOD[key] if key in SETUP_METHOD else
-                   ("Every liquid NSE company whose quarterly results reached the exchange in the "
-                    "last ten sessions is ranked on how its stock moved, against the average stock, "
-                    "on the first session that could price them. Tested on NSE prices and filings "
-                    "from 2018 to 2026.") if event else
-                   "Every liquid NSE stock is ranked on the measurements in the ledger. "
-                    "The list is the top of that ranking after the uptrend and volatility "
-                    "gates. Tested on NSE prices from 2017 to 2026."),
+                   _tab_method(key) or
+                   ("Every liquid NSE stock is ranked on the measurements in the ledger. "
+                    "The list is the top of that ranking after its gates.")),
     }
 
 
@@ -1597,17 +1754,21 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     Returns fewer rows than `limit` when fewer genuinely qualify. That is the
     point: an empty week is information, and padding destroys it.
     """
-    # A scan that carries leader ranks serves the four tested lists. A scan
+    # A scan that carries leader ranks serves the tested lists. A scan
     # from before they existed still answers with the old short and medium
     # lists, so a deploy never blanks the page while the next scan runs.
     key = leaders.resolve(horizon) if leaders is not None else None
     if key and has_picks(payload):
         return select_picks(payload, key, limit=limit)
     if key and horizon not in HORIZONS:
-        horizon = "short" if key in ("week", "month", "momentum", "short") else "medium"
+        # The old short list held what the weeks-to-months names meant when
+        # that scan was made; week and momentum now resolve to month and
+        # long, so they are read by the name they were asked for.
+        asked = str(horizon or "").strip().lower()
+        horizon = "short" if (key in ("month", "short") or asked in _LEGACY_SHORT_NAMES) else "medium"
     h = HORIZONS.get(horizon)
     if not h:
-        raise ValueError("horizon must be one of week, month, momentum or long")
+        raise ValueError("horizon must be one of " + ", ".join(leaders.ALL if leaders is not None else HORIZONS))
 
     floor = MIN_CONVICTION if min_conviction is None else float(min_conviction)
     weights = h["weights"]

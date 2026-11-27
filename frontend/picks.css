@@ -14,9 +14,10 @@
 .pk-sub { margin: 0; font-size: var(--fs-body); color: var(--pk-mute, var(--text-muted)); }
 
 /* ── Which list ────────────────────────────────────────────────────────
-   Ten lists in two rows, and each row says what kind it is. They are tabs:
+   Eight lists in two rows, and each row says what kind it is. They are tabs:
    the chosen one is cognac with a 2px line under it and nothing is filled.
-   Each carries how long the list is held under its name. */
+   Each carries how long the list is held under its name. The three by
+   holding time share their row equally, a column each, on a phone too. */
 .pk-chooser { display: grid; gap: var(--sp-2); }
 .pk-group { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
 .pk-group-h { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted); }
@@ -31,6 +32,8 @@
 .pk-tab:hover, .pk-panel .pk-tab:hover { color: var(--text-primary); background: none; }
 .pk-tab.on, .pk-panel .pk-tab.on, .pk-tab[aria-selected="true"] { color: var(--highlight-text); border-bottom-color: var(--highlight); background: none; }
 .pk-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pk-tabs.hold { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0 var(--sp-6); }
+.pk-tabs.hold .pk-tab { justify-self: stretch; width: 100%; min-width: 0; }
 
 /* ── What the list is, and how it did ─────────────────────────────────── */
 .pk-idea { margin: var(--sp-5) 0 var(--sp-3); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-primary); }
@@ -102,7 +105,9 @@
 /* A live catalyst (order, earnings call, news): marked apart from the tested pattern. */
 .pk-badge.pk-cat { border-color: var(--gain); color: var(--gain); }
 .pk-why { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.pk-why span { padding: 3px 12px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); white-space: nowrap; }
+/* A fact wider than the card (a long industry name on a phone) wraps inside
+   its own pill rather than pushing the page sideways. */
+.pk-why span { max-width: 100%; padding: 3px 12px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); }
 
 .pk-plan { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 12px 0 2px; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface-raised); font-size: var(--fs-body); color: var(--text-secondary); }
 .pk-plan b { margin-right: 4px; font-weight: 600; color: var(--text-primary); }
@@ -146,12 +151,13 @@
 .pk-fact { margin: 8px 0 0; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-fact b { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted); margin-right: 8px; }
-.pk-chart { margin: 16px 0 8px; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface-raised); }
-.pk-chart h6 { margin: 0 0 8px; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
+/* The chart's facts, and the company's figures (.pk-funds): the same box. */
+.pk-chart, .pk-funds { margin: 16px 0 8px; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface-raised); }
+.pk-chart h6, .pk-funds h6 { margin: 0 0 8px; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted); }
-.pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0; font-size: var(--fs-body); line-height: var(--lh-small); }
-.pk-chart dt { color: var(--text-muted); }
-.pk-chart dd { margin: 0; color: var(--text-primary); }
+.pk-chart dl, .pk-funds dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0; font-size: var(--fs-body); line-height: var(--lh-small); }
+.pk-chart dt, .pk-funds dt { color: var(--text-muted); }
+.pk-chart dd, .pk-funds dd { margin: 0; color: var(--text-primary); }
 .pk-chart p { margin: 12px 0 0; font-size: var(--fs-small); line-height: var(--lh-small); color: var(--text-muted); }
 .pk-market { margin: 4px 0 16px; max-width: 560px; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-again { margin: var(--sp-12) 0 var(--sp-3); font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); color: var(--text-primary); letter-spacing:var(--ls-heading); }
@@ -164,17 +170,30 @@
   .pk-sub { display: none; }
   .pk-head { margin-bottom: 12px; }
   .pk-chooser { gap: var(--sp-3); }
-  /* Five tabs across a phone, each as wide as its own word needs
-     ("Momentum" is twice "Week"). The first word of a two-word name and the
-     holding time drop out; the list's own line under the tabs still says
-     how long it is held. */
+  /* Five setup tabs across a phone, each as wide as its own word needs
+     ("Technicals" is twice "Flow"). The first word of a two-word name and
+     the holding time drop out; the list's own line under the tabs still
+     says how long it is held. */
   .pk-tabs { flex-wrap: nowrap; justify-content: space-between; gap: 0 var(--sp-2); }
   .pk-tab, .pk-panel .pk-tab { flex: 0 1 auto; min-width: 0; min-height: 40px; align-items: flex-start; padding: var(--sp-2) 0;
     font-size: var(--fs-small); text-transform: capitalize; }
   .pk-tab i, .pk-tab small { display: none; }
-  .pk-chart dl { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
-  .pk-chart dd { margin-bottom: 8px; }
+  /* The three by holding time keep their thirds and their holding time
+     ("Swing / This month" reads "Swing"), and wrap rather than run wide. */
+  .pk-tabs.hold { gap: 0 var(--sp-3); }
+  .pk-tabs.hold .pk-tab { min-height: 48px; white-space: normal; text-transform: none; }
+  .pk-tabs.hold .pk-tab small { display: block; }
+  .pk-chart dl, .pk-funds dl { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
+  .pk-chart dd, .pk-funds dd { margin-bottom: 8px; }
   .pk-idea { margin: 12px 0 12px; }
+  /* The first pick stays on a phone's first screen with a record above it.
+     How long a list is held is on its tab and in every pick's plan, so the
+     list's line leaves it out here; the policy brief is its link alone; and
+     the lines between sit closer. */
+  .pk-idea span, .pk-brief-more { display: none; }
+  #view-ideas .pk-idea { margin-top: 12px; }
+  .pk-record { margin-bottom: 12px; }
+  .pk-live, #view-ideas #pickhead .pk-updated { margin-bottom: 8px; }
   .pk-record-n b { font-size: var(--fs-h2); line-height: var(--lh-h2); }
   .pk-record-n > span { padding: 8px 12px 12px; }
   .pk-record-n small { font-size: var(--fs-label); line-height: var(--lh-label); }

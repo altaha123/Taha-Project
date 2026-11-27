@@ -140,3 +140,17 @@ def test_list_and_stats_describe_the_same_population(feed, clean_tracker):
     t.add(_idea("AUTOONLY"), source="auto", force=True)
     assert t.listing(source="manual")["count"] == t.stats(source="manual")["total_tracked"]
     assert t.tracked_symbols() == {"MINE"}, "the Ideas button must reflect YOUR list"
+
+
+def test_every_list_keeps_its_own_clock_the_replaced_ones_too():
+    """An idea tracked from a list expires on that list's hold. This week and
+    momentum left the page in December 2026, and the ideas tracked from them
+    still expire on their own clocks, so every key stays, in this order."""
+    import leaders
+    import tracker
+    assert list(tracker.HORIZON_DAYS) == [
+        "momentum_breakout", "institutional_accumulation", "quality_at_discount", "turnaround",
+        "pick_week", "pick_month", "pick_results", "pick_momentum", "pick_long", "pick_short",
+        "pick_breakout", "pick_technical", "pick_quick", "pick_flow", "pick_emerging"]
+    for spec in leaders.LISTS.values():
+        assert tracker.HORIZON_DAYS[spec["setup_key"]] >= spec["hold_days"], spec["setup_key"]

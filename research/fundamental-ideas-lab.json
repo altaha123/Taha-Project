@@ -1,0 +1,5984 @@
+{
+ "generated": "2026-11-27",
+ "windows": {
+  "month": [
+   [
+    "2018-06-01",
+    "2021-12-31"
+   ],
+   [
+    "2022-01-01",
+    "2100-01-01"
+   ]
+  ],
+  "results": [
+   [
+    "2018-06-01",
+    "2021-12-31"
+   ],
+   [
+    "2022-01-01",
+    "2100-01-01"
+   ]
+  ],
+  "long": [
+   [
+    "2022-11-01",
+    "2024-04-30"
+   ],
+   [
+    "2024-05-01",
+    "2100-01-01"
+   ]
+  ]
+ },
+ "long_reference": [
+  "2018-06-01",
+  "2022-10-31"
+ ],
+ "round_trip_cost_pct": 0.49,
+ "rule": {
+  "min_first_picks": {
+   "month": 400,
+   "results": 250,
+   "long": 300
+  },
+  "tie_pp": 0.05,
+  "text": "Highest first-window mean lead over the average liquid stock, among versions with enough picks and a positive mean after a 0.49% round trip; within 0.05 points the one with fewer rules. The second window is printed whatever it shows."
+ },
+ "variants": {
+  "month": {
+   "M0": {
+    "overrides": {},
+    "rules": 7
+   },
+   "M1": {
+    "overrides": {
+     "sector_gate": false
+    },
+    "rules": 6
+   },
+   "M2": {
+    "overrides": {
+     "profit_guard": false,
+     "result_guard": false
+    },
+    "rules": 5
+   },
+   "M3": {
+    "overrides": {
+     "leader_floor": 0.7,
+     "pull_mix": {
+      "dip21": 1.0
+     }
+    },
+    "rules": 7
+   }
+  },
+  "results": {
+   "R1": {
+    "overrides": {
+     "floor": null,
+     "mix": {
+      "reaction": 1.0,
+      "volume": 0.0,
+      "growth": 0.0
+     }
+    },
+    "rules": 2
+   },
+   "R2": {
+    "overrides": {
+     "floor": "sma200_85",
+     "mix": {
+      "reaction": 1.0,
+      "volume": 0.0,
+      "growth": 0.0
+     }
+    },
+    "rules": 3
+   },
+   "R3": {
+    "overrides": {
+     "floor": "sma50",
+     "mix": {
+      "reaction": 1.0,
+      "volume": 0.0,
+      "growth": 0.0
+     }
+    },
+    "rules": 3
+   },
+   "R4": {
+    "overrides": {},
+    "rules": 5
+   },
+   "R5": {
+    "overrides": {
+     "floor": null
+    },
+    "rules": 4
+   }
+  },
+  "long": {
+   "L1": {
+    "overrides": {},
+    "rules": 6
+   },
+   "L2": {
+    "overrides": {
+     "_exit_pct": 25.0
+    },
+    "rules": 6
+   },
+   "L3": {
+    "overrides": {
+     "mix": {
+      "quality": 0.3,
+      "compounding": 0.25,
+      "governance": 0.15,
+      "valuation": 0.0,
+      "trendq": 0.3
+     }
+    },
+    "rules": 5
+   },
+   "L4": {
+    "overrides": {
+     "mix": {
+      "quality": 0.0,
+      "compounding": 0.0,
+      "governance": 0.0,
+      "valuation": 0.0,
+      "trendq": 1.0
+     }
+    },
+    "rules": 4
+   }
+  }
+ },
+ "records": {
+  "month": {
+   "M0": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 177,
+     "picks": 2386,
+     "up_pct": 56.8,
+     "beat_index_pct": 51.1,
+     "avg_pct": 2.54,
+     "median_pct": 1.64,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.2,
+     "best_5pct": 20.9,
+     "exit_hit_pct": 10.4,
+     "lists_ahead_of_index_pct": 62.7,
+     "avg_net_pct": 2.05,
+     "vs_index_pct": 1.06,
+     "vs_avg_stock_pct": 1.4,
+     "vs_avg_stock_net_pct": 0.91,
+     "vs_avg_stock_t": 2.23,
+     "lists_ahead_of_avg_stock_pct": 66.7,
+     "vs_eligible_pct": 1.12,
+     "vs_eligible_net_pct": 0.63,
+     "vs_eligible_t": 1.88,
+     "lists_ahead_of_eligible_pct": 63.3,
+     "member_premium_pct": 0.27,
+     "member_premium_t": 3.34
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3569,
+     "up_pct": 51.8,
+     "beat_index_pct": 48.3,
+     "avg_pct": 1.18,
+     "median_pct": 0.37,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.4,
+     "worst_5pct": -13.9,
+     "best_5pct": 19.1,
+     "exit_hit_pct": 13.8,
+     "lists_ahead_of_index_pct": 57.6,
+     "avg_net_pct": 0.69,
+     "vs_index_pct": 0.38,
+     "vs_avg_stock_pct": 0.26,
+     "vs_avg_stock_net_pct": -0.23,
+     "vs_avg_stock_t": 0.85,
+     "lists_ahead_of_avg_stock_pct": 55.9,
+     "vs_eligible_pct": 0.0,
+     "vs_eligible_net_pct": -0.49,
+     "vs_eligible_t": 0.01,
+     "lists_ahead_of_eligible_pct": 52.5,
+     "member_premium_pct": 0.25,
+     "member_premium_t": 5.12
+    },
+    "all": {
+     "list_dates": 482,
+     "picks": 6910,
+     "up_pct": 54.5,
+     "beat_index_pct": 49.6,
+     "avg_pct": 1.72,
+     "median_pct": 0.98,
+     "index_avg_pct": 1.13,
+     "big_winner_pct": 2.5,
+     "worst_5pct": -13.5,
+     "best_5pct": 19.1,
+     "exit_hit_pct": 11.8,
+     "lists_ahead_of_index_pct": 58.1,
+     "avg_net_pct": 1.23,
+     "vs_index_pct": 0.59,
+     "vs_avg_stock_pct": 0.73,
+     "vs_avg_stock_net_pct": 0.24,
+     "vs_avg_stock_t": 2.43,
+     "lists_ahead_of_avg_stock_pct": 59.5,
+     "vs_eligible_pct": 0.49,
+     "vs_eligible_net_pct": 0.0,
+     "vs_eligible_t": 1.72,
+     "lists_ahead_of_eligible_pct": 56.6,
+     "member_premium_pct": 0.23,
+     "member_premium_t": 5.29
+    }
+   },
+   "M1": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 177,
+     "picks": 2647,
+     "up_pct": 58.0,
+     "beat_index_pct": 50.9,
+     "avg_pct": 2.62,
+     "median_pct": 1.81,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.2,
+     "worst_5pct": -13.4,
+     "best_5pct": 21.2,
+     "exit_hit_pct": 10.8,
+     "lists_ahead_of_index_pct": 60.5,
+     "avg_net_pct": 2.13,
+     "vs_index_pct": 1.14,
+     "vs_avg_stock_pct": 1.4,
+     "vs_avg_stock_net_pct": 0.91,
+     "vs_avg_stock_t": 2.29,
+     "lists_ahead_of_avg_stock_pct": 63.8,
+     "vs_eligible_pct": 1.13,
+     "vs_eligible_net_pct": 0.64,
+     "vs_eligible_t": 1.91,
+     "lists_ahead_of_eligible_pct": 62.7,
+     "member_premium_pct": 0.27,
+     "member_premium_t": 3.34
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3569,
+     "up_pct": 51.7,
+     "beat_index_pct": 48.3,
+     "avg_pct": 1.23,
+     "median_pct": 0.44,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.3,
+     "worst_5pct": -13.8,
+     "best_5pct": 19.6,
+     "exit_hit_pct": 13.6,
+     "lists_ahead_of_index_pct": 58.0,
+     "avg_net_pct": 0.74,
+     "vs_index_pct": 0.43,
+     "vs_avg_stock_pct": 0.31,
+     "vs_avg_stock_net_pct": -0.18,
+     "vs_avg_stock_t": 1.02,
+     "lists_ahead_of_avg_stock_pct": 55.0,
+     "vs_eligible_pct": 0.05,
+     "vs_eligible_net_pct": -0.44,
+     "vs_eligible_t": 0.17,
+     "lists_ahead_of_eligible_pct": 50.4,
+     "member_premium_pct": 0.25,
+     "member_premium_t": 5.12
+    },
+    "all": {
+     "list_dates": 482,
+     "picks": 7219,
+     "up_pct": 55.1,
+     "beat_index_pct": 49.8,
+     "avg_pct": 1.84,
+     "median_pct": 1.13,
+     "index_avg_pct": 1.13,
+     "big_winner_pct": 2.5,
+     "worst_5pct": -13.5,
+     "best_5pct": 19.6,
+     "exit_hit_pct": 11.8,
+     "lists_ahead_of_index_pct": 58.1,
+     "avg_net_pct": 1.35,
+     "vs_index_pct": 0.71,
+     "vs_avg_stock_pct": 0.78,
+     "vs_avg_stock_net_pct": 0.29,
+     "vs_avg_stock_t": 2.67,
+     "lists_ahead_of_avg_stock_pct": 57.3,
+     "vs_eligible_pct": 0.54,
+     "vs_eligible_net_pct": 0.05,
+     "vs_eligible_t": 1.92,
+     "lists_ahead_of_eligible_pct": 54.8,
+     "member_premium_pct": 0.23,
+     "member_premium_t": 5.29
+    }
+   },
+   "M2": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 177,
+     "picks": 2448,
+     "up_pct": 57.3,
+     "beat_index_pct": 51.4,
+     "avg_pct": 2.49,
+     "median_pct": 1.71,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.2,
+     "worst_5pct": -13.2,
+     "best_5pct": 20.7,
+     "exit_hit_pct": 10.0,
+     "lists_ahead_of_index_pct": 62.1,
+     "avg_net_pct": 2.0,
+     "vs_index_pct": 1.01,
+     "vs_avg_stock_pct": 1.34,
+     "vs_avg_stock_net_pct": 0.85,
+     "vs_avg_stock_t": 2.2,
+     "lists_ahead_of_avg_stock_pct": 67.8,
+     "vs_eligible_pct": 1.06,
+     "vs_eligible_net_pct": 0.57,
+     "vs_eligible_t": 1.87,
+     "lists_ahead_of_eligible_pct": 62.7,
+     "member_premium_pct": 0.27,
+     "member_premium_t": 3.34
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3570,
+     "up_pct": 51.0,
+     "beat_index_pct": 47.5,
+     "avg_pct": 1.01,
+     "median_pct": 0.21,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.3,
+     "worst_5pct": -13.9,
+     "best_5pct": 18.7,
+     "exit_hit_pct": 13.9,
+     "lists_ahead_of_index_pct": 51.7,
+     "avg_net_pct": 0.52,
+     "vs_index_pct": 0.21,
+     "vs_avg_stock_pct": 0.09,
+     "vs_avg_stock_net_pct": -0.4,
+     "vs_avg_stock_t": 0.29,
+     "lists_ahead_of_avg_stock_pct": 52.9,
+     "vs_eligible_pct": -0.17,
+     "vs_eligible_net_pct": -0.66,
+     "vs_eligible_t": -0.58,
+     "lists_ahead_of_eligible_pct": 48.3,
+     "member_premium_pct": 0.25,
+     "member_premium_t": 5.12
+    },
+    "all": {
+     "list_dates": 482,
+     "picks": 6973,
+     "up_pct": 54.2,
+     "beat_index_pct": 49.3,
+     "avg_pct": 1.62,
+     "median_pct": 0.9,
+     "index_avg_pct": 1.13,
+     "big_winner_pct": 2.5,
+     "worst_5pct": -13.5,
+     "best_5pct": 19.1,
+     "exit_hit_pct": 11.7,
+     "lists_ahead_of_index_pct": 55.0,
+     "avg_net_pct": 1.13,
+     "vs_index_pct": 0.49,
+     "vs_avg_stock_pct": 0.62,
+     "vs_avg_stock_net_pct": 0.13,
+     "vs_avg_stock_t": 2.13,
+     "lists_ahead_of_avg_stock_pct": 58.5,
+     "vs_eligible_pct": 0.38,
+     "vs_eligible_net_pct": -0.11,
+     "vs_eligible_t": 1.39,
+     "lists_ahead_of_eligible_pct": 54.4,
+     "member_premium_pct": 0.23,
+     "member_premium_t": 5.29
+    }
+   },
+   "M3": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 177,
+     "picks": 2316,
+     "up_pct": 56.4,
+     "beat_index_pct": 50.0,
+     "avg_pct": 2.57,
+     "median_pct": 1.52,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.5,
+     "worst_5pct": -13.1,
+     "best_5pct": 21.2,
+     "exit_hit_pct": 10.4,
+     "lists_ahead_of_index_pct": 64.4,
+     "avg_net_pct": 2.08,
+     "vs_index_pct": 1.09,
+     "vs_avg_stock_pct": 1.49,
+     "vs_avg_stock_net_pct": 1.0,
+     "vs_avg_stock_t": 2.39,
+     "lists_ahead_of_avg_stock_pct": 63.8,
+     "vs_eligible_pct": 1.22,
+     "vs_eligible_net_pct": 0.73,
+     "vs_eligible_t": 2.06,
+     "lists_ahead_of_eligible_pct": 61.0,
+     "member_premium_pct": 0.27,
+     "member_premium_t": 3.34
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3562,
+     "up_pct": 50.6,
+     "beat_index_pct": 47.3,
+     "avg_pct": 1.14,
+     "median_pct": 0.16,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.6,
+     "worst_5pct": -14.0,
+     "best_5pct": 19.3,
+     "exit_hit_pct": 14.4,
+     "lists_ahead_of_index_pct": 52.9,
+     "avg_net_pct": 0.65,
+     "vs_index_pct": 0.34,
+     "vs_avg_stock_pct": 0.22,
+     "vs_avg_stock_net_pct": -0.27,
+     "vs_avg_stock_t": 0.64,
+     "lists_ahead_of_avg_stock_pct": 54.2,
+     "vs_eligible_pct": -0.04,
+     "vs_eligible_net_pct": -0.53,
+     "vs_eligible_t": -0.11,
+     "lists_ahead_of_eligible_pct": 49.2,
+     "member_premium_pct": 0.25,
+     "member_premium_t": 5.12
+    },
+    "all": {
+     "list_dates": 482,
+     "picks": 6765,
+     "up_pct": 53.6,
+     "beat_index_pct": 48.6,
+     "avg_pct": 1.68,
+     "median_pct": 0.85,
+     "index_avg_pct": 1.13,
+     "big_winner_pct": 2.7,
+     "worst_5pct": -13.6,
+     "best_5pct": 19.3,
+     "exit_hit_pct": 12.2,
+     "lists_ahead_of_index_pct": 56.4,
+     "avg_net_pct": 1.19,
+     "vs_index_pct": 0.55,
+     "vs_avg_stock_pct": 0.71,
+     "vs_avg_stock_net_pct": 0.22,
+     "vs_avg_stock_t": 2.29,
+     "lists_ahead_of_avg_stock_pct": 56.2,
+     "vs_eligible_pct": 0.48,
+     "vs_eligible_net_pct": -0.01,
+     "vs_eligible_t": 1.6,
+     "lists_ahead_of_eligible_pct": 53.9,
+     "member_premium_pct": 0.23,
+     "member_premium_t": 5.29
+    }
+   }
+  },
+  "results": {
+   "R1": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 91,
+     "picks": 1261,
+     "up_pct": 55.2,
+     "beat_index_pct": 47.4,
+     "avg_pct": 2.39,
+     "median_pct": 1.28,
+     "index_avg_pct": 1.55,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.5,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 11.4,
+     "lists_ahead_of_index_pct": 57.1,
+     "avg_net_pct": 1.9,
+     "vs_index_pct": 0.84,
+     "vs_avg_stock_pct": 0.86,
+     "vs_avg_stock_net_pct": 0.37,
+     "vs_avg_stock_t": 1.08,
+     "lists_ahead_of_avg_stock_pct": 57.1
+    },
+    "second": {
+     "list_dates": 119,
+     "picks": 1737,
+     "up_pct": 55.8,
+     "beat_index_pct": 51.4,
+     "avg_pct": 1.84,
+     "median_pct": 1.23,
+     "index_avg_pct": 0.9,
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.7,
+     "best_5pct": 21.5,
+     "exit_hit_pct": 14.6,
+     "lists_ahead_of_index_pct": 61.3,
+     "avg_net_pct": 1.35,
+     "vs_index_pct": 0.94,
+     "vs_avg_stock_pct": 0.89,
+     "vs_avg_stock_net_pct": 0.4,
+     "vs_avg_stock_t": 4.03,
+     "lists_ahead_of_avg_stock_pct": 63.0
+    },
+    "all": {
+     "list_dates": 210,
+     "picks": 2998,
+     "up_pct": 55.6,
+     "beat_index_pct": 49.7,
+     "avg_pct": 2.07,
+     "median_pct": 1.25,
+     "index_avg_pct": 1.18,
+     "big_winner_pct": 3.1,
+     "worst_5pct": -13.6,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 13.3,
+     "lists_ahead_of_index_pct": 59.5,
+     "avg_net_pct": 1.58,
+     "vs_index_pct": 0.89,
+     "vs_avg_stock_pct": 0.88,
+     "vs_avg_stock_net_pct": 0.39,
+     "vs_avg_stock_t": 2.4,
+     "lists_ahead_of_avg_stock_pct": 60.5
+    }
+   },
+   "R2": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 87,
+     "picks": 1195,
+     "up_pct": 54.3,
+     "beat_index_pct": 47.7,
+     "avg_pct": 2.06,
+     "median_pct": 1.11,
+     "index_avg_pct": 1.25,
+     "big_winner_pct": 2.7,
+     "worst_5pct": -13.4,
+     "best_5pct": 20.1,
+     "exit_hit_pct": 11.5,
+     "lists_ahead_of_index_pct": 51.7,
+     "avg_net_pct": 1.57,
+     "vs_index_pct": 0.81,
+     "vs_avg_stock_pct": 1.02,
+     "vs_avg_stock_net_pct": 0.53,
+     "vs_avg_stock_t": 1.37,
+     "lists_ahead_of_avg_stock_pct": 56.3
+    },
+    "second": {
+     "list_dates": 118,
+     "picks": 1719,
+     "up_pct": 55.3,
+     "beat_index_pct": 50.7,
+     "avg_pct": 1.68,
+     "median_pct": 1.11,
+     "index_avg_pct": 0.84,
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.8,
+     "best_5pct": 21.4,
+     "exit_hit_pct": 14.8,
+     "lists_ahead_of_index_pct": 57.6,
+     "avg_net_pct": 1.19,
+     "vs_index_pct": 0.84,
+     "vs_avg_stock_pct": 0.76,
+     "vs_avg_stock_net_pct": 0.27,
+     "vs_avg_stock_t": 3.41,
+     "lists_ahead_of_avg_stock_pct": 58.5
+    },
+    "all": {
+     "list_dates": 205,
+     "picks": 2914,
+     "up_pct": 54.9,
+     "beat_index_pct": 49.5,
+     "avg_pct": 1.84,
+     "median_pct": 1.11,
+     "index_avg_pct": 1.01,
+     "big_winner_pct": 2.8,
+     "worst_5pct": -13.7,
+     "best_5pct": 20.8,
+     "exit_hit_pct": 13.5,
+     "lists_ahead_of_index_pct": 55.1,
+     "avg_net_pct": 1.35,
+     "vs_index_pct": 0.83,
+     "vs_avg_stock_pct": 0.87,
+     "vs_avg_stock_net_pct": 0.38,
+     "vs_avg_stock_t": 2.55,
+     "lists_ahead_of_avg_stock_pct": 57.6
+    }
+   },
+   "R3": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 72,
+     "picks": 939,
+     "up_pct": 52.2,
+     "beat_index_pct": 48.2,
+     "avg_pct": 2.2,
+     "median_pct": 0.68,
+     "index_avg_pct": 1.08,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.3,
+     "best_5pct": 20.9,
+     "exit_hit_pct": 11.3,
+     "lists_ahead_of_index_pct": 50.0,
+     "avg_net_pct": 1.71,
+     "vs_index_pct": 1.12,
+     "vs_avg_stock_pct": 0.99,
+     "vs_avg_stock_net_pct": 0.5,
+     "vs_avg_stock_t": 1.03,
+     "lists_ahead_of_avg_stock_pct": 51.4
+    },
+    "second": {
+     "list_dates": 114,
+     "picks": 1612,
+     "up_pct": 57.1,
+     "beat_index_pct": 52.3,
+     "avg_pct": 2.21,
+     "median_pct": 1.49,
+     "index_avg_pct": 0.79,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.7,
+     "best_5pct": 21.8,
+     "exit_hit_pct": 14.0,
+     "lists_ahead_of_index_pct": 64.0,
+     "avg_net_pct": 1.72,
+     "vs_index_pct": 1.42,
+     "vs_avg_stock_pct": 1.22,
+     "vs_avg_stock_net_pct": 0.73,
+     "vs_avg_stock_t": 4.11,
+     "lists_ahead_of_avg_stock_pct": 64.9
+    },
+    "all": {
+     "list_dates": 186,
+     "picks": 2551,
+     "up_pct": 55.3,
+     "beat_index_pct": 50.8,
+     "avg_pct": 2.21,
+     "median_pct": 1.25,
+     "index_avg_pct": 0.9,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.5,
+     "best_5pct": 21.7,
+     "exit_hit_pct": 13.0,
+     "lists_ahead_of_index_pct": 58.6,
+     "avg_net_pct": 1.72,
+     "vs_index_pct": 1.31,
+     "vs_avg_stock_pct": 1.13,
+     "vs_avg_stock_net_pct": 0.64,
+     "vs_avg_stock_t": 2.74,
+     "lists_ahead_of_avg_stock_pct": 59.7
+    }
+   },
+   "R4": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 87,
+     "picks": 1195,
+     "up_pct": 55.1,
+     "beat_index_pct": 48.2,
+     "avg_pct": 2.08,
+     "median_pct": 1.19,
+     "index_avg_pct": 1.25,
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.5,
+     "best_5pct": 20.0,
+     "exit_hit_pct": 11.5,
+     "lists_ahead_of_index_pct": 56.3,
+     "avg_net_pct": 1.59,
+     "vs_index_pct": 0.83,
+     "vs_avg_stock_pct": 1.17,
+     "vs_avg_stock_net_pct": 0.68,
+     "vs_avg_stock_t": 1.65,
+     "lists_ahead_of_avg_stock_pct": 54.0
+    },
+    "second": {
+     "list_dates": 118,
+     "picks": 1719,
+     "up_pct": 54.9,
+     "beat_index_pct": 49.7,
+     "avg_pct": 1.63,
+     "median_pct": 1.09,
+     "index_avg_pct": 0.84,
+     "big_winner_pct": 3.1,
+     "worst_5pct": -13.9,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 15.5,
+     "lists_ahead_of_index_pct": 56.8,
+     "avg_net_pct": 1.14,
+     "vs_index_pct": 0.79,
+     "vs_avg_stock_pct": 0.7,
+     "vs_avg_stock_net_pct": 0.21,
+     "vs_avg_stock_t": 2.68,
+     "lists_ahead_of_avg_stock_pct": 58.5
+    },
+    "all": {
+     "list_dates": 205,
+     "picks": 2914,
+     "up_pct": 55.0,
+     "beat_index_pct": 49.1,
+     "avg_pct": 1.81,
+     "median_pct": 1.14,
+     "index_avg_pct": 1.01,
+     "big_winner_pct": 3.0,
+     "worst_5pct": -13.7,
+     "best_5pct": 21.1,
+     "exit_hit_pct": 13.9,
+     "lists_ahead_of_index_pct": 56.6,
+     "avg_net_pct": 1.32,
+     "vs_index_pct": 0.8,
+     "vs_avg_stock_pct": 0.9,
+     "vs_avg_stock_net_pct": 0.41,
+     "vs_avg_stock_t": 2.66,
+     "lists_ahead_of_avg_stock_pct": 56.6
+    }
+   },
+   "R5": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 91,
+     "picks": 1261,
+     "up_pct": 55.9,
+     "beat_index_pct": 47.7,
+     "avg_pct": 2.31,
+     "median_pct": 1.47,
+     "index_avg_pct": 1.55,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.6,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 11.6,
+     "lists_ahead_of_index_pct": 57.1,
+     "avg_net_pct": 1.82,
+     "vs_index_pct": 0.76,
+     "vs_avg_stock_pct": 0.9,
+     "vs_avg_stock_net_pct": 0.41,
+     "vs_avg_stock_t": 1.23,
+     "lists_ahead_of_avg_stock_pct": 53.8
+    },
+    "second": {
+     "list_dates": 119,
+     "picks": 1737,
+     "up_pct": 55.5,
+     "beat_index_pct": 50.7,
+     "avg_pct": 1.78,
+     "median_pct": 1.23,
+     "index_avg_pct": 0.9,
+     "big_winner_pct": 3.2,
+     "worst_5pct": -13.8,
+     "best_5pct": 21.7,
+     "exit_hit_pct": 15.3,
+     "lists_ahead_of_index_pct": 60.5,
+     "avg_net_pct": 1.29,
+     "vs_index_pct": 0.88,
+     "vs_avg_stock_pct": 0.84,
+     "vs_avg_stock_net_pct": 0.35,
+     "vs_avg_stock_t": 3.31,
+     "lists_ahead_of_avg_stock_pct": 63.0
+    },
+    "all": {
+     "list_dates": 210,
+     "picks": 2998,
+     "up_pct": 55.7,
+     "beat_index_pct": 49.4,
+     "avg_pct": 2.01,
+     "median_pct": 1.31,
+     "index_avg_pct": 1.18,
+     "big_winner_pct": 3.3,
+     "worst_5pct": -13.7,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 13.7,
+     "lists_ahead_of_index_pct": 59.0,
+     "avg_net_pct": 1.52,
+     "vs_index_pct": 0.83,
+     "vs_avg_stock_pct": 0.86,
+     "vs_avg_stock_net_pct": 0.37,
+     "vs_avg_stock_t": 2.48,
+     "lists_ahead_of_avg_stock_pct": 59.0
+    }
+   }
+  },
+  "long": {
+   "L1": {
+    "exit_pct": 30.0,
+    "hold_sessions": 252,
+    "first": {
+     "list_dates": 74,
+     "picks": 1110,
+     "up_pct": 81.1,
+     "beat_index_pct": 60.1,
+     "avg_pct": 49.67,
+     "median_pct": 37.5,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 60.4,
+     "worst_5pct": -30.3,
+     "best_5pct": 166.7,
+     "exit_hit_pct": 5.9,
+     "lists_ahead_of_index_pct": 81.1,
+     "avg_net_pct": 49.18,
+     "vs_index_pct": 23.29,
+     "vs_avg_stock_pct": 4.87,
+     "vs_avg_stock_net_pct": 4.38,
+     "vs_avg_stock_t": 2.13,
+     "lists_ahead_of_avg_stock_pct": 63.5
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1155,
+     "up_pct": 49.7,
+     "beat_index_pct": 46.9,
+     "avg_pct": 6.53,
+     "median_pct": -0.18,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 29.9,
+     "worst_5pct": -32.4,
+     "best_5pct": 71.8,
+     "exit_hit_pct": 28.9,
+     "lists_ahead_of_index_pct": 64.9,
+     "avg_net_pct": 6.04,
+     "vs_index_pct": 4.29,
+     "vs_avg_stock_pct": 5.13,
+     "vs_avg_stock_net_pct": 4.64,
+     "vs_avg_stock_t": 3.89,
+     "lists_ahead_of_avg_stock_pct": 75.3
+    },
+    "all": {
+     "list_dates": 436,
+     "picks": 6512,
+     "up_pct": 58.4,
+     "beat_index_pct": 47.3,
+     "avg_pct": 21.88,
+     "median_pct": 9.32,
+     "index_avg_pct": 13.7,
+     "big_winner_pct": 36.5,
+     "worst_5pct": -32.7,
+     "best_5pct": 120.6,
+     "exit_hit_pct": 23.2,
+     "lists_ahead_of_index_pct": 54.1,
+     "avg_net_pct": 21.39,
+     "vs_index_pct": 8.18,
+     "vs_avg_stock_pct": 5.74,
+     "vs_avg_stock_net_pct": 5.25,
+     "vs_avg_stock_t": 2.35,
+     "lists_ahead_of_avg_stock_pct": 64.4
+    },
+    "reference_2018_22": {
+     "list_dates": 218,
+     "picks": 3256,
+     "up_pct": 57.4,
+     "beat_index_pct": 46.3,
+     "avg_pct": 24.44,
+     "median_pct": 8.13,
+     "index_avg_pct": 15.54,
+     "big_winner_pct": 35.7,
+     "worst_5pct": -33.4,
+     "best_5pct": 132.8,
+     "exit_hit_pct": 26.0,
+     "lists_ahead_of_index_pct": 53.7,
+     "avg_net_pct": 23.95,
+     "vs_index_pct": 8.9,
+     "vs_avg_stock_pct": 6.64,
+     "vs_avg_stock_net_pct": 6.15,
+     "vs_avg_stock_t": 1.42,
+     "lists_ahead_of_avg_stock_pct": 58.3
+    }
+   },
+   "L2": {
+    "exit_pct": 25.0,
+    "hold_sessions": 252,
+    "first": {
+     "list_dates": 74,
+     "picks": 1110,
+     "up_pct": 80.1,
+     "beat_index_pct": 59.3,
+     "avg_pct": 48.99,
+     "median_pct": 36.99,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 59.6,
+     "worst_5pct": -26.1,
+     "best_5pct": 166.7,
+     "exit_hit_pct": 10.1,
+     "lists_ahead_of_index_pct": 79.7,
+     "avg_net_pct": 48.5,
+     "vs_index_pct": 22.61,
+     "vs_avg_stock_pct": 4.19,
+     "vs_avg_stock_net_pct": 3.7,
+     "vs_avg_stock_t": 1.9,
+     "lists_ahead_of_avg_stock_pct": 60.8
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1155,
+     "up_pct": 46.2,
+     "beat_index_pct": 44.0,
+     "avg_pct": 5.73,
+     "median_pct": -3.89,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 29.0,
+     "worst_5pct": -27.8,
+     "best_5pct": 71.6,
+     "exit_hit_pct": 39.4,
+     "lists_ahead_of_index_pct": 58.4,
+     "avg_net_pct": 5.24,
+     "vs_index_pct": 3.49,
+     "vs_avg_stock_pct": 4.33,
+     "vs_avg_stock_net_pct": 3.84,
+     "vs_avg_stock_t": 3.36,
+     "lists_ahead_of_avg_stock_pct": 71.4
+    },
+    "all": {
+     "list_dates": 436,
+     "picks": 6516,
+     "up_pct": 55.9,
+     "beat_index_pct": 45.0,
+     "avg_pct": 20.98,
+     "median_pct": 7.04,
+     "index_avg_pct": 13.7,
+     "big_winner_pct": 35.5,
+     "worst_5pct": -28.3,
+     "best_5pct": 119.5,
+     "exit_hit_pct": 31.1,
+     "lists_ahead_of_index_pct": 51.1,
+     "avg_net_pct": 20.49,
+     "vs_index_pct": 7.28,
+     "vs_avg_stock_pct": 4.86,
+     "vs_avg_stock_net_pct": 4.37,
+     "vs_avg_stock_t": 1.79,
+     "lists_ahead_of_avg_stock_pct": 62.2
+    },
+    "reference_2018_22": {
+     "list_dates": 218,
+     "picks": 3260,
+     "up_pct": 54.1,
+     "beat_index_pct": 43.0,
+     "avg_pct": 22.97,
+     "median_pct": 5.32,
+     "index_avg_pct": 15.54,
+     "big_winner_pct": 34.2,
+     "worst_5pct": -29.1,
+     "best_5pct": 130.6,
+     "exit_hit_pct": 34.4,
+     "lists_ahead_of_index_pct": 50.0,
+     "avg_net_pct": 22.48,
+     "vs_index_pct": 7.43,
+     "vs_avg_stock_pct": 5.21,
+     "vs_avg_stock_net_pct": 4.72,
+     "vs_avg_stock_t": 1.0,
+     "lists_ahead_of_avg_stock_pct": 55.0
+    }
+   },
+   "L3": {
+    "exit_pct": 30.0,
+    "hold_sessions": 252,
+    "first": {
+     "list_dates": 74,
+     "picks": 1110,
+     "up_pct": 82.4,
+     "beat_index_pct": 60.5,
+     "avg_pct": 46.72,
+     "median_pct": 36.37,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 61.2,
+     "worst_5pct": -30.4,
+     "best_5pct": 152.0,
+     "exit_hit_pct": 6.0,
+     "lists_ahead_of_index_pct": 87.8,
+     "avg_net_pct": 46.23,
+     "vs_index_pct": 20.34,
+     "vs_avg_stock_pct": 1.92,
+     "vs_avg_stock_net_pct": 1.43,
+     "vs_avg_stock_t": 2.39,
+     "lists_ahead_of_avg_stock_pct": 62.2
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1155,
+     "up_pct": 46.1,
+     "beat_index_pct": 43.1,
+     "avg_pct": 1.78,
+     "median_pct": -4.04,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 23.8,
+     "worst_5pct": -32.3,
+     "best_5pct": 61.4,
+     "exit_hit_pct": 30.7,
+     "lists_ahead_of_index_pct": 51.9,
+     "avg_net_pct": 1.29,
+     "vs_index_pct": -0.46,
+     "vs_avg_stock_pct": 0.38,
+     "vs_avg_stock_net_pct": -0.11,
+     "vs_avg_stock_t": 0.33,
+     "lists_ahead_of_avg_stock_pct": 49.4
+    },
+    "all": {
+     "list_dates": 436,
+     "picks": 6509,
+     "up_pct": 58.0,
+     "beat_index_pct": 46.8,
+     "avg_pct": 20.85,
+     "median_pct": 8.29,
+     "index_avg_pct": 13.7,
+     "big_winner_pct": 35.2,
+     "worst_5pct": -32.7,
+     "best_5pct": 118.7,
+     "exit_hit_pct": 23.2,
+     "lists_ahead_of_index_pct": 53.0,
+     "avg_net_pct": 20.36,
+     "vs_index_pct": 7.15,
+     "vs_avg_stock_pct": 4.78,
+     "vs_avg_stock_net_pct": 4.29,
+     "vs_avg_stock_t": 1.66,
+     "lists_ahead_of_avg_stock_pct": 60.6
+    },
+    "reference_2018_22": {
+     "list_dates": 218,
+     "picks": 3253,
+     "up_pct": 57.5,
+     "beat_index_pct": 46.5,
+     "avg_pct": 25.07,
+     "median_pct": 7.54,
+     "index_avg_pct": 15.54,
+     "big_winner_pct": 35.1,
+     "worst_5pct": -33.5,
+     "best_5pct": 142.3,
+     "exit_hit_pct": 25.1,
+     "lists_ahead_of_index_pct": 53.7,
+     "avg_net_pct": 24.58,
+     "vs_index_pct": 9.53,
+     "vs_avg_stock_pct": 7.4,
+     "vs_avg_stock_net_pct": 6.91,
+     "vs_avg_stock_t": 1.41,
+     "lists_ahead_of_avg_stock_pct": 60.1
+    }
+   },
+   "L4": {
+    "exit_pct": 30.0,
+    "hold_sessions": 252,
+    "first": {
+     "list_dates": 74,
+     "picks": 1093,
+     "up_pct": 77.4,
+     "beat_index_pct": 54.6,
+     "avg_pct": 46.1,
+     "median_pct": 30.79,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 55.2,
+     "worst_5pct": -30.5,
+     "best_5pct": 183.9,
+     "exit_hit_pct": 6.9,
+     "lists_ahead_of_index_pct": 74.3,
+     "avg_net_pct": 45.61,
+     "vs_index_pct": 19.72,
+     "vs_avg_stock_pct": 1.21,
+     "vs_avg_stock_net_pct": 0.72,
+     "vs_avg_stock_t": 0.38,
+     "lists_ahead_of_avg_stock_pct": 48.6
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1137,
+     "up_pct": 39.8,
+     "beat_index_pct": 36.4,
+     "avg_pct": 1.83,
+     "median_pct": -8.17,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 20.1,
+     "worst_5pct": -32.0,
+     "best_5pct": 75.1,
+     "exit_hit_pct": 28.0,
+     "lists_ahead_of_index_pct": 44.2,
+     "avg_net_pct": 1.34,
+     "vs_index_pct": -0.41,
+     "vs_avg_stock_pct": 0.6,
+     "vs_avg_stock_net_pct": 0.11,
+     "vs_avg_stock_t": 0.31,
+     "lists_ahead_of_avg_stock_pct": 44.2
+    },
+    "all": {
+     "list_dates": 436,
+     "picks": 6449,
+     "up_pct": 57.4,
+     "beat_index_pct": 45.9,
+     "avg_pct": 22.29,
+     "median_pct": 6.97,
+     "index_avg_pct": 13.7,
+     "big_winner_pct": 34.1,
+     "worst_5pct": -32.6,
+     "best_5pct": 128.6,
+     "exit_hit_pct": 22.1,
+     "lists_ahead_of_index_pct": 53.7,
+     "avg_net_pct": 21.8,
+     "vs_index_pct": 8.59,
+     "vs_avg_stock_pct": 6.36,
+     "vs_avg_stock_net_pct": 5.87,
+     "vs_avg_stock_t": 1.78,
+     "lists_ahead_of_avg_stock_pct": 59.2
+    },
+    "reference_2018_22": {
+     "list_dates": 218,
+     "picks": 3228,
+     "up_pct": 60.1,
+     "beat_index_pct": 49.1,
+     "avg_pct": 28.2,
+     "median_pct": 9.32,
+     "index_avg_pct": 15.54,
+     "big_winner_pct": 36.2,
+     "worst_5pct": -33.4,
+     "best_5pct": 176.8,
+     "exit_hit_pct": 23.7,
+     "lists_ahead_of_index_pct": 62.4,
+     "avg_net_pct": 27.71,
+     "vs_index_pct": 12.66,
+     "vs_avg_stock_pct": 10.73,
+     "vs_avg_stock_net_pct": 10.24,
+     "vs_avg_stock_t": 1.73,
+     "lists_ahead_of_avg_stock_pct": 63.8
+    }
+   }
+  }
+ },
+ "before": {
+  "month": {
+   "week": {
+    "exit_pct": 7.0,
+    "hold_sessions": 5,
+    "first": {
+     "list_dates": 177,
+     "picks": 2653,
+     "up_pct": 52.7,
+     "beat_index_pct": 48.7,
+     "avg_pct": 0.53,
+     "median_pct": 0.27,
+     "index_avg_pct": 0.32,
+     "big_winner_pct": 0.3,
+     "worst_5pct": -8.0,
+     "best_5pct": 8.9,
+     "exit_hit_pct": 8.2,
+     "lists_ahead_of_index_pct": 52.5,
+     "avg_net_pct": 0.04,
+     "vs_index_pct": 0.21,
+     "vs_avg_stock_pct": 0.41,
+     "vs_avg_stock_net_pct": -0.08,
+     "vs_avg_stock_t": 2.89,
+     "lists_ahead_of_avg_stock_pct": 58.2,
+     "vs_eligible_pct": 0.33,
+     "vs_eligible_net_pct": -0.16,
+     "vs_eligible_t": 2.44,
+     "lists_ahead_of_eligible_pct": 57.6,
+     "member_premium_pct": 0.08,
+     "member_premium_t": 3.98
+    },
+    "second": {
+     "list_dates": 241,
+     "picks": 3615,
+     "up_pct": 51.1,
+     "beat_index_pct": 49.1,
+     "avg_pct": 0.29,
+     "median_pct": 0.09,
+     "index_avg_pct": 0.21,
+     "big_winner_pct": 0.2,
+     "worst_5pct": -8.6,
+     "best_5pct": 9.5,
+     "exit_hit_pct": 10.7,
+     "lists_ahead_of_index_pct": 53.5,
+     "avg_net_pct": -0.2,
+     "vs_index_pct": 0.08,
+     "vs_avg_stock_pct": 0.22,
+     "vs_avg_stock_net_pct": -0.27,
+     "vs_avg_stock_t": 2.09,
+     "lists_ahead_of_avg_stock_pct": 56.4,
+     "vs_eligible_pct": 0.15,
+     "vs_eligible_net_pct": -0.34,
+     "vs_eligible_t": 1.46,
+     "lists_ahead_of_eligible_pct": 56.4,
+     "member_premium_pct": 0.06,
+     "member_premium_t": 5.24
+    },
+    "all": {
+     "list_dates": 485,
+     "picks": 7273,
+     "up_pct": 52.3,
+     "beat_index_pct": 48.9,
+     "avg_pct": 0.42,
+     "median_pct": 0.25,
+     "index_avg_pct": 0.27,
+     "big_winner_pct": 0.3,
+     "worst_5pct": -8.2,
+     "best_5pct": 9.1,
+     "exit_hit_pct": 9.0,
+     "lists_ahead_of_index_pct": 52.4,
+     "avg_net_pct": -0.07,
+     "vs_index_pct": 0.15,
+     "vs_avg_stock_pct": 0.31,
+     "vs_avg_stock_net_pct": -0.18,
+     "vs_avg_stock_t": 3.99,
+     "lists_ahead_of_avg_stock_pct": 57.5,
+     "vs_eligible_pct": 0.25,
+     "vs_eligible_net_pct": -0.24,
+     "vs_eligible_t": 3.27,
+     "lists_ahead_of_eligible_pct": 56.9,
+     "member_premium_pct": 0.06,
+     "member_premium_t": 5.67
+    }
+   },
+   "month": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 177,
+     "picks": 2649,
+     "up_pct": 56.5,
+     "beat_index_pct": 49.6,
+     "avg_pct": 2.67,
+     "median_pct": 1.6,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.1,
+     "worst_5pct": -13.3,
+     "best_5pct": 21.1,
+     "exit_hit_pct": 9.9,
+     "lists_ahead_of_index_pct": 63.3,
+     "avg_net_pct": 2.18,
+     "vs_index_pct": 1.19,
+     "vs_avg_stock_pct": 1.45,
+     "vs_avg_stock_net_pct": 0.96,
+     "vs_avg_stock_t": 2.46,
+     "lists_ahead_of_avg_stock_pct": 62.7,
+     "vs_eligible_pct": 1.17,
+     "vs_eligible_net_pct": 0.68,
+     "vs_eligible_t": 2.08,
+     "lists_ahead_of_eligible_pct": 60.5,
+     "member_premium_pct": 0.27,
+     "member_premium_t": 3.34
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3569,
+     "up_pct": 51.5,
+     "beat_index_pct": 47.6,
+     "avg_pct": 1.05,
+     "median_pct": 0.35,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 1.8,
+     "worst_5pct": -13.5,
+     "best_5pct": 18.3,
+     "exit_hit_pct": 12.8,
+     "lists_ahead_of_index_pct": 56.3,
+     "avg_net_pct": 0.56,
+     "vs_index_pct": 0.25,
+     "vs_avg_stock_pct": 0.13,
+     "vs_avg_stock_net_pct": -0.36,
+     "vs_avg_stock_t": 0.46,
+     "lists_ahead_of_avg_stock_pct": 52.9,
+     "vs_eligible_pct": -0.13,
+     "vs_eligible_net_pct": -0.62,
+     "vs_eligible_t": -0.46,
+     "lists_ahead_of_eligible_pct": 47.5,
+     "member_premium_pct": 0.25,
+     "member_premium_t": 5.12
+    },
+    "all": {
+     "list_dates": 482,
+     "picks": 7222,
+     "up_pct": 54.2,
+     "beat_index_pct": 48.8,
+     "avg_pct": 1.76,
+     "median_pct": 0.91,
+     "index_avg_pct": 1.13,
+     "big_winner_pct": 2.3,
+     "worst_5pct": -13.3,
+     "best_5pct": 19.0,
+     "exit_hit_pct": 11.0,
+     "lists_ahead_of_index_pct": 58.5,
+     "avg_net_pct": 1.27,
+     "vs_index_pct": 0.63,
+     "vs_avg_stock_pct": 0.7,
+     "vs_avg_stock_net_pct": 0.21,
+     "vs_avg_stock_t": 2.46,
+     "lists_ahead_of_avg_stock_pct": 56.6,
+     "vs_eligible_pct": 0.46,
+     "vs_eligible_net_pct": -0.03,
+     "vs_eligible_t": 1.7,
+     "lists_ahead_of_eligible_pct": 53.3,
+     "member_premium_pct": 0.23,
+     "member_premium_t": 5.29
+    }
+   }
+  },
+  "results": {
+   "results": {
+    "exit_pct": 12.0,
+    "hold_sessions": 21,
+    "first": {
+     "list_dates": 113,
+     "picks": 1629,
+     "up_pct": 53.6,
+     "beat_index_pct": 46.5,
+     "avg_pct": 1.78,
+     "median_pct": 0.86,
+     "index_avg_pct": 1.32,
+     "big_winner_pct": 3.5,
+     "worst_5pct": -13.9,
+     "best_5pct": 22.2,
+     "exit_hit_pct": 16.5,
+     "lists_ahead_of_index_pct": 53.1,
+     "avg_net_pct": 1.29,
+     "vs_index_pct": 0.46,
+     "vs_avg_stock_pct": 0.62,
+     "vs_avg_stock_net_pct": 0.13,
+     "vs_avg_stock_t": 1.07,
+     "lists_ahead_of_avg_stock_pct": 55.8
+    },
+    "second": {
+     "list_dates": 134,
+     "picks": 1935,
+     "up_pct": 54.1,
+     "beat_index_pct": 49.7,
+     "avg_pct": 1.73,
+     "median_pct": 1.05,
+     "index_avg_pct": 0.84,
+     "big_winner_pct": 3.6,
+     "worst_5pct": -13.9,
+     "best_5pct": 21.8,
+     "exit_hit_pct": 16.3,
+     "lists_ahead_of_index_pct": 59.7,
+     "avg_net_pct": 1.24,
+     "vs_index_pct": 0.89,
+     "vs_avg_stock_pct": 0.79,
+     "vs_avg_stock_net_pct": 0.3,
+     "vs_avg_stock_t": 2.98,
+     "lists_ahead_of_avg_stock_pct": 64.2
+    },
+    "all": {
+     "list_dates": 247,
+     "picks": 3564,
+     "up_pct": 53.8,
+     "beat_index_pct": 48.2,
+     "avg_pct": 1.75,
+     "median_pct": 0.98,
+     "index_avg_pct": 1.06,
+     "big_winner_pct": 3.6,
+     "worst_5pct": -13.9,
+     "best_5pct": 22.0,
+     "exit_hit_pct": 16.4,
+     "lists_ahead_of_index_pct": 56.7,
+     "avg_net_pct": 1.26,
+     "vs_index_pct": 0.69,
+     "vs_avg_stock_pct": 0.71,
+     "vs_avg_stock_net_pct": 0.22,
+     "vs_avg_stock_t": 2.38,
+     "lists_ahead_of_avg_stock_pct": 60.3
+    }
+   }
+  },
+  "long": {
+   "long": {
+    "exit_pct": 30.0,
+    "hold_sessions": 252,
+    "first": {
+     "list_dates": 74,
+     "picks": 1099,
+     "up_pct": 79.9,
+     "beat_index_pct": 58.6,
+     "avg_pct": 50.24,
+     "median_pct": 35.84,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 57.8,
+     "worst_5pct": -30.5,
+     "best_5pct": 181.5,
+     "exit_hit_pct": 7.0,
+     "lists_ahead_of_index_pct": 79.7,
+     "avg_net_pct": 49.75,
+     "vs_index_pct": 23.86,
+     "vs_avg_stock_pct": 5.54,
+     "vs_avg_stock_net_pct": 5.05,
+     "vs_avg_stock_t": 3.42,
+     "lists_ahead_of_avg_stock_pct": 64.9
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1142,
+     "up_pct": 44.2,
+     "beat_index_pct": 41.9,
+     "avg_pct": 10.11,
+     "median_pct": -4.96,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 23.3,
+     "worst_5pct": -32.2,
+     "best_5pct": 78.5,
+     "exit_hit_pct": 28.8,
+     "lists_ahead_of_index_pct": 44.2,
+     "avg_net_pct": 9.62,
+     "vs_index_pct": 7.87,
+     "vs_avg_stock_pct": 8.78,
+     "vs_avg_stock_net_pct": 8.29,
+     "vs_avg_stock_t": 1.43,
+     "lists_ahead_of_avg_stock_pct": 57.1
+    },
+    "all": {
+     "list_dates": 436,
+     "picks": 6479,
+     "up_pct": 58.2,
+     "beat_index_pct": 46.6,
+     "avg_pct": 23.91,
+     "median_pct": 8.1,
+     "index_avg_pct": 13.7,
+     "big_winner_pct": 35.0,
+     "worst_5pct": -32.9,
+     "best_5pct": 133.0,
+     "exit_hit_pct": 23.1,
+     "lists_ahead_of_index_pct": 53.7,
+     "avg_net_pct": 23.42,
+     "vs_index_pct": 10.21,
+     "vs_avg_stock_pct": 7.88,
+     "vs_avg_stock_net_pct": 7.39,
+     "vs_avg_stock_t": 2.22,
+     "lists_ahead_of_avg_stock_pct": 65.4
+    }
+   },
+   "momentum": {
+    "exit_pct": 15.0,
+    "hold_sessions": 63,
+    "first": {
+     "list_dates": 74,
+     "picks": 1110,
+     "up_pct": 62.9,
+     "beat_index_pct": 50.0,
+     "avg_pct": 9.65,
+     "median_pct": 6.09,
+     "index_avg_pct": 6.3,
+     "big_winner_pct": 20.2,
+     "worst_5pct": -17.2,
+     "best_5pct": 52.1,
+     "exit_hit_pct": 19.4,
+     "lists_ahead_of_index_pct": 59.5,
+     "avg_net_pct": 9.16,
+     "vs_index_pct": 3.35,
+     "vs_avg_stock_pct": -0.54,
+     "vs_avg_stock_net_pct": -1.03,
+     "vs_avg_stock_t": -0.52,
+     "lists_ahead_of_avg_stock_pct": 36.5
+    },
+    "second": {
+     "list_dates": 115,
+     "picks": 1719,
+     "up_pct": 46.5,
+     "beat_index_pct": 45.2,
+     "avg_pct": 1.84,
+     "median_pct": -1.43,
+     "index_avg_pct": 0.56,
+     "big_winner_pct": 10.6,
+     "worst_5pct": -18.2,
+     "best_5pct": 35.2,
+     "exit_hit_pct": 29.8,
+     "lists_ahead_of_index_pct": 60.9,
+     "avg_net_pct": 1.35,
+     "vs_index_pct": 1.28,
+     "vs_avg_stock_pct": 0.74,
+     "vs_avg_stock_net_pct": 0.25,
+     "vs_avg_stock_t": 0.57,
+     "lists_ahead_of_avg_stock_pct": 59.1
+    },
+    "all": {
+     "list_dates": 471,
+     "picks": 7052,
+     "up_pct": 55.1,
+     "beat_index_pct": 49.1,
+     "avg_pct": 5.45,
+     "median_pct": 2.51,
+     "index_avg_pct": 3.19,
+     "big_winner_pct": 13.9,
+     "worst_5pct": -18.0,
+     "best_5pct": 42.3,
+     "exit_hit_pct": 23.9,
+     "lists_ahead_of_index_pct": 62.6,
+     "avg_net_pct": 4.96,
+     "vs_index_pct": 2.26,
+     "vs_avg_stock_pct": 2.03,
+     "vs_avg_stock_net_pct": 1.54,
+     "vs_avg_stock_t": 3.34,
+     "lists_ahead_of_avg_stock_pct": 61.8
+    }
+   }
+  }
+ },
+ "chosen": {
+  "month": "M3",
+  "results": "R4",
+  "long": "L1"
+ },
+ "overlap": {
+  "month / results": {
+   "dates": 209,
+   "mean_shared": 0.97,
+   "dates_with_any_pct": 51.2
+  },
+  "month / long": {
+   "dates": 486,
+   "mean_shared": 2.73,
+   "dates_with_any_pct": 92.4
+  },
+  "results / long": {
+   "dates": 209,
+   "mean_shared": 1.22,
+   "dates_with_any_pct": 68.9
+  }
+ },
+ "eligible": {
+  "month": {
+   "companies_in_map": 754,
+   "share_of_liquid_pct": 85.3,
+   "what": "The month list refuses a stock with no industry, and the replay handed the engine NSE's list as it stands today, so it could pick only companies in that list. Beside the lead over every liquid stock, its records measure the lead over the liquid stocks in that list: vs_eligible_pct (after the round trip, vs_eligible_net_pct; Newey-West t, vs_eligible_t) and lists_ahead_of_eligible_pct, with member_premium_pct, how far their average ran ahead of every liquid stock's over the same list dates, per hold. Those stocks are more than the list could pick: it also refuses an industry with too few liquid stocks to rank on money flow. Reported beside the rule, never used by it."
+  }
+ },
+ "coverage": {
+  "long": {
+   "from": "2017-01-24",
+   "to": "2026-11-23",
+   "windows": {
+    "first": [
+     "2022-11-01",
+     "2024-04-30"
+    ],
+    "second": [
+     "2024-05-01",
+     "2025-11-17"
+    ]
+   },
+   "list_dates": {
+    "first": 74,
+    "second": 77
+   },
+   "first_half": {
+    "label": "2017-21",
+    "before": "2022-01-01",
+    "list_dates": 244
+   },
+   "checks": {
+    "roce_pct": {
+     "most_from": "2023-05-19",
+     "first_pct": 57.1,
+     "second_pct": 91.6,
+     "first_half_pct": 0.0
+    },
+    "debt_equity_x": {
+     "most_from": "2022-11-09",
+     "first_pct": 88.4,
+     "second_pct": 93.7,
+     "first_half_pct": 0.0
+    },
+    "cfo_to_pat": {
+     "most_from": "2021-05-28",
+     "first_pct": 83.4,
+     "second_pct": 86.7,
+     "first_half_pct": 9.4
+    },
+    "f_score": {
+     "most_from": "2024-05-21",
+     "first_pct": 0.4,
+     "second_pct": 85.9,
+     "first_half_pct": 0.0
+    }
+   },
+   "what": "On every long list date. companies: the liquid companies listed a year that the engine ranks for the long list, less the ones it judges as lenders (a company with no filings counts as none, as the list reads it); with_filings: how many of them had any filing visible that session; and for each check, how many had its figure. most_from is the list date from which a figure was known for at least half of them on every list date after (None if not on the last); first_pct and second_pct are its mean share known over each window's list dates, and first_half_pct over the list dates of the record's first half (first_half), as the page splits the record.",
+   "by_date": {
+    "columns": [
+     "date",
+     "companies",
+     "with_filings",
+     "roce_pct",
+     "debt_equity_x",
+     "cfo_to_pat",
+     "f_score"
+    ],
+    "rows": [
+     [
+      "2017-01-24",
+      195,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-02-01",
+      197,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-02-08",
+      201,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-02-15",
+      200,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-02-22",
+      203,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-03-02",
+      207,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-03-09",
+      209,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-03-17",
+      211,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-03-24",
+      212,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-03-31",
+      219,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-04-10",
+      223,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-04-18",
+      227,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-04-25",
+      234,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-05-03",
+      237,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-05-10",
+      235,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-05-17",
+      235,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-05-24",
+      236,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-05-31",
+      237,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-06-07",
+      238,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-06-14",
+      239,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-06-21",
+      242,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-06-29",
+      241,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-07-06",
+      240,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-07-13",
+      241,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-07-20",
+      241,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-07-27",
+      244,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-08-03",
+      243,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-08-10",
+      244,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-08-18",
+      242,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-08-28",
+      246,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-09-04",
+      247,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-09-11",
+      254,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-09-18",
+      253,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-09-25",
+      257,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-10-03",
+      261,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-10-10",
+      270,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-10-17",
+      273,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-10-25",
+      274,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-11-01",
+      274,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-11-08",
+      278,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-11-15",
+      285,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-11-22",
+      287,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-11-29",
+      292,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-12-06",
+      287,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-12-13",
+      285,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-12-20",
+      289,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2017-12-28",
+      298,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-01-04",
+      305,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-01-11",
+      307,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-01-18",
+      313,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-01-25",
+      315,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-02-02",
+      318,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-02-09",
+      321,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-02-19",
+      323,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-02-26",
+      318,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-03-06",
+      313,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-03-13",
+      312,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-03-20",
+      309,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-03-27",
+      300,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-04-05",
+      293,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-04-12",
+      293,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-04-19",
+      289,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-04-26",
+      285,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-05-04",
+      282,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-05-11",
+      278,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-05-18",
+      274,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-05-25",
+      273,
+      2,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-06-01",
+      269,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-06-08",
+      267,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-06-15",
+      264,
+      34,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-06-22",
+      264,
+      64,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-06-29",
+      262,
+      76,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-07-06",
+      252,
+      76,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-07-13",
+      250,
+      77,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-07-20",
+      247,
+      76,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-07-27",
+      246,
+      77,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-08-03",
+      246,
+      80,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-08-10",
+      247,
+      84,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-08-20",
+      245,
+      85,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-08-28",
+      242,
+      88,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-09-04",
+      241,
+      90,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-09-11",
+      238,
+      88,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-09-19",
+      239,
+      89,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-09-27",
+      244,
+      92,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-10-05",
+      247,
+      93,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-10-12",
+      251,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-10-22",
+      249,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-10-29",
+      247,
+      101,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-11-05",
+      244,
+      105,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-11-13",
+      241,
+      104,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-11-20",
+      240,
+      104,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-11-28",
+      238,
+      105,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-12-05",
+      234,
+      103,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-12-12",
+      230,
+      102,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-12-19",
+      231,
+      103,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2018-12-27",
+      226,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-01-03",
+      223,
+      98,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-01-10",
+      220,
+      97,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-01-17",
+      216,
+      97,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-01-24",
+      212,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-01-31",
+      214,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-02-07",
+      213,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-02-14",
+      214,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-02-21",
+      211,
+      93,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-02-28",
+      215,
+      95,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-03-08",
+      217,
+      96,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-03-15",
+      218,
+      98,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-03-25",
+      221,
+      98,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-04-01",
+      221,
+      97,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-04-08",
+      225,
+      97,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-04-15",
+      228,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-04-24",
+      229,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-05-03",
+      228,
+      100,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-05-10",
+      224,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-05-17",
+      223,
+      99,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-05-24",
+      223,
+      98,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-05-31",
+      225,
+      100,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-06-10",
+      220,
+      98,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-06-17",
+      216,
+      94,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-06-24",
+      213,
+      92,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-07-01",
+      211,
+      93,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-07-08",
+      207,
+      90,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-07-15",
+      205,
+      92,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-07-22",
+      204,
+      93,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-07-29",
+      204,
+      101,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-08-05",
+      201,
+      106,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-08-13",
+      199,
+      125,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-08-21",
+      194,
+      129,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-08-28",
+      192,
+      127,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-09-05",
+      187,
+      125,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-09-13",
+      174,
+      127,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-09-20",
+      172,
+      125,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-09-27",
+      170,
+      124,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-10-07",
+      170,
+      124,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-10-15",
+      169,
+      126,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-10-23",
+      170,
+      128,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-10-31",
+      171,
+      129,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-11-07",
+      175,
+      132,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-11-15",
+      179,
+      141,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-11-22",
+      180,
+      144,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-11-29",
+      180,
+      144,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-12-06",
+      180,
+      146,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-12-13",
+      185,
+      151,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-12-20",
+      181,
+      148,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2019-12-30",
+      178,
+      145,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-01-06",
+      178,
+      146,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-01-13",
+      181,
+      148,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-01-20",
+      181,
+      149,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-01-27",
+      184,
+      151,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-02-03",
+      183,
+      153,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-02-10",
+      180,
+      155,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-02-17",
+      182,
+      159,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-02-25",
+      185,
+      163,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-03-03",
+      189,
+      166,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-03-11",
+      189,
+      166,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-03-18",
+      197,
+      172,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-03-25",
+      197,
+      171,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-04-01",
+      196,
+      169,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-04-13",
+      197,
+      170,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-04-21",
+      197,
+      171,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-04-28",
+      194,
+      169,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-05-06",
+      188,
+      165,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-05-13",
+      182,
+      160,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-05-20",
+      180,
+      157,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-05-28",
+      181,
+      158,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-06-04",
+      180,
+      157,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-06-11",
+      189,
+      165,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-06-18",
+      191,
+      167,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-06-25",
+      199,
+      174,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-07-02",
+      201,
+      176,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-07-09",
+      217,
+      189,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-07-16",
+      215,
+      188,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-07-23",
+      219,
+      192,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-07-30",
+      224,
+      197,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-08-06",
+      230,
+      201,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-08-13",
+      239,
+      210,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-08-20",
+      246,
+      215,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-08-27",
+      255,
+      222,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-09-03",
+      257,
+      226,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-09-10",
+      251,
+      220,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-09-17",
+      248,
+      217,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-09-24",
+      253,
+      221,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-10-01",
+      251,
+      219,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-10-09",
+      250,
+      218,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-10-16",
+      256,
+      222,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-10-23",
+      257,
+      222,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-10-30",
+      245,
+      214,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-11-06",
+      242,
+      211,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-11-13",
+      240,
+      209,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-11-23",
+      238,
+      208,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      "2020-12-01",
+      234,
+      204,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2020-12-08",
+      235,
+      205,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2020-12-15",
+      236,
+      206,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2020-12-22",
+      242,
+      211,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2020-12-30",
+      244,
+      213,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2021-01-06",
+      252,
+      220,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2021-01-13",
+      262,
+      230,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2021-01-20",
+      268,
+      234,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2021-01-28",
+      272,
+      238,
+      0,
+      0,
+      1,
+      0
+     ],
+     [
+      "2021-02-04",
+      273,
+      238,
+      0,
+      0,
+      2,
+      0
+     ],
+     [
+      "2021-02-11",
+      284,
+      247,
+      0,
+      0,
+      2,
+      0
+     ],
+     [
+      "2021-02-18",
+      284,
+      247,
+      0,
+      0,
+      4,
+      0
+     ],
+     [
+      "2021-02-25",
+      292,
+      255,
+      0,
+      0,
+      5,
+      0
+     ],
+     [
+      "2021-03-04",
+      290,
+      253,
+      0,
+      0,
+      6,
+      0
+     ],
+     [
+      "2021-03-12",
+      295,
+      258,
+      0,
+      0,
+      6,
+      0
+     ],
+     [
+      "2021-03-19",
+      296,
+      258,
+      0,
+      0,
+      6,
+      0
+     ],
+     [
+      "2021-03-26",
+      294,
+      255,
+      0,
+      0,
+      6,
+      0
+     ],
+     [
+      "2021-04-06",
+      296,
+      258,
+      0,
+      0,
+      6,
+      0
+     ],
+     [
+      "2021-04-13",
+      293,
+      257,
+      0,
+      0,
+      7,
+      0
+     ],
+     [
+      "2021-04-22",
+      295,
+      258,
+      0,
+      0,
+      12,
+      0
+     ],
+     [
+      "2021-04-29",
+      301,
+      263,
+      0,
+      0,
+      27,
+      0
+     ],
+     [
+      "2021-05-06",
+      303,
+      266,
+      0,
+      0,
+      55,
+      0
+     ],
+     [
+      "2021-05-14",
+      308,
+      271,
+      0,
+      0,
+      96,
+      0
+     ],
+     [
+      "2021-05-21",
+      320,
+      281,
+      0,
+      0,
+      125,
+      0
+     ],
+     [
+      "2021-05-28",
+      335,
+      295,
+      0,
+      0,
+      173,
+      0
+     ],
+     [
+      "2021-06-04",
+      336,
+      295,
+      0,
+      0,
+      202,
+      0
+     ],
+     [
+      "2021-06-11",
+      341,
+      299,
+      0,
+      0,
+      213,
+      0
+     ],
+     [
+      "2021-06-18",
+      350,
+      309,
+      0,
+      0,
+      228,
+      0
+     ],
+     [
+      "2021-06-25",
+      361,
+      322,
+      0,
+      0,
+      254,
+      0
+     ],
+     [
+      "2021-07-02",
+      375,
+      336,
+      0,
+      0,
+      283,
+      0
+     ],
+     [
+      "2021-07-09",
+      381,
+      342,
+      0,
+      0,
+      288,
+      0
+     ],
+     [
+      "2021-07-16",
+      392,
+      352,
+      0,
+      0,
+      296,
+      0
+     ],
+     [
+      "2021-07-26",
+      393,
+      353,
+      0,
+      0,
+      297,
+      0
+     ],
+     [
+      "2021-08-02",
+      400,
+      359,
+      0,
+      0,
+      301,
+      0
+     ],
+     [
+      "2021-08-09",
+      395,
+      354,
+      0,
+      0,
+      296,
+      0
+     ],
+     [
+      "2021-08-16",
+      394,
+      354,
+      0,
+      0,
+      296,
+      0
+     ],
+     [
+      "2021-08-24",
+      389,
+      349,
+      0,
+      0,
+      290,
+      0
+     ],
+     [
+      "2021-08-31",
+      385,
+      344,
+      0,
+      0,
+      288,
+      0
+     ],
+     [
+      "2021-09-07",
+      371,
+      333,
+      0,
+      0,
+      277,
+      0
+     ],
+     [
+      "2021-09-15",
+      373,
+      334,
+      0,
+      0,
+      278,
+      0
+     ],
+     [
+      "2021-09-22",
+      374,
+      333,
+      0,
+      0,
+      278,
+      0
+     ],
+     [
+      "2021-09-29",
+      377,
+      335,
+      0,
+      0,
+      280,
+      0
+     ],
+     [
+      "2021-10-06",
+      380,
+      336,
+      0,
+      0,
+      281,
+      0
+     ],
+     [
+      "2021-10-13",
+      372,
+      332,
+      0,
+      0,
+      279,
+      0
+     ],
+     [
+      "2021-10-21",
+      379,
+      337,
+      0,
+      0,
+      283,
+      0
+     ],
+     [
+      "2021-10-28",
+      371,
+      329,
+      0,
+      0,
+      278,
+      0
+     ],
+     [
+      "2021-11-04",
+      365,
+      325,
+      0,
+      0,
+      275,
+      0
+     ],
+     [
+      "2021-11-12",
+      368,
+      326,
+      0,
+      0,
+      274,
+      0
+     ],
+     [
+      "2021-11-22",
+      361,
+      322,
+      0,
+      0,
+      269,
+      0
+     ],
+     [
+      "2021-11-29",
+      366,
+      326,
+      0,
+      0,
+      271,
+      0
+     ],
+     [
+      "2021-12-06",
+      367,
+      328,
+      0,
+      0,
+      273,
+      0
+     ],
+     [
+      "2021-12-13",
+      356,
+      320,
+      0,
+      0,
+      268,
+      0
+     ],
+     [
+      "2021-12-20",
+      346,
+      312,
+      0,
+      0,
+      261,
+      0
+     ],
+     [
+      "2021-12-27",
+      344,
+      308,
+      0,
+      0,
+      259,
+      0
+     ],
+     [
+      "2022-01-03",
+      338,
+      302,
+      0,
+      0,
+      254,
+      0
+     ],
+     [
+      "2022-01-10",
+      342,
+      306,
+      0,
+      0,
+      257,
+      0
+     ],
+     [
+      "2022-01-17",
+      336,
+      302,
+      0,
+      0,
+      254,
+      0
+     ],
+     [
+      "2022-01-24",
+      341,
+      306,
+      0,
+      0,
+      256,
+      0
+     ],
+     [
+      "2022-02-01",
+      343,
+      307,
+      0,
+      0,
+      258,
+      0
+     ],
+     [
+      "2022-02-08",
+      343,
+      307,
+      0,
+      0,
+      258,
+      0
+     ],
+     [
+      "2022-02-15",
+      344,
+      308,
+      0,
+      0,
+      258,
+      0
+     ],
+     [
+      "2022-02-22",
+      344,
+      308,
+      0,
+      0,
+      256,
+      0
+     ],
+     [
+      "2022-03-02",
+      341,
+      305,
+      0,
+      0,
+      253,
+      0
+     ],
+     [
+      "2022-03-09",
+      335,
+      300,
+      0,
+      0,
+      248,
+      0
+     ],
+     [
+      "2022-03-16",
+      335,
+      300,
+      0,
+      0,
+      246,
+      0
+     ],
+     [
+      "2022-03-24",
+      341,
+      305,
+      0,
+      0,
+      251,
+      0
+     ],
+     [
+      "2022-03-31",
+      349,
+      313,
+      0,
+      0,
+      259,
+      0
+     ],
+     [
+      "2022-04-07",
+      355,
+      319,
+      0,
+      0,
+      265,
+      0
+     ],
+     [
+      "2022-04-18",
+      352,
+      315,
+      0,
+      0,
+      262,
+      0
+     ],
+     [
+      "2022-04-25",
+      358,
+      322,
+      0,
+      0,
+      269,
+      0
+     ],
+     [
+      "2022-05-02",
+      356,
+      320,
+      0,
+      0,
+      271,
+      0
+     ],
+     [
+      "2022-05-10",
+      348,
+      313,
+      0,
+      0,
+      269,
+      0
+     ],
+     [
+      "2022-05-17",
+      350,
+      315,
+      0,
+      0,
+      274,
+      0
+     ],
+     [
+      "2022-05-24",
+      349,
+      314,
+      0,
+      0,
+      281,
+      0
+     ],
+     [
+      "2022-05-31",
+      348,
+      316,
+      0,
+      0,
+      286,
+      0
+     ],
+     [
+      "2022-06-07",
+      345,
+      315,
+      0,
+      0,
+      286,
+      0
+     ],
+     [
+      "2022-06-14",
+      339,
+      312,
+      0,
+      0,
+      283,
+      0
+     ],
+     [
+      "2022-06-21",
+      328,
+      300,
+      0,
+      0,
+      273,
+      0
+     ],
+     [
+      "2022-06-28",
+      318,
+      289,
+      0,
+      0,
+      265,
+      0
+     ],
+     [
+      "2022-07-05",
+      317,
+      289,
+      0,
+      0,
+      263,
+      0
+     ],
+     [
+      "2022-07-12",
+      308,
+      280,
+      0,
+      0,
+      257,
+      0
+     ],
+     [
+      "2022-07-19",
+      301,
+      274,
+      0,
+      1,
+      253,
+      0
+     ],
+     [
+      "2022-07-26",
+      304,
+      277,
+      0,
+      1,
+      256,
+      0
+     ],
+     [
+      "2022-08-02",
+      314,
+      286,
+      0,
+      2,
+      263,
+      0
+     ],
+     [
+      "2022-08-10",
+      312,
+      284,
+      0,
+      4,
+      260,
+      0
+     ],
+     [
+      "2022-08-18",
+      316,
+      288,
+      0,
+      4,
+      265,
+      0
+     ],
+     [
+      "2022-08-25",
+      321,
+      293,
+      0,
+      4,
+      270,
+      0
+     ],
+     [
+      "2022-09-02",
+      331,
+      300,
+      0,
+      4,
+      274,
+      0
+     ],
+     [
+      "2022-09-09",
+      335,
+      305,
+      0,
+      4,
+      280,
+      0
+     ],
+     [
+      "2022-09-16",
+      345,
+      315,
+      0,
+      4,
+      289,
+      0
+     ],
+     [
+      "2022-09-23",
+      345,
+      316,
+      1,
+      5,
+      291,
+      0
+     ],
+     [
+      "2022-09-30",
+      355,
+      324,
+      1,
+      5,
+      298,
+      0
+     ],
+     [
+      "2022-10-10",
+      354,
+      323,
+      1,
+      5,
+      293,
+      0
+     ],
+     [
+      "2022-10-17",
+      356,
+      324,
+      0,
+      15,
+      296,
+      0
+     ],
+     [
+      "2022-10-24",
+      354,
+      324,
+      1,
+      70,
+      294,
+      0
+     ],
+     [
+      "2022-11-01",
+      351,
+      320,
+      1,
+      109,
+      291,
+      0
+     ],
+     [
+      "2022-11-09",
+      345,
+      316,
+      0,
+      182,
+      288,
+      0
+     ],
+     [
+      "2022-11-16",
+      345,
+      316,
+      0,
+      301,
+      289,
+      0
+     ],
+     [
+      "2022-11-23",
+      344,
+      314,
+      0,
+      300,
+      285,
+      0
+     ],
+     [
+      "2022-11-30",
+      342,
+      312,
+      1,
+      299,
+      283,
+      0
+     ],
+     [
+      "2022-12-07",
+      338,
+      309,
+      1,
+      296,
+      282,
+      0
+     ],
+     [
+      "2022-12-14",
+      331,
+      303,
+      1,
+      290,
+      277,
+      0
+     ],
+     [
+      "2022-12-21",
+      324,
+      295,
+      1,
+      284,
+      271,
+      0
+     ],
+     [
+      "2022-12-28",
+      324,
+      294,
+      1,
+      283,
+      270,
+      0
+     ],
+     [
+      "2023-01-04",
+      326,
+      296,
+      1,
+      284,
+      271,
+      0
+     ],
+     [
+      "2023-01-11",
+      330,
+      298,
+      1,
+      287,
+      271,
+      0
+     ],
+     [
+      "2023-01-18",
+      333,
+      302,
+      1,
+      290,
+      274,
+      0
+     ],
+     [
+      "2023-01-25",
+      328,
+      299,
+      1,
+      287,
+      269,
+      0
+     ],
+     [
+      "2023-02-02",
+      326,
+      297,
+      1,
+      285,
+      267,
+      0
+     ],
+     [
+      "2023-02-09",
+      325,
+      295,
+      2,
+      283,
+      265,
+      0
+     ],
+     [
+      "2023-02-16",
+      325,
+      296,
+      2,
+      284,
+      266,
+      0
+     ],
+     [
+      "2023-02-23",
+      319,
+      291,
+      2,
+      280,
+      262,
+      0
+     ],
+     [
+      "2023-03-02",
+      311,
+      285,
+      4,
+      276,
+      255,
+      0
+     ],
+     [
+      "2023-03-10",
+      301,
+      276,
+      4,
+      268,
+      250,
+      0
+     ],
+     [
+      "2023-03-17",
+      293,
+      270,
+      4,
+      262,
+      244,
+      0
+     ],
+     [
+      "2023-03-24",
+      290,
+      267,
+      4,
+      260,
+      240,
+      0
+     ],
+     [
+      "2023-04-03",
+      295,
+      273,
+      4,
+      266,
+      246,
+      0
+     ],
+     [
+      "2023-04-12",
+      299,
+      277,
+      4,
+      270,
+      251,
+      0
+     ],
+     [
+      "2023-04-20",
+      301,
+      279,
+      8,
+      272,
+      253,
+      0
+     ],
+     [
+      "2023-04-27",
+      306,
+      284,
+      26,
+      276,
+      258,
+      0
+     ],
+     [
+      "2023-05-05",
+      312,
+      288,
+      70,
+      282,
+      267,
+      0
+     ],
+     [
+      "2023-05-12",
+      319,
+      294,
+      117,
+      288,
+      274,
+      0
+     ],
+     [
+      "2023-05-19",
+      317,
+      294,
+      176,
+      288,
+      275,
+      0
+     ],
+     [
+      "2023-05-26",
+      327,
+      302,
+      247,
+      297,
+      283,
+      0
+     ],
+     [
+      "2023-06-02",
+      335,
+      309,
+      301,
+      305,
+      292,
+      0
+     ],
+     [
+      "2023-06-09",
+      342,
+      316,
+      308,
+      312,
+      298,
+      0
+     ],
+     [
+      "2023-06-16",
+      354,
+      328,
+      319,
+      323,
+      309,
+      0
+     ],
+     [
+      "2023-06-23",
+      366,
+      339,
+      328,
+      333,
+      319,
+      0
+     ],
+     [
+      "2023-07-03",
+      371,
+      344,
+      333,
+      337,
+      323,
+      0
+     ],
+     [
+      "2023-07-10",
+      381,
+      352,
+      340,
+      344,
+      328,
+      0
+     ],
+     [
+      "2023-07-17",
+      388,
+      358,
+      346,
+      350,
+      334,
+      0
+     ],
+     [
+      "2023-07-24",
+      399,
+      369,
+      357,
+      361,
+      343,
+      0
+     ],
+     [
+      "2023-07-31",
+      402,
+      371,
+      360,
+      364,
+      345,
+      0
+     ],
+     [
+      "2023-08-07",
+      414,
+      384,
+      372,
+      375,
+      357,
+      0
+     ],
+     [
+      "2023-08-14",
+      424,
+      393,
+      380,
+      383,
+      362,
+      0
+     ],
+     [
+      "2023-08-22",
+      432,
+      401,
+      387,
+      390,
+      369,
+      0
+     ],
+     [
+      "2023-08-29",
+      434,
+      403,
+      388,
+      392,
+      370,
+      0
+     ],
+     [
+      "2023-09-05",
+      448,
+      417,
+      397,
+      401,
+      377,
+      0
+     ],
+     [
+      "2023-09-12",
+      458,
+      427,
+      409,
+      414,
+      386,
+      0
+     ],
+     [
+      "2023-09-20",
+      462,
+      431,
+      413,
+      417,
+      391,
+      0
+     ],
+     [
+      "2023-09-27",
+      471,
+      437,
+      417,
+      422,
+      394,
+      1
+     ],
+     [
+      "2023-10-05",
+      474,
+      438,
+      418,
+      422,
+      391,
+      1
+     ],
+     [
+      "2023-10-12",
+      472,
+      438,
+      417,
+      421,
+      389,
+      0
+     ],
+     [
+      "2023-10-19",
+      473,
+      440,
+      418,
+      424,
+      388,
+      0
+     ],
+     [
+      "2023-10-27",
+      482,
+      449,
+      428,
+      435,
+      399,
+      0
+     ],
+     [
+      "2023-11-03",
+      468,
+      438,
+      417,
+      424,
+      386,
+      0
+     ],
+     [
+      "2023-11-10",
+      478,
+      448,
+      425,
+      434,
+      391,
+      1
+     ],
+     [
+      "2023-11-20",
+      480,
+      450,
+      425,
+      433,
+      391,
+      1
+     ],
+     [
+      "2023-11-28",
+      483,
+      453,
+      428,
+      436,
+      396,
+      1
+     ],
+     [
+      "2023-12-05",
+      480,
+      450,
+      426,
+      435,
+      393,
+      3
+     ],
+     [
+      "2023-12-12",
+      484,
+      453,
+      427,
+      436,
+      394,
+      3
+     ],
+     [
+      "2023-12-19",
+      487,
+      456,
+      430,
+      439,
+      395,
+      2
+     ],
+     [
+      "2023-12-27",
+      487,
+      456,
+      431,
+      440,
+      395,
+      2
+     ],
+     [
+      "2024-01-03",
+      499,
+      467,
+      441,
+      449,
+      405,
+      2
+     ],
+     [
+      "2024-01-10",
+      513,
+      481,
+      454,
+      462,
+      418,
+      2
+     ],
+     [
+      "2024-01-17",
+      527,
+      496,
+      469,
+      477,
+      433,
+      2
+     ],
+     [
+      "2024-01-25",
+      532,
+      499,
+      472,
+      479,
+      435,
+      2
+     ],
+     [
+      "2024-02-02",
+      547,
+      512,
+      485,
+      492,
+      447,
+      3
+     ],
+     [
+      "2024-02-09",
+      561,
+      527,
+      500,
+      507,
+      459,
+      4
+     ],
+     [
+      "2024-02-16",
+      566,
+      531,
+      504,
+      511,
+      463,
+      4
+     ],
+     [
+      "2024-02-23",
+      573,
+      538,
+      512,
+      519,
+      472,
+      5
+     ],
+     [
+      "2024-03-01",
+      574,
+      540,
+      513,
+      519,
+      470,
+      7
+     ],
+     [
+      "2024-03-11",
+      572,
+      538,
+      511,
+      517,
+      469,
+      7
+     ],
+     [
+      "2024-03-18",
+      573,
+      540,
+      514,
+      520,
+      472,
+      7
+     ],
+     [
+      "2024-03-26",
+      554,
+      521,
+      496,
+      502,
+      453,
+      7
+     ],
+     [
+      "2024-04-03",
+      551,
+      519,
+      494,
+      500,
+      451,
+      7
+     ],
+     [
+      "2024-04-10",
+      554,
+      521,
+      496,
+      502,
+      453,
+      7
+     ],
+     [
+      "2024-04-19",
+      547,
+      515,
+      492,
+      497,
+      450,
+      15
+     ],
+     [
+      "2024-04-26",
+      544,
+      513,
+      492,
+      497,
+      450,
+      51
+     ],
+     [
+      "2024-05-06",
+      532,
+      501,
+      480,
+      486,
+      441,
+      114
+     ],
+     [
+      "2024-05-13",
+      518,
+      487,
+      470,
+      475,
+      431,
+      189
+     ],
+     [
+      "2024-05-21",
+      509,
+      479,
+      463,
+      467,
+      425,
+      292
+     ],
+     [
+      "2024-05-28",
+      511,
+      481,
+      467,
+      470,
+      431,
+      392
+     ],
+     [
+      "2024-06-04",
+      511,
+      484,
+      471,
+      473,
+      441,
+      456
+     ],
+     [
+      "2024-06-11",
+      520,
+      492,
+      479,
+      481,
+      448,
+      465
+     ],
+     [
+      "2024-06-19",
+      522,
+      494,
+      482,
+      484,
+      451,
+      469
+     ],
+     [
+      "2024-06-26",
+      528,
+      498,
+      484,
+      486,
+      453,
+      472
+     ],
+     [
+      "2024-07-03",
+      534,
+      504,
+      489,
+      491,
+      458,
+      477
+     ],
+     [
+      "2024-07-10",
+      549,
+      519,
+      505,
+      507,
+      472,
+      491
+     ],
+     [
+      "2024-07-18",
+      557,
+      526,
+      512,
+      514,
+      480,
+      498
+     ],
+     [
+      "2024-07-25",
+      564,
+      534,
+      519,
+      521,
+      484,
+      502
+     ],
+     [
+      "2024-08-01",
+      584,
+      553,
+      537,
+      539,
+      502,
+      519
+     ],
+     [
+      "2024-08-08",
+      601,
+      569,
+      553,
+      555,
+      518,
+      534
+     ],
+     [
+      "2024-08-16",
+      612,
+      581,
+      565,
+      567,
+      528,
+      546
+     ],
+     [
+      "2024-08-23",
+      619,
+      588,
+      572,
+      574,
+      535,
+      553
+     ],
+     [
+      "2024-08-30",
+      637,
+      604,
+      586,
+      588,
+      548,
+      568
+     ],
+     [
+      "2024-09-06",
+      636,
+      603,
+      585,
+      587,
+      546,
+      566
+     ],
+     [
+      "2024-09-13",
+      645,
+      611,
+      592,
+      594,
+      553,
+      568
+     ],
+     [
+      "2024-09-20",
+      639,
+      605,
+      586,
+      588,
+      549,
+      560
+     ],
+     [
+      "2024-09-27",
+      635,
+      601,
+      582,
+      584,
+      543,
+      557
+     ],
+     [
+      "2024-10-07",
+      636,
+      603,
+      576,
+      585,
+      537,
+      555
+     ],
+     [
+      "2024-10-14",
+      635,
+      602,
+      574,
+      583,
+      535,
+      550
+     ],
+     [
+      "2024-10-21",
+      625,
+      594,
+      565,
+      575,
+      528,
+      542
+     ],
+     [
+      "2024-10-28",
+      619,
+      589,
+      560,
+      571,
+      526,
+      537
+     ],
+     [
+      "2024-11-04",
+      610,
+      582,
+      553,
+      565,
+      521,
+      530
+     ],
+     [
+      "2024-11-11",
+      615,
+      588,
+      559,
+      572,
+      525,
+      532
+     ],
+     [
+      "2024-11-19",
+      599,
+      573,
+      544,
+      558,
+      515,
+      519
+     ],
+     [
+      "2024-11-27",
+      587,
+      562,
+      534,
+      546,
+      505,
+      511
+     ],
+     [
+      "2024-12-04",
+      575,
+      551,
+      524,
+      536,
+      495,
+      504
+     ],
+     [
+      "2024-12-11",
+      580,
+      553,
+      526,
+      538,
+      499,
+      503
+     ],
+     [
+      "2024-12-18",
+      565,
+      540,
+      518,
+      529,
+      492,
+      495
+     ],
+     [
+      "2024-12-26",
+      562,
+      537,
+      514,
+      526,
+      487,
+      492
+     ],
+     [
+      "2025-01-02",
+      554,
+      528,
+      506,
+      517,
+      479,
+      483
+     ],
+     [
+      "2025-01-09",
+      551,
+      525,
+      504,
+      515,
+      476,
+      481
+     ],
+     [
+      "2025-01-16",
+      555,
+      527,
+      505,
+      516,
+      476,
+      481
+     ],
+     [
+      "2025-01-23",
+      548,
+      522,
+      502,
+      512,
+      473,
+      478
+     ],
+     [
+      "2025-01-30",
+      548,
+      523,
+      502,
+      512,
+      474,
+      477
+     ],
+     [
+      "2025-02-06",
+      547,
+      522,
+      501,
+      511,
+      473,
+      475
+     ],
+     [
+      "2025-02-13",
+      539,
+      515,
+      495,
+      505,
+      466,
+      470
+     ],
+     [
+      "2025-02-20",
+      538,
+      513,
+      494,
+      503,
+      465,
+      468
+     ],
+     [
+      "2025-02-28",
+      526,
+      502,
+      483,
+      493,
+      457,
+      456
+     ],
+     [
+      "2025-03-07",
+      523,
+      500,
+      481,
+      490,
+      453,
+      453
+     ],
+     [
+      "2025-03-17",
+      517,
+      493,
+      474,
+      483,
+      451,
+      445
+     ],
+     [
+      "2025-03-24",
+      520,
+      496,
+      477,
+      486,
+      453,
+      446
+     ],
+     [
+      "2025-04-01",
+      525,
+      502,
+      482,
+      492,
+      458,
+      452
+     ],
+     [
+      "2025-04-08",
+      526,
+      503,
+      483,
+      492,
+      459,
+      453
+     ],
+     [
+      "2025-04-17",
+      524,
+      504,
+      483,
+      492,
+      459,
+      453
+     ],
+     [
+      "2025-04-25",
+      530,
+      510,
+      490,
+      498,
+      466,
+      459
+     ],
+     [
+      "2025-05-05",
+      516,
+      498,
+      479,
+      486,
+      455,
+      451
+     ],
+     [
+      "2025-05-12",
+      518,
+      500,
+      485,
+      490,
+      461,
+      454
+     ],
+     [
+      "2025-05-19",
+      521,
+      503,
+      491,
+      494,
+      467,
+      464
+     ],
+     [
+      "2025-05-26",
+      530,
+      510,
+      498,
+      500,
+      478,
+      478
+     ],
+     [
+      "2025-06-02",
+      541,
+      523,
+      511,
+      513,
+      490,
+      499
+     ],
+     [
+      "2025-06-09",
+      542,
+      523,
+      511,
+      513,
+      490,
+      497
+     ],
+     [
+      "2025-06-16",
+      544,
+      526,
+      513,
+      515,
+      490,
+      501
+     ],
+     [
+      "2025-06-23",
+      537,
+      519,
+      507,
+      510,
+      484,
+      495
+     ],
+     [
+      "2025-06-30",
+      538,
+      520,
+      506,
+      509,
+      483,
+      496
+     ],
+     [
+      "2025-07-07",
+      537,
+      520,
+      507,
+      510,
+      486,
+      496
+     ],
+     [
+      "2025-07-14",
+      540,
+      523,
+      509,
+      512,
+      488,
+      498
+     ],
+     [
+      "2025-07-21",
+      532,
+      516,
+      503,
+      505,
+      485,
+      490
+     ],
+     [
+      "2025-07-28",
+      536,
+      520,
+      508,
+      510,
+      490,
+      494
+     ],
+     [
+      "2025-08-04",
+      548,
+      532,
+      519,
+      521,
+      499,
+      505
+     ],
+     [
+      "2025-08-11",
+      542,
+      528,
+      515,
+      518,
+      493,
+      499
+     ],
+     [
+      "2025-08-19",
+      535,
+      521,
+      509,
+      513,
+      486,
+      491
+     ],
+     [
+      "2025-08-26",
+      535,
+      521,
+      509,
+      513,
+      486,
+      490
+     ],
+     [
+      "2025-09-03",
+      532,
+      517,
+      504,
+      509,
+      483,
+      486
+     ],
+     [
+      "2025-09-10",
+      527,
+      512,
+      499,
+      504,
+      478,
+      479
+     ],
+     [
+      "2025-09-17",
+      529,
+      514,
+      501,
+      506,
+      479,
+      480
+     ],
+     [
+      "2025-09-24",
+      524,
+      509,
+      497,
+      502,
+      476,
+      475
+     ],
+     [
+      "2025-10-01",
+      520,
+      505,
+      494,
+      498,
+      474,
+      470
+     ],
+     [
+      "2025-10-09",
+      522,
+      508,
+      429,
+      500,
+      412,
+      413
+     ],
+     [
+      "2025-10-16",
+      517,
+      504,
+      425,
+      496,
+      408,
+      408
+     ],
+     [
+      "2025-10-24",
+      514,
+      501,
+      424,
+      493,
+      408,
+      408
+     ],
+     [
+      "2025-10-31",
+      510,
+      496,
+      418,
+      488,
+      402,
+      402
+     ],
+     [
+      "2025-11-10",
+      515,
+      501,
+      422,
+      493,
+      406,
+      405
+     ],
+     [
+      "2025-11-17",
+      515,
+      503,
+      421,
+      495,
+      405,
+      405
+     ],
+     [
+      "2025-11-24",
+      521,
+      507,
+      423,
+      499,
+      406,
+      404
+     ],
+     [
+      "2025-12-01",
+      515,
+      501,
+      418,
+      494,
+      402,
+      398
+     ],
+     [
+      "2025-12-08",
+      507,
+      493,
+      411,
+      486,
+      394,
+      390
+     ],
+     [
+      "2025-12-15",
+      495,
+      481,
+      402,
+      474,
+      386,
+      381
+     ],
+     [
+      "2025-12-22",
+      489,
+      478,
+      398,
+      471,
+      381,
+      379
+     ],
+     [
+      "2025-12-30",
+      490,
+      477,
+      397,
+      471,
+      379,
+      375
+     ],
+     [
+      "2026-01-06",
+      484,
+      471,
+      391,
+      464,
+      373,
+      370
+     ],
+     [
+      "2026-01-13",
+      485,
+      472,
+      394,
+      465,
+      376,
+      374
+     ],
+     [
+      "2026-01-21",
+      487,
+      475,
+      396,
+      468,
+      377,
+      374
+     ],
+     [
+      "2026-01-29",
+      490,
+      477,
+      396,
+      470,
+      376,
+      376
+     ],
+     [
+      "2026-02-05",
+      493,
+      481,
+      400,
+      473,
+      379,
+      380
+     ],
+     [
+      "2026-02-12",
+      494,
+      482,
+      402,
+      474,
+      381,
+      378
+     ],
+     [
+      "2026-02-19",
+      490,
+      480,
+      399,
+      471,
+      378,
+      373
+     ],
+     [
+      "2026-02-26",
+      488,
+      478,
+      399,
+      470,
+      378,
+      372
+     ],
+     [
+      "2026-03-06",
+      494,
+      484,
+      406,
+      476,
+      385,
+      378
+     ],
+     [
+      "2026-03-13",
+      503,
+      493,
+      412,
+      485,
+      391,
+      384
+     ],
+     [
+      "2026-03-20",
+      504,
+      493,
+      414,
+      486,
+      393,
+      385
+     ],
+     [
+      "2026-03-30",
+      516,
+      505,
+      421,
+      497,
+      401,
+      392
+     ],
+     [
+      "2026-04-08",
+      523,
+      513,
+      428,
+      500,
+      407,
+      398
+     ],
+     [
+      "2026-04-16",
+      528,
+      519,
+      434,
+      507,
+      414,
+      401
+     ],
+     [
+      "2026-04-23",
+      540,
+      531,
+      445,
+      518,
+      425,
+      412
+     ],
+     [
+      "2026-04-30",
+      546,
+      537,
+      456,
+      523,
+      432,
+      419
+     ],
+     [
+      "2026-05-08",
+      550,
+      541,
+      471,
+      529,
+      447,
+      426
+     ],
+     [
+      "2026-05-15",
+      559,
+      549,
+      489,
+      538,
+      466,
+      444
+     ],
+     [
+      "2026-05-22",
+      569,
+      559,
+      518,
+      550,
+      491,
+      458
+     ],
+     [
+      "2026-06-01",
+      575,
+      566,
+      536,
+      556,
+      511,
+      470
+     ],
+     [
+      "2026-06-08",
+      585,
+      576,
+      547,
+      565,
+      522,
+      477
+     ],
+     [
+      "2026-06-15",
+      592,
+      583,
+      555,
+      572,
+      527,
+      484
+     ],
+     [
+      "2026-06-22",
+      589,
+      579,
+      554,
+      571,
+      528,
+      484
+     ],
+     [
+      "2026-06-30",
+      590,
+      580,
+      558,
+      572,
+      533,
+      482
+     ],
+     [
+      "2026-07-07",
+      596,
+      586,
+      564,
+      578,
+      539,
+      488
+     ],
+     [
+      "2026-07-14",
+      598,
+      588,
+      572,
+      581,
+      548,
+      490
+     ],
+     [
+      "2026-07-21",
+      593,
+      583,
+      571,
+      575,
+      546,
+      486
+     ],
+     [
+      "2026-07-28",
+      603,
+      594,
+      580,
+      584,
+      555,
+      495
+     ],
+     [
+      "2026-08-04",
+      604,
+      597,
+      580,
+      584,
+      555,
+      495
+     ],
+     [
+      "2026-08-11",
+      612,
+      604,
+      586,
+      589,
+      559,
+      500
+     ],
+     [
+      "2026-08-18",
+      616,
+      608,
+      591,
+      594,
+      565,
+      498
+     ],
+     [
+      "2026-08-25",
+      616,
+      609,
+      592,
+      595,
+      565,
+      497
+     ],
+     [
+      "2026-09-01",
+      617,
+      610,
+      593,
+      596,
+      566,
+      499
+     ],
+     [
+      "2026-09-08",
+      621,
+      614,
+      597,
+      599,
+      571,
+      500
+     ],
+     [
+      "2026-09-16",
+      617,
+      610,
+      594,
+      596,
+      567,
+      494
+     ],
+     [
+      "2026-09-23",
+      619,
+      612,
+      597,
+      598,
+      570,
+      496
+     ],
+     [
+      "2026-09-30",
+      613,
+      606,
+      591,
+      592,
+      564,
+      491
+     ],
+     [
+      "2026-10-08",
+      616,
+      609,
+      590,
+      596,
+      563,
+      486
+     ],
+     [
+      "2026-10-15",
+      620,
+      613,
+      601,
+      602,
+      574,
+      493
+     ],
+     [
+      "2026-10-23",
+      620,
+      613,
+      603,
+      604,
+      575,
+      495
+     ],
+     [
+      "2026-10-30",
+      614,
+      607,
+      598,
+      600,
+      570,
+      489
+     ],
+     [
+      "2026-11-06",
+      620,
+      613,
+      603,
+      609,
+      576,
+      491
+     ],
+     [
+      "2026-11-16",
+      610,
+      603,
+      593,
+      601,
+      566,
+      484
+     ],
+     [
+      "2026-11-23",
+      593,
+      586,
+      577,
+      584,
+      552,
+      472
+     ]
+    ]
+   }
+  }
+ }
+}

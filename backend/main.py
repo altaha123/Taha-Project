@@ -1252,7 +1252,7 @@ def ideas(horizon: str = "short", limit: int = 15,
         log_as = result.get("list") or horizon
         if (limit == 15 and min_tier == "moderate" and not include_thin
                 and min_conviction is None):
-            _log_calls(log_as, result.get("rows") or [], p)
+            _log_calls(log_as, result.get("rows") or [], p, result.get("recipe"))
         _attach_calls(log_as, result.get("rows") or [], p)
         result["live"] = _live_record(log_as)
         return to_native({**result, "disclaimer": DISCLAIMER})
@@ -1353,13 +1353,25 @@ def _call_horizons(p):
     return call_log.PICK_HORIZONS if ideas_engine.has_picks(p) else call_log.LEGACY_HORIZONS
 
 
+def _running_recipe():
+    """leaders.RECIPE as the ideas engine loaded it, or None."""
+    return getattr(getattr(ideas_engine, "leaders", None), "RECIPE", None)
+
+
 def _live_record(horizon):
-    """How this list's own calls have done since it went live. Counts only;
-    None when the log cannot be read, so the page says nothing, not zero."""
+    """How this list's own calls have done since the recipe running now went
+    live. The month and long-term lists kept their names through the December
+    2026 rebuild, so the calls the old recipes made are in the log under the
+    same keys; they are not this recipe's record and are not counted. Counts
+    only; None when the log cannot be read or this recipe has logged nothing
+    yet, so the page says nothing, not zero."""
     if call_log is None or horizon not in getattr(call_log, "PICK_HORIZONS", ()):
         return None
     try:
-        rows = (call_log.listing(horizon=horizon, limit=2000) or {}).get("rows") or []
+        since = call_log.recipe_since(horizon, _running_recipe())
+        if since is None:
+            return None
+        rows = (call_log.listing(horizon=horizon, since=since, limit=1000) or {}).get("rows") or []
     except Exception:
         return None
     priced = [r for r in rows if r.get("move_pct") is not None]
@@ -1375,15 +1387,22 @@ def _live_record(horizon):
     }
 
 
-def _log_calls(horizon, rows, p):
+def _log_calls(horizon, rows, p, recipe=None):
     if call_log is None or not p or p.get("partial"):
+        return None
+    # A scan ranked under an earlier recipe is not this list's record: its
+    # picks were made by the list this one replaced. Nothing is logged from it,
+    # and nothing retired, until the first scan ranked under the running one.
+    if horizon in getattr(call_log, "PICK_HORIZONS", ()) and (not recipe or recipe != _running_recipe()):
         return None
     try:
         if horizon in call_log.PICK_HORIZONS:
             # The first scan with the tested lists closes what is still open
-            # on the two lists they replaced. Nothing would ever drop those.
+            # on the lists they replaced (short and medium, then this week and
+            # momentum). Nothing would ever drop those.
             call_log.retire(call_log.LEGACY_HORIZONS, p.get("scanned_at"), _scan_prices(p))
-        return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p))
+            call_log.retire_replaced(p.get("scanned_at"), _scan_prices(p))
+        return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p), recipe=recipe)
     except Exception:
         import traceback
         print(f"[call_log] record failed for horizon={horizon}\n{traceback.format_exc()}", flush=True)
@@ -1424,6 +1443,10 @@ def _log_scan_calls(p):
     thread: select() reaches the news, sector and regime feeds."""
     if call_log is None or not p or p.get("partial"):
         return False
+    # Ranked before the running recipe: nothing of it is logged (_log_calls),
+    # so there is nothing to start a thread for.
+    if ideas_engine.has_picks(p) and ideas_engine.scan_recipe(p) != _running_recipe():
+        return False
     try:
         if all(call_log.recorded(h, p.get("scanned_at")) for h in _call_horizons(p)):
             return False
@@ -1441,7 +1464,7 @@ def _log_scan_calls(p):
                     sel = ideas_engine.select(p, horizon=h, limit=15)
                 except Exception:
                     continue
-                _log_calls(h, sel.get("rows") or [], p)
+                _log_calls(h, sel.get("rows") or [], p, sel.get("recipe"))
         finally:
             _call_log_busy.release()
 
@@ -1654,14 +1677,26 @@ def tracker_export():
                              "attachment; filename=altaha-tracked-ideas.csv"})
 
 
+def _horizon_slug(sel, horizon):
+    """The file name's list: the list that answered (an old name resolves to
+    the list that replaced it), else the name asked for, letters only."""
+    name = str((sel or {}).get("list") or horizon or "ideas").lower()
+    return "".join(ch for ch in name if ch.isalnum() or ch in "-_")[:20] or "ideas"
+
+
 @app.get("/ideas/export.csv")
 def ideas_export(horizon: str = "short", limit: int = 25,
                  min_tier: str = "moderate", include_thin: bool = False):
     p = _state["payload"]
     if not p:
         raise HTTPException(404, "No scan yet.")
-    sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
-                              min_tier=min_tier, include_thin=bool(include_thin))
+    try:
+        # An old list's name (week, momentum, trade, position) resolves to the
+        # list that replaced it; a name no list ever had is the caller's error.
+        sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
+                                  min_tier=min_tier, include_thin=bool(include_thin))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     cols = ["symbol", "name", "sector", "setup", "conviction", "conviction_band",
             "setup_fit", "composite", "technical", "fundamental", "f_score",
             "price", "horizon", "liquidity_tier", "avg_turnover_cr",
@@ -1686,7 +1721,7 @@ def ideas_export(horizon: str = "short", limit: int = 25,
         w.writerow({k: _cell(row.get(k)) for k in cols})
     return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
-                             f"attachment; filename=altaha-ideas-{horizon}.csv"})
+                             f"attachment; filename=altaha-ideas-{_horizon_slug(sel, horizon)}.csv"})
 
 
 @app.get("/patterns")
@@ -2100,6 +2135,19 @@ def share_chart(ticker: str, range: str = "1D"):
         media_type="text/html")
 
 
+def _list_label(horizon):
+    """What the page calls the list a horizon opens. An old list's name opens
+    the list that replaced it, so a week link reads "Swing / This month"."""
+    try:
+        import leaders as _leaders
+        key = _leaders.resolve(horizon)
+        if key:
+            return _leaders.LISTS[key]["label"]
+    except Exception:
+        pass
+    return f"{horizon}-term"
+
+
 @app.get("/share/idea/{ticker}")
 def share_idea(ticker: str, horizon: str = "short"):
     if not ticker or len(ticker) > 20:
@@ -2107,14 +2155,15 @@ def share_idea(ticker: str, horizon: str = "short"):
     sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
     h = (horizon or "short").strip().lower()[:10]
     row = _idea_row(sym, h)
+    label = _list_label(h)
     if row:
         name = row.get("name") or sym
         desc = (f"{name} scores {row.get('conviction')}/100 conviction on the "
-                f"{h}-term list: {row.get('setup') or 'no archetype'}, typical hold "
-                f"{row.get('horizon') or '—'}. The seven weighted inputs that add up "
+                f"{label} list: {row.get('setup') or 'no archetype'}, typical hold "
+                f"{row.get('horizon') or '—'}. The weighted inputs that add up "
                 "to that number are published beside it.")
     else:
-        name, desc = sym, (f"{sym} is not on the current {h}-term list. The scorecard "
+        name, desc = sym, (f"{sym} is not on the current {label} list. The scorecard "
                            "and the arithmetic behind it are on the site.")
     return Response(content=og_cards.share_page(
         f"{name} ({sym}) | conviction {row.get('conviction') if row else '—'}/100",

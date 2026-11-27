@@ -281,7 +281,7 @@
         /* quiet: the full pick lists are what Ideas' own page leads with and
            its "See all" opens, so listing them beside it in the menu was the
            same thing twice. Search still finds them by name. */
-        { tab: 'ideas', quiet: true, label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
+        { tab: 'ideas', quiet: true, label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks swing month after results earnings quarterly long term compounders quality buy best top universe scan ranked planets' },
         /* One entry. "Call log" and "Track record" sat here as two, and were
            one thing: every idea, dated, and what it has returned since. */
         { tab: 'calls', g: 'proof', label: 'Track record', icon: 'target', hint: 'Every idea, the day it was made, and its return since', kw: 'track record tracker performance returns calls call log history dated when called buy zone stop target' },

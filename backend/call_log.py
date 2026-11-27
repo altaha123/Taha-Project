@@ -89,13 +89,32 @@ except Exception:
 DB_PATH = os.environ.get("ALTAHA_CALL_DB", "").strip() or os.path.join(DATA_DIR, "call_log.db")
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
-# The four tested lists (leaders.py), then the two lists they replaced. The
-# old keys stay valid so the calls already in the log keep their labels.
-PICK_HORIZONS = ("week", "month", "momentum", "long")
+# The tested lists whose calls are logged (leaders.py), then the lists they
+# replaced. The old keys stay valid so the calls already in the log keep
+# their labels: this week and momentum were folded into the month and
+# long-term lists in December 2026, and short and medium before them.
+PICK_HORIZONS = ("month", "long")
+# The month and long-term lists kept their keys when they were rebuilt to read
+# company filings (December 2026), so every call already in the log under
+# those keys was made by the price lists they replaced. The first start of
+# this code files those calls under keys of their own, once (_migrate), and
+# they keep their own names; the first scan of the rebuilt lists closes what
+# they left open, as it closes this week's and momentum's.
+REKEYED = {"month": "month_old", "long": "long_old"}
+RETIRED_HORIZONS = ("week", "momentum") + tuple(REKEYED.values())
 LEGACY_HORIZONS = ("short", "medium")
-HORIZONS = PICK_HORIZONS + LEGACY_HORIZONS
-HORIZON_LABEL = {"week": "This week", "month": "This month", "momentum": "Momentum",
-                 "long": "Long term", "short": "Short term", "medium": "Medium term"}
+HORIZONS = PICK_HORIZONS + RETIRED_HORIZONS + LEGACY_HORIZONS
+HORIZON_LABEL = {"month": "Swing / This month", "long": "Long-term compounders",
+                 "week": "This week", "momentum": "Momentum",
+                 "month_old": "This month (earlier list)", "long_old": "Long term (earlier list)",
+                 "short": "Short term", "medium": "Medium term"}
+# Why an open call on a retired list was closed: the list that took its place.
+RETIRED_NOTE = {"week": "List replaced by Swing / This month.",
+                "momentum": "List replaced by Long-term compounders.",
+                "month_old": "List rebuilt as Swing / This month.",
+                "long_old": "List rebuilt as Long-term compounders."}
+# The log's own version (PRAGMA user_version): 1 once REKEYED has been applied.
+SCHEMA_VERSION = 1
 
 
 def _anchored(setup_key):
@@ -164,6 +183,12 @@ CREATE TABLE IF NOT EXISTS recorded_scans (
   at       TEXT NOT NULL,
   PRIMARY KEY (horizon, scan)
 );
+CREATE TABLE IF NOT EXISTS list_recipes (
+  horizon  TEXT NOT NULL,
+  recipe   TEXT NOT NULL,
+  since    TEXT NOT NULL,
+  PRIMARY KEY (horizon, recipe)
+);
 """
 
 _write_lock = threading.Lock()
@@ -184,8 +209,31 @@ def _connect():
     except sqlite3.DatabaseError:
         pass
     conn.executescript(SCHEMA)
+    _migrate(conn)
     _local.conn, _local.path = conn, DB_PATH
     return conn
+
+
+def _migrate(conn):
+    """Bring a log written by earlier code up to SCHEMA_VERSION, once.
+
+    Version 1 files the month and long-term calls already in the log under
+    REKEYED: they were made by the lists those two keys named before the
+    rebuild. It runs in one transaction, and checks the version again inside
+    it, so two threads opening the log at once apply it once."""
+    if conn.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION:
+        return
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        if conn.execute("PRAGMA user_version").fetchone()[0] < 1:
+            for old, new in REKEYED.items():
+                conn.execute("UPDATE calls SET horizon=? WHERE horizon=?", (new, old))
+                conn.execute("UPDATE recorded_scans SET horizon=? WHERE horizon=?", (new, old))
+        conn.execute(f"PRAGMA user_version={int(SCHEMA_VERSION)}")
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
 
 
 @contextmanager
@@ -314,13 +362,17 @@ def recorded(horizon: str, scanned_at: str) -> bool:
 
 
 def record(horizon: str, rows: list, scanned_at: str, prices: dict | None = None,
-           now: dt.datetime | None = None) -> dict:
+           now: dt.datetime | None = None, recipe: str | None = None) -> dict:
     """
     Write one scan's Ideas list for one horizon. Idempotent per scan.
 
     rows    the list exactly as /ideas served it, best first
     prices  {SYMBOL: price} for the whole scored universe in the same scan, so
             a call that left the list still gets a closing price
+    recipe  the leaders.RECIPE stamp the list was ranked under. The first scan
+            logged under a stamp dates it (recipe_since), so a list rebuilt
+            under its old name does not count the calls its old recipe made
+            as its own.
     """
     if horizon not in HORIZONS:
         return {"recorded": False, "reason": "unknown horizon"}
@@ -406,6 +458,9 @@ def record(horizon: str, rows: list, scanned_at: str, prices: dict | None = None
 
         conn.execute("INSERT INTO recorded_scans(horizon,scan,at) VALUES(?,?,?)",
                      (horizon, str(scanned_at), _iso(now or dt.datetime.now(dt.timezone.utc))))
+        if recipe:
+            conn.execute("INSERT OR IGNORE INTO list_recipes(horizon,recipe,since) VALUES(?,?,?)",
+                         (horizon, str(recipe), at))
     return {"recorded": True, "horizon": horizon, "opened": opened,
             "carried": kept, "closed": closed, "at": at}
 
@@ -563,7 +618,7 @@ def _by_day(rows, now, days=14):
 
 def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 300,
             prices: dict | None = None, now: dt.datetime | None = None,
-            index=None, index_name: str = "") -> dict:
+            index=None, index_name: str = "", since: str = "") -> dict:
     """
     Ideas newest first, each with its timeline, plus a summary of all of them.
 
@@ -571,6 +626,7 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
             measured to
     index   the index's daily closes, as [(date, close)] or {date: close}, for
             the same-days comparison; without it the index fields are None
+    since   only the calls made at or after this time (recipe_since)
     """
     now = now or dt.datetime.now(dt.timezone.utc)
     prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
@@ -582,6 +638,8 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
         where.append("status=?"); args.append(status)
     if symbol:
         where.append("symbol=?"); args.append(symbol.strip().upper())
+    if since:
+        where.append("called_at>=?"); args.append(str(since))
     sql = "SELECT * FROM calls" + (" WHERE " + " AND ".join(where) if where else "")
     conn = _connect()
     calls = conn.execute(sql + " ORDER BY called_at DESC, id DESC", args).fetchall()
@@ -602,6 +660,16 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
     }
 
 
+def recipe_since(horizon: str, recipe: str):
+    """When the first scan ranked under `recipe` was logged for this list, or
+    None if none has been. Calls made before it belong to an earlier recipe."""
+    if not horizon or not recipe:
+        return None
+    row = _connect().execute("SELECT since FROM list_recipes WHERE horizon=? AND recipe=?",
+                             (horizon, str(recipe))).fetchone()
+    return row["since"] if row else None
+
+
 def open_index(horizon: str, prices: dict | None = None) -> dict:
     """{(SYMBOL, setup_key): compact call} for the open calls of one horizon.
     What the Ideas list uses to say how long each row has been there."""
@@ -617,13 +685,24 @@ def open_index(horizon: str, prices: dict | None = None) -> dict:
     return out
 
 
+def retire_replaced(scanned_at: str, prices: dict | None = None) -> int:
+    """
+    Close the open calls of the lists replaced in December 2026 (this week and
+    momentum, folded into the month and long-term lists, and the month and
+    long-term lists as they were before the rebuild), each with the name of
+    the list that took its place. Idempotent: once closed, nothing is open
+    there to close again.
+    """
+    return sum(retire((h,), scanned_at, prices, RETIRED_NOTE[h]) for h in RETIRED_HORIZONS)
+
+
 def retire(horizons, scanned_at: str, prices: dict | None = None, note: str = "") -> int:
     """
     Close every open call of the given horizons as dropped. Idempotent.
 
-    Used once, when the short- and medium-term lists were replaced: their open
-    calls would otherwise stay open for ever, because no scan would list or
-    drop them again.
+    Used when a list is replaced: its open calls would otherwise stay open for
+    ever, because no scan would list or drop them again (the short- and
+    medium-term lists, then this week and momentum: retire_replaced).
     """
     prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
     at = _iso(scan_time(scanned_at) or dt.datetime.now(dt.timezone.utc))

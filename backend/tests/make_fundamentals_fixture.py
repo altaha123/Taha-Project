@@ -158,9 +158,21 @@ OUT_SCREENS = OUT.with_name("fundamentals-screens.json")
 
 
 def screens():
-    """The screens index and every screen's matches, from the real module over
-    a temporary store holding one company that meets each screen and one stale
-    company that would meet two of them if it were current."""
+    """
+    The screens index and every screen's matches, from the real module over a
+    temporary store holding:
+
+      · two growers, one on each route (four quarters above 20%; two of 16%
+        with the margin up 3 points), and a lender on the first route, which
+        is shown without an operating margin;
+      · one operational turnaround, whose year-ago loss is printed;
+      · two compounders, one with a stored price (so a free cash flow yield)
+        and one without, which follows it;
+      · a stale company that would be a grower and a turnaround if its
+        quarter were current.
+
+    No scan is on record, so no turnover test runs.
+    """
     import datetime as dt
     import os
     import tempfile
@@ -170,35 +182,82 @@ def screens():
     import fundamentals_store as st
     import fundamentals_screens as sc
     import fundamentals as F
+    sc._scan_market = lambda today: {}
+    today = dt.date(2026, 9, 25)
 
-    def q(sym, co, end, rev, pat, opm=15.0):
+    def meta(sym, co, end, freq=None, months=None):
         e = dt.date.fromisoformat(end)
-        r = st.to_row("income", {
-            "symbol": sym, "company": co, "basis": "consolidated", "freq": "quarterly",
-            "label": F.quarter_label(e), "period_end": end, "months": 3,
-            "filed_at": "2026-08-10", "source_url": "https://x/%s-%s.xml" % (sym, end)},
-            {"revenue": rev * 1e7, "pat": pat * 1e7})
+        label = F.quarter_label(e) if freq == "quarterly" else "FY%s" % end[2:4]
+        return {"symbol": sym, "company": co, "basis": "consolidated", "freq": freq,
+                "label": label, "period_end": end, "months": months,
+                "filed_at": (e + dt.timedelta(days=45)).isoformat() + " 18:00:00",
+                "source_url": "https://x/%s-%s.xml" % (sym, end)}
+
+    def q(sym, co, end, rev, pat, opm=15.0, oi=None, pbt=None, eps=None):
+        pbt = pat * 1.3 if pbt is None else pbt
+        r = st.to_row("income", meta(sym, co, end, "quarterly", 3), {
+            "revenue": rev * 1e7, "pat": pat * 1e7, "ebitda": rev * opm / 100 * 1e7,
+            "exceptional": 0.0, "pbt": pbt * 1e7, "pbt_before_exceptional": pbt * 1e7,
+            "other_income": (rev * 0.005 if oi is None else oi) * 1e7,
+            "eps_basic": eps if eps is not None else round(pat / 10, 2)})
         r["opm_pct"] = opm
         return r
 
     ends = ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30",
             "2025-06-30", "2025-03-31", "2024-12-31", "2024-09-30"]
-    rows = [q("TRENT", "Trent Limited", e, 5200 if i < 4 else 4100, 420)
-            for i, e in enumerate(ends)]
-    rows += [q("VODAIDEA", "Vodafone Idea Limited", ends[0], 11100, 310),
-             q("VODAIDEA", "Vodafone Idea Limited", ends[4], 10500, -6400)]
-    rows += [q("TATASTEEL", "Tata Steel Limited", ends[0], 56000, 2900, opm=15.8),
-             q("TATASTEEL", "Tata Steel Limited", ends[4], 54000, 1200, opm=11.2)]
-    rows += [q("OLDCO", "Old Company Limited", "2025-06-30", 900, 40),
-             q("OLDCO", "Old Company Limited", "2024-06-30", 800, -20)]
+    rows = [q("TRENT", "Trent Limited", e, 5200 if i < 4 else 4100, 420,
+              opm=17.0 if i < 4 else 15.5) for i, e in enumerate(ends)]
+    rows += [q("KPITTECH", "KPIT Technologies Limited", e,
+               (1650, 1650, 1500, 1500)[i] if i < 4 else 1420, 210,
+               opm=21.0 if i == 0 else 18.0) for i, e in enumerate(ends)]
+    # A lender's "operating margin" says nothing about it; 70% is what the
+    # formula gives a bank, and it is never shown or tested.
+    rows += [q("BAJFINANCE", "Bajaj Finance Limited", e, 12500 if i < 4 else 10000, 4200,
+               opm=70.0 if i < 4 else 74.0) for i, e in enumerate(ends)]
+    rows += [q("VODAIDEA", "Vodafone Idea Limited", ends[0], 11100, 310, opm=43.2,
+               oi=50, pbt=400),
+             q("VODAIDEA", "Vodafone Idea Limited", ends[4], 10500, -6400, opm=40.0,
+               oi=60, pbt=-6400)]
+    rows += [q("OLDCO", "Old Company Limited", e, 900 if i < 4 else 700, 40 if i < 4 else -20)
+             for i, e in enumerate(["2025-06-30", "2025-03-31", "2024-12-31", "2024-09-30",
+                                    "2024-06-30", "2024-03-31", "2023-12-31", "2023-09-30"])]
+    years = ["2026-03-31", "2025-03-31", "2024-03-31", "2023-03-31"]
+    for sym, co, revs, pat, pbt, fcfs, eq, debt, cash in (
+            ("PAGEIND", "Page Industries Limited", (5000, 4600, 4250, 3900), 700, 940,
+             (750, 600, 520), 1900, 50, 700),
+            ("ECLERX", "eClerx Services Limited", (3600, 3150, 2900, 2600), 520, 700,
+             (480, 410, 360), 1800, 40, 600)):
+        rows += [st.to_row("income", meta(sym, co, e, "annual", 12),
+                           {"revenue": r * 1e7, "pat": (pat if i == 0 else pat * 0.9) * 1e7,
+                            "pbt": pbt * 1e7, "finance_cost": 20e7})
+                 for i, (e, r) in enumerate(zip(years, revs))]
+        st.upsert("cashflow", [st.to_row("cashflow", {**meta(sym, co, e, None, 12)}, {
+            "cfo": (f + 150) * 1e7, "capex": 150e7, "fcf": f * 1e7})
+            for e, f in zip(years, fcfs)])
+        st.upsert("balance", [st.to_row("balance", meta(sym, co, e), {
+            "total_assets": (eq + debt) * 1.6e7, "total_equity": eq * k * 1e7,
+            "total_borrowings": debt * 1e7, "cash_and_equivalents": cash * 1e7,
+            "net_debt": (debt - cash) * 1e7, "debt_equity_x": round(debt / (eq * k), 2)})
+            for e, k in ((years[0], 1.0), (years[1], 0.88))])
+        # The latest quarter: its profit and EPS give the share count a
+        # market value is worked out from.
+        rows.append(q(sym, co, ends[0], revs[0] / 4, pat / 4, eps={"PAGEIND": 156.9,
+                                                                   "ECLERX": 27.1}[sym]))
     st.upsert("income", rows)
-    for s_ in ("TRENT", "VODAIDEA", "TATASTEEL", "OLDCO"):
+    for s_ in ("TRENT", "KPITTECH", "BAJFINANCE", "VODAIDEA", "OLDCO", "PAGEIND", "ECLERX"):
         st.recompute_yoy(s_)
-    idx = sc.index(today=dt.date(2026, 9, 25))
-    detail = {s["id"]: sc.detail(s["id"], today=dt.date(2026, 9, 25)) for s in sc.SCREENS}
-    assert [m["symbol"] for m in detail["turnarounds"]["matches"]] == ["VODAIDEA"]
-    OUT_SCREENS.write_text(json.dumps({"index": idx, "detail": detail}, indent=1) + "\n",
-                           encoding="utf-8")
+    st.record_yf_profile("PAGEIND", {"longName": "Page Industries Limited",
+                                     "sector": "Consumer Cyclical",
+                                     "industry": "Apparel Manufacturing",
+                                     "sharesOutstanding": 11153874, "currentPrice": 45000,
+                                     "currency": "INR"})
+    idx = sc.index(today=today)
+    detail = {s["id"]: sc.detail(s["id"], today=today) for s in sc.SCREENS}
+    names = {k: [m["symbol"] for m in d["matches"]] for k, d in detail.items()}
+    assert sorted(names["steady_growers"]) == ["BAJFINANCE", "KPITTECH", "TRENT"], names
+    assert names["turnarounds"] == ["VODAIDEA"], names
+    assert names["fcf_compounders"] == ["PAGEIND", "ECLERX"], names
+    OUT_SCREENS.write_text(json.dumps({"index": idx, "detail": detail}, indent=1) + "\n", encoding="utf-8")
     print("wrote %s" % OUT_SCREENS.relative_to(ROOT))
 
 

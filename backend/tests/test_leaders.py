@@ -1,14 +1,17 @@
 """
-The pick lists: this week, this month, after results, momentum, long term.
+The pick lists: Swing / This month, After results, Long-term compounders,
+and the setup lists.
 
 What is pinned here is what would make the Ideas page lie if it broke: a
 signal that can see tomorrow's bar, a recipe that drifts away from the one
 the study measured, an exit line that follows the price down, a pick that
-skipped a gate, and a deploy that blanks the page until the next scan.
+skipped a gate, a list that read a figure the company never filed as a zero,
+and a deploy that blanks the page until the next scan.
 """
 import datetime as dt
 import json
 import os
+import re
 import tempfile
 import time
 
@@ -44,8 +47,18 @@ def frame(n=320, drift=0.001, noise=0.01, turnover=5e8, price=100.0, seed=1, las
                          "Volume": v}, index=idx)
 
 
+_SIGNALS = {}
+
+
 def cand(sym, **kw):
-    return {"symbol": sym, "leader_sig": leaders.signals(frame(**kw))}
+    """A candidate as the scan hands it to rank(). Its frame is drawn from a
+    seed, so the same arguments are the same stock and its signals are
+    worked out once for the whole file (rank() reads them, never changes
+    them)."""
+    key = tuple(sorted(kw.items()))
+    if key not in _SIGNALS:
+        _SIGNALS[key] = leaders.signals(frame(**kw))
+    return {"symbol": sym, "leader_sig": _SIGNALS[key]}
 
 
 # The lists ranked on price alone. The results list is ranked on a filing and
@@ -59,15 +72,18 @@ def filed(sessions_ago, hhmm="18:30"):
     return {"filed_at": f"{DAYS[-1 - sessions_ago]} {hhmm}:00"}
 
 
-def reporters(n=12, start=2):
+def reporters(n=12, start=2, step=0.01):
     """A universe in which S00..S(n-1) reported: each jumped a different
-    amount on the session after its results, filed `start` sessions back."""
+    amount (`step` more each) on the session after its results, filed `start`
+    sessions back, on a volume that grew with the jump (as a real result
+    day's does)."""
     cands, results = [], {}
     for i in range(60):
         kw = dict(drift=0.0004 + 0.00004 * i, noise=0.006 + 0.0003 * (i % 9), seed=i)
         if i < n:
             # Filed after the close `start` sessions ago: priced the session after.
-            kw["jump"] = (start - 1, 0.01 * (i + 1))
+            kw["jump"] = (start - 1, step * (i + 1))
+            kw["volume_on"] = (start - 1, 1.5 + 0.1 * i)
             results[f"S{i:02d}"] = filed(start)
         cands.append(cand(f"S{i:02d}", **kw))
     return cands, results
@@ -79,6 +95,87 @@ def universe(n=60):
     for i in range(n):
         out.append(cand(f"S{i:02d}", drift=0.0004 + 0.00004 * i, noise=0.006 + 0.0003 * (i % 9), seed=i))
     return out
+
+
+def industries(cands, k=10):
+    """Each stock in one of k NSE industries, every one with enough liquid
+    members to be ranked on money flow."""
+    return {c["symbol"]: f"Ind{i % k}" for i, c in enumerate(cands)}
+
+
+def healthy(**over):
+    """A snapshot of a company whose filings pass every test of the three
+    lists: growing, profitable, cash-backed, little debt, nothing pledged."""
+    s = {"basis": "consolidated", "is_financial": False, "quarter": "Q2 FY27",
+         "revenue_yoy_pct": 18.0, "ebitda_yoy_pct": 20.0, "pat_yoy_pct": 22.0, "opm_pct": 18.0,
+         "opm_yoy_chg": 1.0, "prev_revenue_yoy_pct": 15.0, "revenue_cr": 500.0, "pat_cr": 60.0,
+         "ebitda_cr": 95.0, "core_ebitda_cr": 95.0, "exceptional_cr": 0.0, "pbt_cr": 80.0,
+         "other_income_cr": 5.0, "other_income_share_pct": 6.0, "earnings_quality_ok": True,
+         "eps_ttm": 24.0, "revenue_ttm_yoy_pct": 17.0, "pat_ttm_yoy_pct": 20.0, "rev_cagr_3y": 16.0,
+         "pat_cagr_3y": 19.0, "opm_trend_2y": 1.5, "cfo_cr": 220.0, "fcf_cr": 150.0,
+         "fcf_pos_years_3y": 3, "cfo_to_pat": 1.1, "debt_equity_x": 0.2, "roe_pct": 21.0,
+         "roce_pct": 24.0, "f_score": 7, "pe": 32.0, "peg": 1.7, "ev_ebitda": 20.0,
+         "pledge_pct": 0.0, "promoter_chg_4q": 0.5, "fii_dii_chg_1q": 0.3,
+         "delivery_spike": False, "order_win_pct_mcap": None}
+    s.update(over)
+    return s
+
+
+def market(n=120, k=10, **snap_over):
+    """n liquid uptrends in k industries, every company with a healthy
+    snapshot: (candidates, sectors, snapshots)."""
+    cands = universe(n)
+    return cands, industries(cands, k), {c["symbol"]: healthy(**snap_over) for c in cands}
+
+
+def realistic(n=240, k=20, seed=7):
+    """
+    A market that looks like the real one: drifts and calm that vary, a third
+    of the stocks pulling back over the last month or week, a handful that
+    reported results in the last fortnight, and filings that differ the way
+    companies do (growth, margins, returns, cash, debt, valuation, pledges),
+    with growth and returns related as they are in practice. Returns
+    (candidates, sectors, snapshots, results).
+    """
+    rng = np.random.default_rng(seed)
+    cands, snaps, results = [], {}, {}
+    for i in range(n):
+        sym = f"R{i:03d}"
+        kw = dict(drift=float(rng.uniform(-0.0004, 0.0022)), noise=float(rng.uniform(0.006, 0.02)), seed=1000 + i)
+        roll = rng.uniform()
+        if roll < 0.20:
+            kw["last21"] = float(rng.uniform(-0.12, -0.02))
+        elif roll < 0.33:
+            kw["last5"] = float(rng.uniform(-0.07, -0.015))
+        if i % 16 == 0:
+            kw["jump"] = (2, float(rng.uniform(0.0, 0.12)))
+            kw["volume_on"] = (2, float(rng.uniform(1.0, 4.0)))
+            results[sym] = filed(3)
+        cands.append(cand(sym, **kw))
+        quality = float(rng.normal())                     # a company's underlying strength
+        growth = 12 + 10 * quality + float(rng.normal(0, 8))
+        fin = i % 11 == 0
+        snaps[sym] = healthy(
+            is_financial=fin, revenue_yoy_pct=round(growth, 1), prev_revenue_yoy_pct=round(growth + rng.normal(0, 5), 1),
+            pat_yoy_pct=round(growth * 1.2 + float(rng.normal(0, 10)), 1), ebitda_yoy_pct=round(growth + 2, 1),
+            opm_yoy_chg=round(float(rng.normal(0.3 * quality, 2)), 2),
+            roce_pct=None if fin else round(16 + 8 * quality + float(rng.normal(0, 5)), 1),
+            roe_pct=round(15 + 6 * quality + float(rng.normal(0, 4)), 1),
+            cfo_to_pat=None if fin else round(0.9 + 0.2 * quality + float(rng.normal(0, 0.3)), 2),
+            debt_equity_x=round(abs(float(rng.normal(0.5, 0.6))), 2),
+            rev_cagr_3y=round(growth * 0.9 + float(rng.normal(0, 4)), 1),
+            pat_cagr_3y=round(growth + float(rng.normal(0, 6)), 1),
+            pe=round(float(np.exp(rng.normal(3.4, 0.5))), 1), peg=round(float(np.exp(rng.normal(0.4, 0.5))), 2),
+            ev_ebitda=None if fin else round(float(np.exp(rng.normal(2.9, 0.4))), 1),
+            pledge_pct=0.0 if rng.uniform() < 0.8 else round(float(rng.uniform(0.5, 20)), 1),
+            f_score=None if fin else int(rng.integers(3, 10)))
+    return cands, industries(cands, k), snaps, results
+
+
+def top(blocks, key, n=None):
+    """The symbols a list ranks in its top n (LIST_SIZE by default)."""
+    n = n or leaders.LIST_SIZE
+    return {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 999) <= n}
 
 
 # --- signals ---------------------------------------------------------------
@@ -163,11 +260,14 @@ def test_an_illiquid_or_penny_stock_is_not_compared_at_all():
 
 
 def test_a_downtrend_is_on_no_list():
-    blocks = leaders.rank(universe() + [cand("FALLING", drift=-0.002)])
-    b = blocks["FALLING"]
+    cands, sectors, snaps = market()
+    cands.append(cand("FALLING", drift=-0.002))
+    sectors["FALLING"], snaps["FALLING"] = "Ind0", healthy()
+    b = leaders.rank(cands, sectors=sectors, snapshot=snaps)["FALLING"]
     assert not b["uptrend"]
     assert all(v["rank"] is None and not v["eligible"] for v in b["lists"].values())
-    assert "uptrend" in b["lists"]["momentum"]["why_not"]
+    assert "uptrend" in b["lists"]["month"]["why_not"]
+    assert b["lists"]["long"]["why_not"] == "Under its 200-day average."
 
 
 def test_the_most_volatile_fifth_is_on_no_list():
@@ -203,54 +303,84 @@ def test_ranking_is_the_same_whatever_order_the_scan_met_the_stocks_in():
     assert a == b
 
 
-def test_a_dip_lifts_a_stock_on_the_week_list_and_not_on_the_momentum_list():
+def test_a_dip_lifts_a_stock_on_the_month_list_and_not_on_the_long_term_list():
     base = universe()
     flat = leaders.rank(base + [cand("X", drift=0.0015, noise=0.006, seed=99)])["X"]
     dipped = leaders.rank(base + [cand("X", drift=0.0015, noise=0.006, seed=99, last5=-0.04)])["X"]
     assert dipped["parts"]["dip"] > flat["parts"]["dip"]
-    gain_week = dipped["lists"]["week"]["score"] - flat["lists"]["week"]["score"]
-    gain_mom = dipped["lists"]["momentum"]["score"] - flat["lists"]["momentum"]["score"]
-    assert gain_week > 0 and gain_week > gain_mom
+    gain_month = dipped["lists"]["month"]["score"] - flat["lists"]["month"]["score"]
+    gain_long = dipped["lists"]["long"]["score"] - flat["lists"]["long"]["score"]
+    assert gain_month > 0 and gain_month > gain_long
 
 
 # --- one stock, one list --------------------------------------------------------
 
-def test_momentum_gives_way_to_long_term():
-    """Momentum and long term shared 12 of 15 names. Now they share none."""
-    blocks = leaders.rank(universe(120))
-    top = lambda key: {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 99) <= leaders.LIST_SIZE}
-    long_top, mom_top = top("long"), top("momentum")
-    assert len(long_top) == leaders.LIST_SIZE and len(mom_top) == leaders.LIST_SIZE
-    assert not long_top & mom_top
-    for s in long_top:
-        e = blocks[s]["lists"]["momentum"]
-        assert e["rank"] is None and not e["eligible"]
-        assert "long term list" in e["why_not"]
+def test_the_three_lists_overlap_little_without_giving_way():
+    """
+    The first version of the price lists shared 10 to 12 of their 15 names,
+    and momentum was made to give way to long term to stop it. The three
+    fundamental lists read different things (a pullback and a growing last
+    quarter; a result the market rewarded; returns, cash and a fair price),
+    so on a market that looks like the real one they share little with no
+    list made to give way to another. Replayed on NSE from 2017 to 2026
+    (research/fundamental-ideas-lab.json) the swing and long lists shared 2.7
+    of their 15 names a date on average, results and long 1.2, swing and
+    results 1.0. One synthetic market here puts 6 in common on one pair; the
+    average across them is what the real record bounds.
+    """
+    assert not any(spec.get("gives_way_to") for spec in leaders.LISTS.values())
+    shared = []
+    for seed in (7, 11, 23):
+        cands, sectors, snaps, results = realistic(n=400, k=25, seed=seed)
+        blocks = leaders.rank(cands, results=results, sectors=sectors, snapshot=snaps)
+        tops = {k: top(blocks, k) for k in leaders.ORDER}
+        assert len(tops["month"]) == len(tops["long"]) == leaders.LIST_SIZE and len(tops["results"]) >= 8
+        for a, b in (("month", "long"), ("month", "results"), ("results", "long")):
+            n = len(tops[a] & tops[b])
+            assert n <= leaders.LIST_SIZE * 2 // 5, (seed, a, b, n)
+            shared.append(n)
+    assert sum(shared) / len(shared) <= leaders.LIST_SIZE / 6
 
 
-def test_long_term_and_the_short_lists_are_not_changed_by_giving_way():
-    """Only momentum gives way: the other three rank every eligible stock."""
-    blocks = leaders.rank(universe(120))
-    for key in ("week", "month", "long"):
+def test_every_eligible_stock_is_ranked_and_the_industry_cap_says_why_it_left_one_out():
+    """No list gives way any more. Every eligible stock on the three lists is
+    ranked; one left out by its list's cap on a single industry says so."""
+    cands, sectors, snaps = market(120, 6)
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    capped = 0
+    for key in leaders.ORDER:
         for b in blocks.values():
             e = b["lists"][key]
             assert (e["rank"] is not None) == e["eligible"]
             assert e["why_not"] is None or "list. Each stock" not in e["why_not"]
+            capped += bool(e["why_not"] and "from its industry rank higher" in e["why_not"])
+        per = {}
+        for s, b in blocks.items():
+            if b["lists"][key]["rank"]:
+                per[sectors[s]] = per.get(sectors[s], 0) + 1
+        assert not per or max(per.values()) <= leaders.recipe_of(key)["sector_cap"], key
+    assert capped, "with six industries a list of fifteen has to be capped somewhere"
 
 
 def test_a_month_pick_has_to_be_a_market_leader():
-    blocks = leaders.rank(universe(120))
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    floor = leaders.MONTH["leader_floor"]
+    assert floor == leaders.LEADER_FLOOR == 0.70
     ranked = [b for b in blocks.values() if b["lists"]["month"]["rank"]]
     assert ranked
-    assert all(b["score"] >= leaders.LEADER_FLOOR * 100 - 0.05 for b in ranked)
+    assert all(b["score"] >= floor * 100 - 0.05 for b in ranked)
     followers = [b for b in blocks.values()
-                 if b["uptrend"] and b["calm"] and b["score"] < leaders.LEADER_FLOOR * 100 - 0.05]
+                 if b["uptrend"] and b["calm"] and b["score"] < floor * 100 - 0.05]
     assert followers
-    assert all(b["lists"]["month"]["rank"] is None and "leader" in b["lists"]["month"]["why_not"]
+    assert all(b["lists"]["month"]["rank"] is None and "under 70 of 100" in b["lists"]["month"]["why_not"]
                for b in followers)
 
 
-def test_a_month_long_pullback_lifts_a_leader_on_the_month_list():
+def test_a_month_long_pullback_lifts_a_leader_on_the_month_list(monkeypatch):
+    # The pullback is what is measured here, so the industry screen is off:
+    # with it on, the stock's industry would decide the case.
+    monkeypatch.setitem(leaders.MONTH, "sector_gate", False)
     base = universe()
     flat = leaders.rank(base + [cand("X", drift=0.004, noise=0.006, seed=99)])["X"]
     dipped = leaders.rank(base + [cand("X", drift=0.004, noise=0.006, seed=99, last21=-0.03)])["X"]
@@ -268,12 +398,31 @@ def test_a_fall_deep_enough_to_lose_the_lead_takes_a_stock_off_the_month_list():
     assert "leader" in deep["lists"]["month"]["why_not"]
 
 
-def test_the_published_record_is_for_lists_that_do_not_share_names():
+def _study_file():
     with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
-        study = json.load(f)
-    now = study["overlap"]["now"]
-    assert now["momentum / long"] == 0
-    assert now["distinct in all four"] > study["overlap"]["first version"]["distinct in all four"]
+        return json.load(f)
+
+
+def _lab_file():
+    with open(os.path.join(HERE, "..", "..", "research", "fundamental-ideas-lab.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_the_published_record_is_for_lists_that_do_not_share_names():
+    """The three lists as replayed (research/fundamental_ideas_lab.py) share
+    few names on a date, with no list made to give way to another; the
+    overlap of the four price lists they replaced is kept beside it."""
+    study = _study_file()
+    now = study["overlap"]
+    pairs = {k: v for k, v in now.items() if " / " in k}
+    assert set(pairs) == {"month / results", "month / long", "results / long"}
+    assert all(v["dates"] > 150 and v["mean_shared"] <= leaders.LIST_SIZE / 5 for v in pairs.values())
+    assert now["distinct in all three"] > 2 * leaders.LIST_SIZE
+    # Exactly as the lab measured it.
+    assert pairs == _lab_file()["overlap"]
+    before = study["overlap_before"]
+    assert before["now"]["momentum / long"] == 0
+    assert before["now"]["distinct in all four"] > before["first version"]["distinct in all four"]
 
 
 # --- the recipes are the ones the study measured ----------------------------
@@ -281,6 +430,11 @@ def test_the_published_record_is_for_lists_that_do_not_share_names():
 def test_every_mix_sums_to_one():
     for key, spec in leaders.LISTS.items():
         assert sum(spec["mix"].values()) == pytest.approx(1.0), key
+        assert sum(leaders.mix_of(key).values()) == pytest.approx(1.0), key
+    assert sum(leaders.MONTH["pull_mix"].values()) == pytest.approx(1.0)
+    # The three lists' weights are their recipe dictionaries' own.
+    for key, cfg in (("month", leaders.MONTH), ("results", leaders.RESULTS), ("long", leaders.LONG)):
+        assert leaders.recipe_of(key) is cfg and leaders.LISTS[key]["mix"] is cfg["mix"]
 
 
 def test_hold_and_exit_are_the_ones_the_study_measured():
@@ -309,30 +463,121 @@ def test_the_record_shown_is_read_from_the_study_file():
     for key in leaders.ORDER:
         rec = ideas.tested_record(key)
         # The results list makes a list only in the weeks companies report,
-        # and its filings begin in 2018: fewer picks, a later first half.
+        # when eight or more pass its tests, and its filings begin in 2018:
+        # fewer picks, a later first half.
         event = bool(leaders.LISTS[key].get("event"))
-        assert rec["picks"] > (3000 if event else 5000) and 0 < rec["up_pct"] < 100
+        assert rec["picks"] > (2500 if event else 5000) and 0 < rec["up_pct"] < 100
         assert set(rec["by_half"]) == ({"2018-21", "2022-26"} if event else {"2017-21", "2022-26"})
+        assert all(rec["by_half"].values()), key
+        assert set(rec["vs_average_stock"]["by_half"]) == set(rec["by_half"])
         assert set(rec["market"]) == {"above_200d", "below_200d"}
+        assert rec["avg_after_costs_pct"] == round(rec["avg_pct"] - leaders.TESTED["round_trip_cost_pct"], 2)
+        assert "big_winner_pct" in rec and rec["median_pct"] is not None and rec["what"] and rec["bias"]
+    rec = ideas.tested_record("results")
+    assert rec["from"].startswith("2018") and rec["vs_reporters"]["by_half"].keys() == {"2018-21", "2022-26"}
+
+
+def test_the_study_file_is_stamped_with_the_recipe_the_lists_run():
+    """The page prints a fundamental list's record only beside a scan ranked
+    with the recipe the study file was written for (ideas._study_current)."""
+    study = _study_file()
+    assert study["recipe"] == leaders.RECIPE == leaders.TESTED["recipe"]
+    assert all(ideas._study_current(k) for k in leaders.ALL)
+
+
+def test_the_record_served_for_each_fundamental_list_is_the_labs_chosen_version(quiet):
+    """
+    Each of the three lists' records is the replay of the version the lab's
+    declared rule chose (research/fundamental-ideas-lab.json), the version
+    backend/leaders.py now runs; and that is the record a reader is shown.
+    """
+    study, lab = _study_file(), _lab_file()
+    chosen = lab["chosen"]
+    assert chosen == {"month": "M3", "results": "R4", "long": "L1"}
+    cfgs = {"month": leaders.MONTH, "results": leaders.RESULTS, "long": leaders.LONG}
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
+    for key in leaders.ORDER:
+        rec, version = study["lists"][key], chosen[key]
+        measured = lab["records"][key][version]
+        assert rec["lab"]["variant"] == version
+        assert rec["lab"]["first"] == measured["first"] and rec["lab"]["second"] == measured["second"]
+        assert rec["lab"]["rule"] == lab["rule"]["text"]
+        assert set(rec["lab"]["before"]) == set(lab["before"][key])
+        # The whole replay is the chosen version's, figure for figure.
+        for k in ("list_dates", "picks", "up_pct", "avg_pct", "median_pct", "index_avg_pct", "worst_5pct",
+                  "best_5pct", "big_winner_pct", "exit_hit_pct"):
+            assert rec[k] == measured["all"][k], (key, k)
+        assert rec["exit_pct"] == measured["exit_pct"] == leaders.LISTS[key]["exit_pct"]
+        assert rec["hold_sessions"] == measured["hold_sessions"] == leaders.LISTS[key]["hold_sessions"]
+        # The version the rule chose is the engine's default now.
+        for k, v in lab["variants"][key][version]["overrides"].items():
+            assert k.startswith("_") or cfgs[key][k] == v, (key, k)
+        # And it is what the page is sent (the results list's, between
+        # seasons too).
+        assert ideas.select(p, horizon=key)["tested"] == rec
+
+
+def test_the_replaced_lists_records_are_never_served_beside_the_new_ones(quiet):
+    """This week and momentum were folded into the fundamental lists. Their
+    records are kept under `retired`, with what replaced each, and nothing
+    the page reads can reach them: an old link opens the new list with the
+    new list's record."""
+    study = _study_file()
+    for old, new in (("week", "month"), ("momentum", "long")):
+        assert old not in study["lists"] and old not in study["exits"]
+        gone = study["retired"][old]
+        assert gone["replaced_by"] == new and leaders.LISTS[new]["label"] in gone["note"]
+        assert gone["record"]["picks"] > 5000 and gone["exits"]["no exit line"]
+        assert ideas.tested_record(old) is None and leaders.target_tested(old) is None
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
+    for old, gone, new in (("week", "week", "month"), ("trade", "week", "month"),
+                           ("momentum", "momentum", "long"), ("position", "momentum", "long")):
+        sel = ideas.select(p, horizon=old)
+        assert sel["list"] == new and sel["tested"] == study["lists"][new]
+        assert sel["tested"] != study["retired"][gone]["record"]
+        assert sel["target_test"]["held"]["avg_pct"] == study["lists"][new]["avg_pct"]
 
 
 def test_every_old_horizon_name_still_resolves():
     assert leaders.resolve("short") == "short"        # its own list now, not a name for momentum
-    assert leaders.resolve("medium") == "long"
-    assert leaders.resolve("WEEK") == "week"
-    assert leaders.resolve("nonsense") is None
+    assert leaders.resolve("medium") == "long" and leaders.resolve("invest") == "long"
+    # This week and momentum were folded into the fundamental lists: their
+    # names, and the old switch's, open the list that replaced each.
+    assert leaders.resolve("WEEK") == "month" and leaders.resolve("trade") == "month"
+    assert leaders.resolve("momentum") == "long" and leaders.resolve(" Position ") == "long"
+    assert leaders.resolve("nonsense") is None and leaders.resolve(None) is None
+
+
+def test_the_lists_are_the_three_fundamental_ones_and_the_setups():
+    assert leaders.ORDER == ("month", "results", "long")
+    assert "week" not in leaders.LISTS and "momentum" not in leaders.LISTS
+    assert leaders.YOUNG_LISTS == ()
+    assert leaders.RECIPE == "2026-12 fundamental lists v4"
+    assert leaders.DAYS_KEPT == 23
+    assert set(leaders.ALL) == set(leaders.LISTS)
+    for key, spec in leaders.LISTS.items():
+        assert len(key) <= 10 and spec["setup_key"] == f"pick_{key}", key
+    # What each was called, and how long each is held: what the call log,
+    # the tracker and the study key on.
+    assert [leaders.LISTS[k]["label"] for k in leaders.ORDER] == \
+        ["Swing / This month", "After results", "Long-term compounders"]
+    assert [(leaders.LISTS[k]["hold_sessions"], leaders.LISTS[k]["exit_pct"]) for k in leaders.ORDER] == \
+        [(21, 12.0), (21, 12.0), (252, 30.0)]
 
 
 # --- the plan ----------------------------------------------------------------
 
 def test_the_plan_has_an_exit_line_a_review_date_and_no_target():
-    p = leaders.plan("momentum", 200.0, dt.date(2026, 11, 10))
-    assert p["stop"] == 170.0 and p["risk_pct"] == 15.0
+    p = leaders.plan("month", 200.0, dt.date(2026, 11, 10))
+    assert p["stop"] == 176.0 and p["risk_pct"] == 12.0
     assert p["t1"] is None and p["rr"] is None
-    assert p["review_on"] == "2027-02-09"
-    assert leaders.plan("week", 100.0, dt.date(2026, 11, 10))["stop"] == 93.0
+    assert p["review_on"] == "2026-12-10"
+    assert leaders.plan("results", 100.0, dt.date(2026, 11, 10))["stop"] == 88.0
     assert leaders.plan("long", 100.0)["stop"] == 70.0
-    assert leaders.plan("momentum", None) is None
+    assert leaders.plan("long", 100.0, dt.date(2026, 11, 10))["review_on"] == "2027-11-10"
+    assert leaders.plan("month", None) is None
     assert leaders.plan("nonsense", 100.0) is None
 
 
@@ -343,8 +588,8 @@ def test_the_mark_above_the_price_is_for_the_page_and_closes_nothing():
     target to sell at: the call log closes a call on `t1`, and that stays
     None, so a pick is judged exactly as it was before the mark existed.
     """
-    p = leaders.plan("momentum", 200.0, dt.date(2026, 11, 10))
-    assert p["aim"] == 230.0 and p["aim_pct"] == 15.0
+    p = leaders.plan("month", 200.0, dt.date(2026, 11, 10))
+    assert p["aim"] == 224.0 and p["aim_pct"] == 12.0
     assert p["aim"] - p["entry"] == p["entry"] - p["stop"]
     assert p["t1"] is None and p["rr"] is None and "targets" not in p
     import call_log
@@ -355,18 +600,26 @@ def test_the_mark_above_the_price_is_for_the_page_and_closes_nothing():
 
 
 def test_what_selling_at_the_mark_did_is_the_studys_own_figures():
+    """Read from the study file's exits table, whatever lists it holds: a list
+    with both runs there gets the study's own two records, any other none."""
     exits = leaders.TESTED["exits"]
-    for key in ("week", "month", "momentum", "long"):
-        t = leaders.target_tested(key)
+    for key in leaders.ORDER:
         pct = leaders.LISTS[key]["exit_pct"]
+        runs = exits.get(key) or {}
+        sold = runs.get(f"close {pct:g}% under, target {pct:g}% over")
+        held = runs.get(f"close {pct:g}% under")
+        t = leaders.target_tested(key)
+        if not (sold and held):
+            assert t is None, key
+            continue
         assert t["target_pct"] == pct
-        sold = exits[key][f"close {pct:g}% under, target {pct:g}% over"]
-        held = exits[key][f"close {pct:g}% under"]
         assert t["sold"]["up_pct"] == sold["up_pct"] and t["sold"]["avg_pct"] == sold["avg_pct"]
         assert t["held"]["up_pct"] == held["up_pct"] and t["held"]["avg_pct"] == held["avg_pct"]
         # Held to the end is the list's own record, the one the page already prints.
         assert t["held"]["avg_pct"] == leaders.TESTED["lists"][key]["avg_pct"]
-    # Not tested that way: nothing is said, and nothing is made up.
+    assert leaders.target_tested("month") and leaders.target_tested("long")
+    # Not tested that way: nothing is said, and nothing is made up. The
+    # results list's plan carries a mark, and the replay sold nothing at it.
     for key in ("results", "technical", "breakout", "quick", "nonsense"):
         assert leaders.target_tested(key) is None
 
@@ -395,72 +648,108 @@ def scan_payload(blocks, sectors=None, extra=None):
             "factor_universe": rows, "rankings": rows[:60]}
 
 
+def big_market():
+    """Two hundred stocks in twenty industries, every company healthy: enough
+    for the month list to fill fifteen places under its industry cap."""
+    return market(200, 20)
+
+
 def test_each_list_is_served_in_the_order_the_recipe_ranked_it(quiet):
-    blocks = leaders.rank(universe())
-    p = scan_payload(blocks)
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
     for key in PRICE_LISTS:
         sel = ideas.select(p, horizon=key, limit=15)
         assert sel["list"] == key and sel["method_key"] == "tested_lists"
         ranks = [r["pick_rank"] for r in sel["rows"]]
-        assert ranks == sorted(ranks) and len(ranks) == 15
+        assert ranks == sorted(ranks) and len(ranks) == 15, key
         assert all(r["setup_key"] == leaders.LISTS[key]["setup_key"] for r in sel["rows"])
         assert all(r["plan"]["t1"] is None and r["plan"]["stop"] < r["price"] for r in sel["rows"])
         assert sel["tested"]["hold_sessions"] == leaders.LISTS[key]["hold_sessions"]
+        assert sel["weights"] == leaders.mix_of(key) and sel["study_current"] is True
+        assert sel["method"] == ideas._tab_method(key)
 
 
 def test_the_ledger_adds_up_to_the_score_beside_it(quiet):
-    sel = ideas.select(scan_payload(leaders.rank(universe())), horizon="month")
+    """Every part of each fundamental list's mix has a row, in plain words,
+    and the rows add up to the conviction printed beside them."""
+    cands, sectors, snaps, results = realistic(n=240, seed=7)
+    p = scan_payload(leaders.rank(cands, results=results, sectors=sectors, snapshot=snaps))
+    for key in leaders.ORDER:
+        sel = ideas.select(p, horizon=key)
+        assert sel["rows"], key
+        weighted = {k for k, w in leaders.mix_of(key).items() if w > 0}
+        for r in sel["rows"]:
+            assert {e["key"] for e in r["evidence"]} == weighted, key
+            assert sum(e["of"] for e in r["evidence"]) == pytest.approx(100, abs=0.5)
+            assert sum(e["points"] for e in r["evidence"]) == pytest.approx(r["conviction"], abs=0.3)
+            assert all(e["factor"] and e["detail"].endswith(".") for e in r["evidence"])
+
+
+def test_a_ledger_from_before_the_breakdown_still_adds_up(quiet):
+    """A scan ranked before December 2026 has no breakdown on its blocks. Until
+    the next scan its ledger is rebuilt from the mix it was ranked on."""
+    blocks = leaders.rank(universe())
+    for b in blocks.values():
+        b["recipe"] = "2026-12 setup lists v2"
+        for key in leaders.ORDER:
+            b["lists"][key].pop("breakdown", None)
+        old = b["parts"]
+        b["lists"]["long"]["score"] = round((old["momentum_12m"] + old["near_high"] + old["steady_trend"]) / 3, 1)
+    sel = ideas.select(scan_payload(blocks), horizon="long")
+    assert sel["rows"] and sel["recipe_current"] is False
     for r in sel["rows"]:
-        assert sum(e["of"] for e in r["evidence"]) == pytest.approx(100, abs=0.5)
+        assert [e["factor"] for e in r["evidence"]] == ["12-month return for its risk", "Closeness to the 52-week high",
+                                                        "How steady the climb was"]
         assert sum(e["points"] for e in r["evidence"]) == pytest.approx(r["conviction"], abs=1.5)
 
 
 def test_a_serious_adverse_filing_removes_a_pick_and_says_so(quiet, monkeypatch):
     blocks = leaders.rank(universe())
-    top = min(blocks, key=lambda s: blocks[s]["lists"]["momentum"]["rank"] or 999)
+    first = min(blocks, key=lambda s: blocks[s]["lists"]["long"]["rank"] or 999)
     monkeypatch.setattr(ideas, "_filing_for", lambda sym, hours, cats: (
         {"category": "Regulatory action", "importance": "critical", "headline": "SEBI order",
-         "line": "filed", "direction": "adverse"} if sym == top else None))
-    sel = ideas.select(scan_payload(blocks), horizon="momentum")
-    assert top not in [r["symbol"] for r in sel["rows"]]
-    assert sel["excluded_adverse"][0]["symbol"] == top
+         "line": "filed", "direction": "adverse"} if sym == first else None))
+    sel = ideas.select(scan_payload(blocks), horizon="long")
+    assert first not in [r["symbol"] for r in sel["rows"]]
+    assert sel["excluded_adverse"][0]["symbol"] == first
     assert any("adverse filing" in n for n in sel["selection_notes"])
 
 
 def test_one_sector_cannot_fill_the_list(quiet):
     blocks = leaders.rank(universe())
-    sel = ideas.select(scan_payload(blocks, sectors={s: "Industrials" for s in blocks}), horizon="momentum")
+    sel = ideas.select(scan_payload(blocks, sectors={s: "Industrials" for s in blocks}), horizon="long")
     assert len(sel["rows"]) == ideas.PICK_SECTOR_CAP
     assert any("one sector" in n for n in sel["selection_notes"])
 
 
-def test_the_long_term_list_leaves_out_a_loss_maker_and_the_others_do_not(quiet):
-    blocks = leaders.rank(universe())
-    top = min(blocks, key=lambda s: blocks[s]["lists"]["long"]["rank"] or 999)
-    p = scan_payload(blocks, extra={top: {"trailing_eps": -3.0}})
-    assert top not in [r["symbol"] for r in ideas.select(p, horizon="long")["rows"]]
-    assert any(top in n for n in ideas.select(p, horizon="long")["selection_notes"])
-    if blocks[top]["lists"]["momentum"]["rank"] and blocks[top]["lists"]["momentum"]["rank"] <= 15:
-        assert top in [r["symbol"] for r in ideas.select(p, horizon="momentum")["rows"]]
+def test_the_long_term_list_is_screened_on_the_filings_by_the_engine_not_on_yahoo_by_the_page(quiet):
+    """
+    The page used to drop a long-term pick with a Piotroski score under 4 or
+    a trailing loss read from Yahoo, a screen nobody had tested. The engine's
+    own gates now read the company's filings and were replayed: a loss over
+    the last four quarters, or an F-score under 5, takes a stock off the list
+    in words, and the page drops nothing for Yahoo's figures.
+    """
+    assert not hasattr(ideas, "LONG_MIN_PIOTROSKI")
+    cands, sectors, snaps = market(60, 5)
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    first = min(blocks, key=lambda s: blocks[s]["lists"]["long"]["rank"] or 999)
+    p = scan_payload(blocks, extra={first: {"trailing_eps": -3.0, "f_score": 2}})
+    assert first in [r["symbol"] for r in ideas.select(p, horizon="long")["rows"]]
+    for over, text in (({"eps_ttm": -3.0}, "Lost money over the last four quarters."),
+                       ({"f_score": 4}, "F-score 4 of 9: the list needs 5.")):
+        again = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{first: healthy(**over)}))
+        e = again[first]["lists"]["long"]
+        assert e["rank"] is None and e["why_not"] == text
 
 
-def test_momentum_never_shows_a_stock_the_long_term_list_shows(quiet):
-    """The engine leaves out long term's top 15. The page can reach further
-    down long term (its sector cap and its fundamentals screen), so the page
-    checks what long term actually shows as well."""
-    blocks = leaders.rank(universe(120))
-    order = sorted((s for s in blocks if blocks[s]["lists"]["long"]["rank"]),
-                   key=lambda s: blocks[s]["lists"]["long"]["rank"])
-    p = scan_payload(blocks, sectors={s: "One sector" for s in order[:8]})
-    long_sel = ideas.select(p, horizon="long")
-    shown = {r["symbol"] for r in long_sel["rows"]}
-    assert any(blocks[s]["lists"]["long"]["rank"] > leaders.LIST_SIZE for s in shown), \
-        "the sector cap should have reached past long term's top 15"
-    mom = ideas.select(p, horizon="momentum")
-    assert len(mom["rows"]) == 15
-    assert not shown & {r["symbol"] for r in mom["rows"]}
-    assert mom["gives_way_to"] == "long"
-    assert any("long term list" in n for n in mom["selection_notes"])
+def test_an_old_momentum_or_week_link_opens_the_list_that_replaced_it(quiet):
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
+    for old, new in (("momentum", "long"), ("position", "long"), ("week", "month"), ("trade", "month")):
+        sel = ideas.select(p, horizon=old)
+        assert sel["list"] == new and sel["gives_way_to"] is None, old
+        assert [r["symbol"] for r in sel["rows"]] == [r["symbol"] for r in ideas.select(p, horizon=new)["rows"]]
 
 
 @pytest.mark.parametrize("stamp", ["an older recipe", None])
@@ -473,12 +762,63 @@ def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record
             b.pop("recipe")                  # ranked before blocks carried a stamp
         else:
             b["recipe"] = stamp
-    sel = ideas.select(scan_payload(blocks), horizon="month")
+    sel = ideas.select(scan_payload(blocks), horizon="long")
     assert sel["method_key"] == "tested_lists" and len(sel["rows"]) == 15
     assert sel["tested"] is None and sel["recipe_current"] is False
     assert any("earlier recipe" in n for n in sel["selection_notes"])
-    fresh = ideas.select(scan_payload(leaders.rank(universe())), horizon="month")
+    fresh = ideas.select(scan_payload(leaders.rank(universe())), horizon="long")
     assert fresh["recipe_current"] is True and fresh["tested"]
+
+
+def test_a_results_scan_from_an_earlier_recipe_claims_no_count_of_this_recipes_tests(quiet):
+    """The recipe before this one counted no results against the tests of
+    real growth, so its scan carries no count of them. It must not say that
+    none passed them beside picks it chose another way."""
+    cands, results = reporters(20)
+    snaps = {c["symbol"]: healthy() for c in cands}
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    fresh = ideas.select(scan_payload(blocks), horizon="results")
+    assert fresh["recipe_current"] is True and fresh["rows"]
+    assert any("passed every test of real growth" in n for n in fresh["selection_notes"])
+    for b in blocks.values():
+        b["recipe"] = "2026-12 setup lists v2"
+        (b.get("results") or {}).pop("qualified", None)
+    old = ideas.select(scan_payload(blocks), horizon="results")
+    assert old["recipe_current"] is False and old["rows"]
+    notes = " ".join(old["selection_notes"])
+    assert "passed every test" not in notes
+    assert "chosen the earlier way" in notes
+
+
+def test_an_earlier_recipes_scan_says_only_the_rebuilt_lists_were_chosen_another_way(quiet):
+    """Only the three lists by holding time were rebuilt. A setup list on a
+    scan from before the deploy chose its picks as it does now: its note says
+    only that the record is held back."""
+    blocks = leaders.rank(universe())
+    for b in blocks.values():
+        b["recipe"] = "2026-12 setup lists v2"
+    p = scan_payload(blocks)
+    for key in ("breakout", "technical", "quick", "emerging"):
+        notes = " ".join(ideas.select(p, horizon=key)["selection_notes"])
+        assert "earlier recipe" in notes and "chosen the earlier way" not in notes, key
+    assert "chosen the earlier way" in " ".join(ideas.select(p, horizon="long")["selection_notes"])
+
+
+def test_a_study_of_the_lists_that_were_replaced_is_not_printed_beside_the_new_ones(quiet, monkeypatch):
+    """
+    The study file is the record of a recipe. A file the lab has not written
+    for the recipe running now (one from before the three fundamental lists,
+    or a deploy that changes the recipe before its replay is published) shows
+    no record beside a current scan's lists rather than another recipe's, and
+    says why; the setup lists' records are the engine's own replay and stay.
+    """
+    monkeypatch.setitem(leaders.TESTED, "recipe", "2026-11 price lists")
+    p = scan_payload(leaders.rank(universe()))
+    sel = ideas.select(p, horizon="long")
+    assert sel["recipe_current"] is True and sel["study_current"] is False
+    assert sel["tested"] is None and sel["target_test"] is None and sel["market_test"] is None
+    assert any("not in the study file yet" in n for n in sel["selection_notes"])
+    assert ideas.select(p, horizon="breakout")["tested"]
 
 
 def test_a_scan_from_before_the_lists_still_answers(quiet):
@@ -502,6 +842,7 @@ def test_the_old_switch_positions_reach_the_new_lists(quiet):
     p = scan_payload(leaders.rank(universe()))
     assert ideas.select(p, horizon="short")["list"] == "short"
     assert ideas.select(p, horizon="medium")["list"] == "long"
+    assert ideas.select(p, horizon="invest")["list"] == "long"
 
 
 # --- the scan gives leaders a place ------------------------------------------
@@ -509,7 +850,8 @@ def test_the_old_switch_positions_reach_the_new_lists(quiet):
 def test_the_scan_gives_the_top_of_every_list_a_place_in_phase_two():
     import scan
     cands = universe(80)
-    blocks = leaders.rank(cands)
+    blocks = leaders.rank(cands, sectors=industries(cands, 8),
+                          snapshot={c["symbol"]: healthy() for c in cands})
     for i, c in enumerate(cands):
         c.update(score=float(i), turnover=5e8, leader=blocks.get(c["symbol"]))
         c.pop("leader_sig")
@@ -545,7 +887,7 @@ def log(monkeypatch):
     return call_log
 
 
-def pick(sym, price, key="momentum"):
+def pick(sym, price, key="month"):
     spec = leaders.LISTS[key]
     return {"symbol": sym, "name": sym, "sector": "Energy", "setup_key": spec["setup_key"],
             "setup": spec["setup"], "horizon": spec["hold_text"], "price": price, "conviction": 90.0,
@@ -556,18 +898,18 @@ S1, S2, S3 = "02 Nov 2026, 10:30", "03 Nov 2026, 10:30", "04 Nov 2026, 10:30"
 
 
 def test_the_exit_line_stays_where_the_call_put_it(log):
-    log.record("momentum", [pick("ABC", 100.0)], S1, {"ABC": 100.0})
+    log.record("month", [pick("ABC", 100.0)], S1, {"ABC": 100.0})
     # The price fell 10%. A plan redrawn from today's price would put the line
-    # at 76.5; the call's own line is 85 and must not move.
-    log.record("momentum", [pick("ABC", 90.0)], S2, {"ABC": 90.0})
+    # at 79.2; the call's own line is 88 and must not move.
+    log.record("month", [pick("ABC", 90.0)], S2, {"ABC": 90.0})
     call = log.listing()["rows"][0]
-    assert call["status"] == "open" and call["stop"] == 85.0
+    assert call["status"] == "open" and call["stop"] == 88.0
     assert not [e for e in call["events"] if e["kind"] == "levels"]
     # Under the line at the next scan, and gone from the list.
-    log.record("momentum", [], S3, {"ABC": 84.0})
+    log.record("month", [], S3, {"ABC": 87.0})
     call = log.listing()["rows"][0]
     assert call["status"] == "closed" and call["outcome"] == "stop"
-    assert call["price_now"] == 84.0
+    assert call["price_now"] == 87.0
 
 
 def test_the_lists_they_replaced_are_closed_once_and_only_once(log):
@@ -584,6 +926,26 @@ def test_the_lists_they_replaced_are_closed_once_and_only_once(log):
     assert log.HORIZON_LABEL["week"] == "This week"
 
 
+def test_the_week_and_momentum_calls_close_once_with_the_list_that_replaced_them(log):
+    """This week and momentum left the page in December 2026. Their open
+    calls would otherwise stay open for ever: nothing lists or drops them."""
+    week = dict(pick("WK", 100.0), setup_key="pick_week", setup="Week pick")
+    mom = dict(pick("MO", 200.0, "long"), setup_key="pick_momentum", setup="Momentum pick")
+    log.record("week", [week], S1, {"WK": 100.0})
+    log.record("momentum", [mom], S1, {"MO": 200.0})
+    assert log.retire_replaced(S2, {"WK": 104.0, "MO": 210.0}) == 2
+    assert log.retire_replaced(S3, {"WK": 90.0, "MO": 150.0}) == 0
+    by = {r["horizon"]: r for r in log.listing()["rows"]}
+    assert by["week"]["status"] == by["momentum"]["status"] == "closed"
+    assert by["week"]["outcome"] == by["momentum"]["outcome"] == "dropped"
+    assert by["week"]["price_now"] == 104.0 and by["momentum"]["price_now"] == 210.0
+    notes = {h: [e["note"] for e in by[h]["events"] if e["kind"] == "dropped"] for h in by}
+    assert notes["week"] == ["List replaced by Swing / This month."]
+    assert notes["momentum"] == ["List replaced by Long-term compounders."]
+    # They keep their own labels on the record.
+    assert by["week"]["horizon_label"] == "This week" and by["momentum"]["horizon_label"] == "Momentum"
+
+
 # --- the tracker reads a pick's exit line on the close ------------------------
 
 def test_an_intraday_dip_through_the_line_is_not_an_exit():
@@ -595,8 +957,10 @@ def test_an_intraday_dip_through_the_line_is_not_an_exit():
     assert on_low["on"] == "2026-11-03"
     _t, on_close = tracker._first_touch(win, None, 85.0, on_close=True)
     assert on_close["on"] == "2026-11-05"
+    # Every list's ideas expire on their own clock, the replaced lists' too.
     assert tracker.HORIZON_DAYS["pick_week"] < tracker.HORIZON_DAYS["pick_month"] \
         < tracker.HORIZON_DAYS["pick_momentum"] < tracker.HORIZON_DAYS["pick_long"]
+    assert all(spec["setup_key"] in tracker.HORIZON_DAYS for spec in leaders.LISTS.values())
 
 
 # --- the results list ---------------------------------------------------------
@@ -606,19 +970,27 @@ def test_an_intraday_dip_through_the_line_is_not_an_exit():
 # session that is, how old a result may be, and that nothing here can see a
 # filing or a bar from the future.
 
+def reported(results, **over):
+    """A healthy snapshot for every company in `results`: what each reported
+    was real growth unless a test says otherwise."""
+    return {s: healthy(**over) for s in results}
+
+
 def test_companies_are_ranked_on_the_day_their_results_were_priced():
     cands, results = reporters(n=12)
-    blocks = leaders.rank(cands, results=results)
+    blocks = leaders.rank(cands, results=results, snapshot=reported(results))
     ranked = sorted((b["lists"]["results"]["rank"], s) for s, b in blocks.items()
                     if b["lists"]["results"]["rank"])
-    # S11 jumped the most on the session after it reported, S00 the least.
+    # S11 jumped the most on the session after it reported, on the heaviest
+    # volume; S00 the least. Their quarters were the same.
     assert [s for _r, s in ranked] == [f"S{i:02d}" for i in range(11, -1, -1)]
     top = blocks["S11"]
     assert top["results"]["session"] == DAYS[-2] and top["results"]["sessions_ago"] == 1
     assert top["results"]["move_pct"] == pytest.approx(12.7, abs=0.2)        # exp(0.12) - 1
     assert top["results"]["reaction_pct"] == pytest.approx(
         top["results"]["move_pct"] - top["results"]["market_move_pct"], abs=0.11)
-    assert top["results"]["reported"] == 12
+    assert top["results"]["reported"] == 12 and top["results"]["qualified"] == 12
+    assert top["results"]["vol_x"] == pytest.approx(2.6 / 1.12, rel=0.05)    # 2.6x the shares on a 12% higher price
     assert any("Results on" in w for w in top["lists"]["results"]["why"])
     # A company that did not report is on every other list it earned, and not this one.
     assert blocks["S40"]["lists"]["results"]["rank"] is None
@@ -677,22 +1049,53 @@ def test_fewer_than_eight_reporters_is_not_a_list():
 
 
 def test_the_results_list_has_no_trend_or_volatility_gate():
-    """It was tested without one: a falling stock that jumps on its numbers is
-    exactly the kind of pick it makes."""
+    """A falling stock that jumps on real numbers is exactly the kind of pick
+    it makes: no uptrend or calm gate, only a floor under a stock still far
+    below its 200-day average."""
     cands, results = reporters(n=12)
-    cands.append(cand("FALLING", drift=-0.002, jump=(1, 0.30)))
+    cands.append(cand("FALLING", drift=-0.001, jump=(1, 0.10), volume_on=(1, 3.0)))
     results["FALLING"] = filed(2)
-    b = leaders.rank(cands, results=results)["FALLING"]
+    b = leaders.rank(cands, results=results, snapshot=reported(results))["FALLING"]
     assert not b["uptrend"]
-    assert b["lists"]["results"]["rank"] == 1
+    assert b["lists"]["results"]["eligible"] and b["lists"]["results"]["rank"] <= 5
     assert all(b["lists"][k]["rank"] is None for k in PRICE_LISTS)
 
 
-def test_without_filings_the_results_list_is_empty_and_the_others_are_unchanged():
+def test_the_results_list_does_not_chase_and_leaves_a_stock_still_far_under_its_average():
     cands, results = reporters(n=12)
-    with_results, without = leaders.rank(cands, results=results), leaders.rank(cands)
+    cands += [cand("CHASED", jump=(1, 0.22), volume_on=(1, 4.0), seed=41),
+              cand("SLUMP", drift=-0.004, jump=(1, 0.03), seed=42)]
+    results.update(CHASED=filed(2), SLUMP=filed(2))
+    blocks = leaders.rank(cands, results=results, snapshot=reported(results))
+    assert blocks["CHASED"]["lists"]["results"]["why_not"] == \
+        "Already rose 25% the day results were priced: the list does not chase."
+    assert blocks["SLUMP"]["lists"]["results"]["why_not"] == "More than 15% under its 200-day average."
+
+
+def test_the_results_floor_is_the_recipes_own(monkeypatch):
+    """RESULTS["floor"] picks the floor the lab replays: none, within 15% of
+    the 200-day average, or above the 50-day."""
+    cands, results = reporters(n=12)
+    cands.append(cand("SLUMP", drift=-0.004, jump=(1, 0.03), seed=42))
+    results["SLUMP"] = filed(2)
+    snaps = reported(results)
+    monkeypatch.setitem(leaders.RESULTS, "floor", None)
+    assert leaders.rank(cands, results=results, snapshot=snaps)["SLUMP"]["lists"]["results"]["eligible"]
+    monkeypatch.setitem(leaders.RESULTS, "floor", "sma50")
+    assert leaders.rank(cands, results=results, snapshot=snaps)["SLUMP"]["lists"]["results"]["why_not"] == \
+        "Under its 50-day average."
+
+
+def test_without_filings_the_results_list_is_empty_and_the_others_are_unchanged():
+    # No reporter here was sold on its results, so the month list's result
+    # guard has nothing to say and the price lists are exactly as they were.
+    cands, results = reporters(n=12)
+    snaps = reported(results)
+    with_results = leaders.rank(cands, results=results, snapshot=snaps)
+    without = leaders.rank(cands, snapshot=snaps)
     for sym in without:
         assert without[sym]["results"] is None
+        assert without[sym]["lists"]["results"]["rank"] is None
         for key in PRICE_LISTS:
             assert with_results[sym]["lists"][key]["rank"] == without[sym]["lists"][key]["rank"]
 
@@ -737,12 +1140,19 @@ def test_the_indicators_are_the_textbook_ones():
 
 
 def test_technicals_ride_with_every_ranked_stock_and_move_no_rank():
-    cands = universe()
-    blocks = leaders.rank(cands)
+    """RSI, MACD, ADX, the breakout and volume measures are facts beside a
+    pick. Taken away, the month and long-term lists are exactly the same.
+    (The industry's money flow is part of the month recipe: it is built from
+    each stock's turnover and its 50-day average, which stay.)"""
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
     assert all(b["technicals"] and b["technicals"]["rsi"] is not None for b in blocks.values())
-    stripped = [{"symbol": c["symbol"], "leader_sig": {k: v for k, v in c["leader_sig"].items() if k != "tech"}}
+    flow = ("turnover_5", "turnover_60", "above_50d")
+    stripped = [{"symbol": c["symbol"],
+                 "leader_sig": dict(c["leader_sig"], tech={k: c["leader_sig"]["tech"][k] for k in flow})}
                 for c in cands]
-    plain = leaders.rank(stripped)
+    plain = leaders.rank(stripped, sectors=sectors, snapshot=snaps)
+    assert any(b["lists"]["month"]["rank"] for b in plain.values())
     for sym in blocks:
         for key in PRICE_LISTS:
             assert blocks[sym]["lists"][key]["rank"] == plain[sym]["lists"][key]["rank"]
@@ -752,28 +1162,56 @@ def test_technicals_ride_with_every_ranked_stock_and_move_no_rank():
 
 def test_the_results_list_is_served_with_its_record_and_its_ledger(quiet):
     cands, results = reporters(n=12)
-    sel = ideas.select(scan_payload(leaders.rank(cands, results=results)), horizon="results", limit=15)
+    blocks = leaders.rank(cands, results=results, snapshot=reported(results))
+    sel = ideas.select(scan_payload(blocks), horizon="results", limit=15)
     assert sel["list"] == "results" and sel["event"] == "results" and sel["count"] == 12
     assert [r["symbol"] for r in sel["rows"]][:2] == ["S11", "S10"]
     assert sel["tested"]["hold_sessions"] == 21 and sel["tested"]["exit_pct"] == 12.0
-    assert "2018-21" in sel["tested"]["by_half"]
     for r in sel["rows"]:
         assert r["setup_key"] == "pick_results" and r["plan"]["risk_pct"] == 12.0
-        assert sum(e["points"] for e in r["evidence"]) == pytest.approx(r["conviction"], abs=1.5)
+        assert sum(e["points"] for e in r["evidence"]) == pytest.approx(r["conviction"], abs=0.3)
         assert "results reached the exchange" in r["evidence"][0]["detail"]
+        assert [e["key"] for e in r["evidence"]] == ["reaction", "volume", "growth"]
         assert r["results"]["session"] == DAYS[-2]
+    assert any("12 passed every test" in n for n in sel["selection_notes"])
 
 
-def test_an_empty_results_list_says_why(quiet):
+def test_an_empty_results_list_says_why_and_when_it_fills_in(quiet):
     cands, results = reporters(n=5)
-    sel = ideas.select(scan_payload(leaders.rank(cands, results=results)), horizon="results")
+    sel = ideas.select(scan_payload(leaders.rank(cands, results=results, snapshot=reported(results))),
+                       horizon="results")
     assert sel["count"] == 0 and "5 liquid companies" in sel["empty_text"] and "needs 8" in sel["empty_text"]
     none = ideas.select(scan_payload(leaders.rank(universe())), horizon="results")
     assert none["count"] == 0 and "No liquid company" in none["empty_text"]
+    # Twelve reported and five passed every test: no list this season, and
+    # the page says when companies report again.
+    cands, results = reporters(n=12)
+    snaps = reported(results)
+    for s in list(results)[:7]:
+        snaps[s] = healthy(revenue_yoy_pct=3.0)
+    p = scan_payload(leaders.rank(cands, results=results, snapshot=snaps))
+    p["scanned_at"] = "05 Dec 2026, 10:30"            # between seasons
+    sel = ideas.select(p, horizon="results")
+    assert sel["count"] == 0
+    assert sel["empty_text"].startswith("12 liquid companies had results priced in the last 10 sessions and 5 "
+                                        "passed every test; the list needs 8.")
+    assert sel["empty_text"].endswith("Companies report again from about 10 January; this list fills in then.")
+    p["scanned_at"] = "28 Oct 2026, 10:30"            # in the middle of a season
+    assert "Companies are reporting now" in ideas.select(p, horizon="results")["empty_text"]
+
+
+def test_the_next_results_season_is_named_from_the_calendar():
+    season = leaders.next_results_season
+    assert season(dt.date(2026, 12, 5)) == (dt.date(2027, 1, 10), False)
+    assert season(dt.date(2027, 1, 9)) == (dt.date(2027, 1, 10), False)
+    assert season(dt.date(2027, 1, 10)) == (dt.date(2027, 1, 10), True)
+    assert season(dt.date(2026, 5, 29)) == (dt.date(2026, 4, 10), True)       # the March quarter runs late
+    assert season(dt.date(2026, 6, 20)) == (dt.date(2026, 7, 10), False)
+    assert season(dt.date(2026, 11, 20)) == (dt.date(2026, 10, 10), True)
 
 
 def test_every_pick_carries_the_chart_facts_and_a_note_that_they_rank_nothing(quiet):
-    sel = ideas.select(scan_payload(leaders.rank(universe())), horizon="momentum")
+    sel = ideas.select(scan_payload(leaders.rank(universe())), horizon="long")
     assert "none of them changes a rank" in sel["chart_note"]
     for r in sel["rows"]:
         kinds = [c["k"] for c in r["chart"]]
@@ -801,18 +1239,18 @@ def test_the_page_is_told_what_the_test_found_in_a_market_like_todays(quiet, mon
     """The old page warned that trend setups fail under a weak index. Measured
     on these lists they did not, so the page says what was measured."""
     monkeypatch.setattr(ideas, "market_regime", lambda: {"ok": False, "pct_vs_200dma": -4.0, "label": "x"})
-    sel = ideas.select(scan_payload(leaders.rank(universe())), horizon="momentum")
-    rec = ideas.tested_record("momentum")["market"]
+    sel = ideas.select(scan_payload(leaders.rank(universe())), horizon="long")
+    rec = ideas.tested_record("long")["market"]
     assert sel["market_test"]["state"] == "below_200d"
     assert f"{rec['below_200d']['avg_pct']:+.1f}%" in sel["market_test"]["text"]
     assert "not held back" in sel["market_test"]["text"]
     monkeypatch.setattr(ideas, "market_regime", lambda: {"ok": True, "pct_vs_200dma": 6.0, "label": "x"})
-    assert ideas.select(scan_payload(leaders.rank(universe())), horizon="momentum")["market_test"]["state"] == "above_200d"
+    assert ideas.select(scan_payload(leaders.rank(universe())), horizon="long")["market_test"]["state"] == "above_200d"
 
 
 def test_an_order_is_shown_with_its_size_against_the_company(quiet, monkeypatch):
     payload = scan_payload(leaders.rank(universe()))
-    winner = ideas.select(payload, horizon="momentum")["rows"][0]["symbol"]
+    winner = ideas.select(payload, horizon="long")["rows"][0]["symbol"]
 
     class Ledger:
         @staticmethod
@@ -822,7 +1260,7 @@ def test_an_order_is_shown_with_its_size_against_the_company(quiet, monkeypatch)
                     {"symbol": winner, "date": "2025-03-03", "value_cr": 40.0, "pct_of_market_cap": 1.1}]
     monkeypatch.setattr(ideas, "wow_orders", Ledger)
     monkeypatch.setitem(ideas._orders_cache, "at", 0.0)
-    sel = ideas.select(payload, horizon="momentum")
+    sel = ideas.select(payload, horizon="long")
     row = sel["rows"][0]
     assert row["symbol"] == winner, "an order is a fact beside the pick; it moves no rank"
     assert row["order"]["value_cr"] == 450.0 and row["order"]["pct_of_market_cap"] == 12.2
@@ -873,7 +1311,9 @@ def test_the_scan_survives_both_results_sources_failing(monkeypatch):
 #
 # Tested before they were let in: on the week and momentum lists the picks that
 # were six to twelve months old led the average stock in both halves of the
-# decade; on the month, long-term and results lists they did not.
+# decade; on the month, long-term and results lists they did not. Since week
+# and momentum were folded into the fundamental lists (December 2026), such a
+# company is on the emerging list only.
 
 def newcomer(sym="NEWCO", **kw):
     kw.setdefault("drift", 0.004)
@@ -881,16 +1321,19 @@ def newcomer(sym="NEWCO", **kw):
     return {"symbol": sym, "leader_sig": leaders.signals(frame(n=200, **kw))}
 
 
-def test_a_young_company_is_ranked_on_the_two_lists_it_earned_and_no_other():
-    blocks = leaders.rank(universe() + [newcomer()])
-    b = blocks["NEWCO"]
+def test_a_young_company_is_on_none_of_the_three_lists_and_is_told_where_it_is():
+    cands, sectors, snaps = market()
+    cands.append(newcomer())
+    sectors["NEWCO"], snaps["NEWCO"] = "Ind0", healthy()
+    b = leaders.rank(cands, sectors=sectors, snapshot=snaps)["NEWCO"]
     assert b["young"] is True and b["listed_sessions"] == 200
-    assert b["lists"]["momentum"]["rank"] and b["lists"]["week"]["eligible"]
-    for key in ("month", "long", "results"):
+    for key in leaders.ORDER:
         assert b["lists"][key]["rank"] is None
-        assert "Listed under a year" in b["lists"][key]["why_not"]
+        assert b["lists"][key]["why_not"] == ("Listed under a year. This list needs twelve months of prices; "
+                                              "younger companies are on emerging.")
+        assert b["lists"][key]["breakdown"] == []
     assert b["facts"]["return_12m_pct"] is None and b["facts"]["return_6m_pct"] is not None
-    assert any(w.startswith("Listed ") for w in b["lists"]["momentum"]["why"])
+    assert any(w.startswith("Listed ") for w in b["lists"]["month"]["why"])
 
 
 def test_letting_young_companies_in_changes_no_established_stocks_score():
@@ -909,8 +1352,6 @@ def test_letting_young_companies_in_changes_no_established_stocks_score():
 def test_a_young_company_passes_the_same_gates_as_everyone():
     falling = leaders.rank(universe() + [newcomer("DOWN", drift=-0.003)])["DOWN"]
     assert not falling["uptrend"] and all(v["rank"] is None for v in falling["lists"].values())
-    wild = leaders.rank(universe() + [newcomer("WILD", drift=0.006, noise=0.06, seed=3)])["WILD"]
-    assert "volatile" in wild["lists"]["momentum"]["why_not"]
     thin = leaders.rank(universe() + [newcomer("THIN", turnover=5e7)])
     assert "THIN" not in thin
 
@@ -923,24 +1364,34 @@ def test_a_young_company_is_not_on_the_results_list_even_if_it_reported():
     assert b["results"] is None and b["lists"]["results"]["rank"] is None
 
 
-def test_a_young_pick_says_it_is_young_and_how_it_was_ranked(quiet):
-    sel = ideas.select(scan_payload(leaders.rank(universe() + [newcomer()])), horizon="momentum")
-    row = next(r for r in sel["rows"] if r["symbol"] == "NEWCO")
-    assert row["young"] is True
-    assert "6-month return" in row["evidence"][0]["detail"] and "stands in" in row["evidence"][0]["detail"]
-    assert any("Listed under a year" in n and "NEWCO" in n for n in sel["selection_notes"])
-    assert sum(e["points"] for e in row["evidence"]) == pytest.approx(row["conviction"], abs=1.5)
+def test_a_young_company_is_never_served_on_the_three_lists(quiet):
+    """The Ideas layer serves the engine's ranks, so a company listed under a
+    year cannot reach the month, results or long-term list however strong."""
+    cands, results = reporters(n=12)
+    cands.append(newcomer("NEWCO", jump=(1, 0.08)))
+    results["NEWCO"] = filed(2)
+    sectors = industries(cands, 5)
+    p = scan_payload(leaders.rank(cands, results=results, sectors=sectors,
+                                  snapshot={c["symbol"]: healthy() for c in cands}))
+    for key in leaders.ORDER:
+        sel = ideas.select(p, horizon=key)
+        assert "NEWCO" not in [r["symbol"] for r in sel["rows"]], key
+        assert not any(r["young"] for r in sel["rows"])
 
 
 def test_the_study_measured_the_young_picks_before_they_were_admitted():
-    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
-        study = json.load(f)
-    for key in leaders.YOUNG_LISTS:
-        young = study["lists"][key]["young"]
+    """Companies listed six to twelve months were admitted to this week and
+    momentum because their picks led the average stock in both halves. Both
+    lists are retired, their records kept with that measurement; no list
+    admits them now, and no record served claims young picks."""
+    study = _study_file()
+    assert leaders.YOUNG_LISTS == ()
+    for key in ("week", "momentum"):
+        young = study["retired"][key]["record"]["young"]
         assert young["picks"] > 100
         halves = young["vs_average_stock"]["by_half"]
         assert all(h["excess_pct"] > 0 for h in halves.values()), f"young picks trailed on {key}"
-    for key in set(leaders.LISTS) - set(leaders.YOUNG_LISTS):
+    for key in leaders.LISTS:
         assert "young" not in study["lists"][key]
 
 
@@ -1461,3 +1912,505 @@ def test_the_short_term_record_is_the_engines_and_is_read_from_the_study():
     assert rec["hold_sessions"] == 21 and rec["exit_pct"] == 8.0
     # Led the average stock in both halves: the reason it is the list the page leads with.
     assert all(h["excess_pct"] > 0 for h in rec["vs_average_stock"]["by_half"].values())
+
+
+# --- the three fundamental lists (December 2026) ----------------------------------
+#
+# Swing / This month, After results and Long-term compounders read each
+# company's filings (fund_snapshot.py) beside its chart. What is pinned: they
+# read the snapshot and nothing the setup lists read; a figure a company has
+# not filed is the middle of the field and never a failed test; each refusal
+# is said in words, in the order the page explains; every threshold and
+# weight is the recipe dictionary's, as the lab replays it.
+
+WORDS_NEVER_USED = re.compile(r"\b(buy|buys|buying|sell|sells|selling|should|recommend\w*)\b", re.I)
+
+
+def member(i, **kw):
+    """Stock S{i} of universe(), drawn again with something changed."""
+    base = dict(drift=0.0004 + 0.00004 * i, noise=0.006 + 0.0003 * (i % 9), seed=i)
+    base.update(kw)
+    return cand(f"S{i:02d}", **base)
+
+
+def ranked(blocks, key):
+    """A list's symbols in the order it ranked them."""
+    return [s for _r, s in sorted((b["lists"][key]["rank"], s) for s, b in blocks.items()
+                                  if b["lists"][key]["rank"])]
+
+
+def first_on(blocks, key):
+    return ranked(blocks, key)[0]
+
+
+def test_the_setup_lists_never_read_the_snapshot():
+    """The six setup lists keep reading `fundamentals` exactly as before: a
+    snapshot passed or not, good or dreadful, moves none of their ranks."""
+    cands, sectors, snaps = market(80, 5)
+    fundamentals = {c["symbol"]: {"pat_yoy_pct": 12.0 - i % 30, "revenue_yoy_pct": 5.0, "pat_cr": 10.0}
+                    for i, c in enumerate(cands)}
+    dreadful = {s: healthy(pat_cr=-50.0, pat_yoy_pct=-90.0, revenue_yoy_pct=-40.0, pledge_pct=80.0,
+                           eps_ttm=-5.0, roce_pct=1.0) for s in snaps}
+    runs = [leaders.rank(cands, sectors=sectors, fundamentals=fundamentals, snapshot=snap)
+            for snap in (None, snaps, dreadful, {s: {} for s in snaps})]
+    for key in leaders.SETUPS:
+        for sym in runs[0]:
+            want = (runs[0][sym]["lists"][key]["rank"], runs[0][sym]["lists"][key]["score"])
+            assert all((r[sym]["lists"][key]["rank"], r[sym]["lists"][key]["score"]) == want for r in runs[1:]), \
+                (key, sym)
+    # And the other way round: the three lists never read `fundamentals`.
+    a = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    b = leaders.rank(cands, sectors=sectors, fundamentals=fundamentals, snapshot=snaps)
+    for key in leaders.ORDER:
+        assert ranked(a, key) == ranked(b, key), key
+
+
+def test_a_company_with_nothing_on_file_is_the_middle_of_the_field_and_nothing_raises():
+    cands, sectors, snaps = market(60, 5)
+    syms = [c["symbol"] for c in cands]
+    odd = {syms[0]: {}, syms[1]: {"pat_cr": None}, syms[2]: None,
+           syms[3]: {"revenue_yoy_pct": "n/a", "pe": float("nan"), "pledge_pct": "x", "is_financial": None,
+                     "roce_pct": float("inf"), "f_score": "seven", "delivery_spike": "yes"},
+           syms[4]: {k: None for k in healthy()}}
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=odd)
+    assert set(blocks) == set(syms)
+    for s in syms[:5]:
+        for key, part in (("month", "fundmom"), ("month", "catalyst"), ("long", "quality"),
+                          ("long", "compounding"), ("long", "governance"), ("long", "valuation")):
+            row = next(r for r in blocks[s]["lists"][key]["breakdown"] if r["factor"] == part)
+            assert row["value"] == 50.0, (s, key, part)
+        # A missing figure skips its own check and fails nothing.
+        for key in ("month", "long"):
+            why = blocks[s]["lists"][key]["why_not"] or ""
+            assert not any(t in why for t in ("loss", "Profit fell", "pledged", "F-score", "Return on",
+                                              "Debt", "Cash from", "P/E", "Lost money")), (s, why)
+    assert blocks[syms[0]]["fundamentals"] is None and blocks[syms[2]]["fundamentals"] is None
+    # With no snapshot at all, the same.
+    bare = leaders.rank(cands, sectors=sectors)
+    assert ranked(bare, "long") and all(b["fundamentals"] is None for b in bare.values())
+
+
+def test_month_refuses_a_falling_or_loss_making_quarter_and_a_heavy_pledge_in_words():
+    cands, sectors, snaps = market()
+    base = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(base, "month")
+    cases = {"Made a loss in its last quarter.": dict(pat_cr=-4.0, pat_yoy_pct=None),
+             "Profit fell 31% on a year ago in its last quarter.": dict(pat_yoy_pct=-31.0),
+             "Profit fell 0.4% on a year ago in its last quarter.": dict(pat_yoy_pct=-0.4),
+             "Promoters have pledged 25% of the company.": dict(pledge_pct=25.0),
+             "Promoters have pledged 10.5% of the company.": dict(pledge_pct=10.5)}
+    for text, over in cases.items():
+        e = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["month"]
+        assert e["rank"] is None and e["why_not"] == text, (text, e["why_not"])
+    # A pledge at the limit is not over it.
+    e = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(pledge_pct=10.0)}))[x]
+    assert e["lists"]["month"]["eligible"]
+
+
+def test_month_refuses_an_industry_money_is_leaving_or_that_cannot_be_ranked():
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    leaders_ = [s for s, b in blocks.items()
+                if b["uptrend"] and b["calm"] and b["parts"]["leader"] >= leaders.MONTH["leader_floor"] * 100 + 1]
+    top = lambda s: blocks[s]["sector_flow"]["rank"] <= blocks[s]["sector_flow"]["of"] * leaders.MONTH["sector_top"]
+    weak = [s for s in leaders_ if not top(s)]
+    strong = [s for s in leaders_ if top(s)]
+    assert weak and strong
+    for s in weak:
+        row = blocks[s]["sector_flow"]
+        assert blocks[s]["lists"]["month"]["why_not"] == \
+            f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: the list needs the top half."
+    assert all("money flow" not in (blocks[s]["lists"]["month"]["why_not"] or "") for s in strong)
+    x = strong[0]
+    unknown = {k: v for k, v in sectors.items() if k != x}
+    e = leaders.rank(cands, sectors=unknown, snapshot=snaps)[x]["lists"]["month"]
+    assert e["why_not"] == "Its industry could not be ranked on money flow."
+
+
+def test_month_refuses_a_company_whose_results_the_market_sold_this_month():
+    """A result priced in the last 21 sessions that fell 2% or more against
+    the average stock: the month list waits, though the results list (ten
+    sessions) has long forgotten it."""
+    cands, sectors, snaps = market()
+    # A calm leader, so one bad day does not make it volatile.
+    x = next(s for s in ranked(leaders.rank(cands, sectors=sectors, snapshot=snaps), "month")
+             if int(s[1:]) % 9 <= 2)
+    i = int(x[1:])
+    cands = [c for c in cands if c["symbol"] != x] + [member(i, jump=(15, -0.03))]
+    clean = leaders.rank(cands, sectors=sectors, snapshot=snaps)[x]
+    assert clean["lists"]["month"]["eligible"], "the fall alone is a pullback, not a refusal"
+    sold = leaders.rank(cands, sectors=sectors, snapshot=snaps, results={x: filed(16)})[x]
+    assert sold["results"] is None, "fifteen sessions ago is outside the results list's ten"
+    assert sold["lists"]["month"]["why_not"].startswith("Its results were sold: -")
+
+
+def test_month_checks_its_gates_in_the_order_the_page_explains():
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(blocks, "month")
+    bad = healthy(pat_cr=-1.0, pledge_pct=40.0)
+    got = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: bad}))[x]["lists"]["month"]
+    assert got["why_not"] == "Made a loss in its last quarter.", "the profit guard comes before the pledge"
+    follower = next(s for s, b in blocks.items() if b["uptrend"] and b["calm"]
+                    and b["parts"]["leader"] < 60 and b["sector_flow"]["score"] < 50)
+    got = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{follower: bad}))[follower]
+    assert got["lists"]["month"]["why_not"].startswith("Not a market leader"), \
+        "the leader floor comes before the industry and the filings"
+
+
+def test_a_catalyst_and_a_growing_quarter_lift_a_month_pick():
+    cands, sectors, snaps = market()
+    x = first_on(leaders.rank(cands, sectors=sectors, snapshot=snaps), "month")
+    def score(**over):
+        return leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["month"]
+    plain = score()
+    for over in (dict(delivery_spike=True), dict(order_win_pct_mcap=3.0)):
+        lifted = score(**over)
+        assert lifted["score"] == pytest.approx(plain["score"] + 5.0, abs=0.05)   # 10% weight, 0.5 to 1.0
+        assert any(("deliveries" in w.lower()) or ("order worth" in w) for w in lifted["why"])
+    assert score(order_win_pct_mcap=1.5)["score"] == plain["score"], "an order under 2% is not a catalyst"
+    assert score(revenue_yoy_pct=60.0, opm_yoy_chg=6.0)["score"] > plain["score"] > \
+        score(revenue_yoy_pct=-5.0, opm_yoy_chg=-4.0)["score"]
+
+
+def test_results_refuses_results_that_were_not_real_growth_in_words():
+    cands, results = reporters(n=20, step=0.007)
+    snaps = reported(results)
+    cases = {
+        "S00": (dict(other_income_share_pct=60.0),
+                "Other income was 60% of profit before tax: not the business's own earnings."),
+        "S01": (dict(exceptional_cr=40.0, pbt_cr=80.0), "An exceptional gain made up 50% of profit before tax."),
+        "S02": (dict(revenue_yoy_pct=5.0), "Sales grew 5% on a year ago; the list needs 8%."),
+        "S03": (dict(revenue_yoy_pct=-6.0), "Sales fell 6% on a year ago; the list needs 8% growth."),
+        "S04": (dict(pat_cr=-3.0, pat_yoy_pct=None), "Made a loss in the quarter it reported."),
+        "S05": (dict(pat_yoy_pct=-4.0), "Profit did not grow on a year ago."),
+        "S06": (dict(ebitda_yoy_pct=-2.0), "Operating profit did not grow on a year ago."),
+        "S07": (dict(core_ebitda_cr=-5.0), "Made an operating loss in the quarter, one-off items left out."),
+        "S08": (dict(cfo_cr=-10.0), "Its last full year's operations used cash."),
+        "S09": (dict(pat_cr=None), "The figures it reported are not in the fundamentals tables yet."),
+    }
+    for s, (over, _text) in cases.items():
+        snaps[s] = healthy(**over)
+    # A lender's other income and cash flow are its business: no refusal.
+    snaps["S10"] = healthy(is_financial=True, other_income_share_pct=60.0, cfo_cr=-500.0, core_ebitda_cr=None)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    for s, (_over, text) in cases.items():
+        assert blocks[s]["lists"]["results"]["why_not"] == text, (s, blocks[s]["lists"]["results"]["why_not"])
+    assert blocks["S10"]["lists"]["results"]["eligible"]
+    assert len(ranked(blocks, "results")) == 10
+
+
+def test_results_reads_operating_profit_without_one_off_items():
+    """The stored EBITDA has exceptional items in it. A one-off gain a year
+    ago can make a fall look like growth, and a one-off loss now the reverse:
+    where both quarters' core figures are filed they decide."""
+    cands, results = reporters(n=20, step=0.007)
+    snaps = reported(results)
+    # Stored growth +30% thanks to a one-off; without it, operating profit fell.
+    snaps["S00"] = healthy(core_ebitda_cr=90.0, core_ebitda_yoy_cr_prev=100.0, ebitda_yoy_pct=30.0)
+    # Stored growth -5% because of a one-off loss now; without it, it rose.
+    snaps["S01"] = healthy(core_ebitda_cr=110.0, core_ebitda_yoy_cr_prev=100.0, ebitda_yoy_pct=-5.0)
+    # A rise from an operating loss a year ago is a rise.
+    snaps["S02"] = healthy(core_ebitda_cr=12.0, core_ebitda_yoy_cr_prev=-8.0, ebitda_yoy_pct=None)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    got = {s: blocks[s]["lists"]["results"] for s in ("S00", "S01", "S02")}
+    assert got["S00"]["why_not"] == "Operating profit did not grow on a year ago, one-off items left out."
+    assert got["S01"]["eligible"] and got["S02"]["eligible"]
+    assert "Sales +18%, operating profit up" in got["S01"]["why"]
+
+
+def test_results_says_a_small_move_with_its_decimal():
+    cands, results = reporters(n=12, step=0.008)
+    snaps = reported(results)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    events = leaders.result_reactions([(c["symbol"], leaders.signals(c)) for c in cands
+                                       if leaders.signals(c)], {k.upper(): v for k, v in results.items()})
+    for s, ev in events.items():
+        fact = blocks[s]["lists"]["results"]["why"][0]
+        move = ev["move"] * 100
+        if abs(move) < 1:
+            assert re.search(r"(rose|fell) \d\.\d%|little changed", fact), fact
+        assert "0%" not in fact.split(":")[1].split(" on ")[0] or abs(move) >= 0.05, fact
+
+
+def test_a_lenders_margin_is_neither_ranked_nor_printed():
+    """fund_snapshot leaves a lender's margin out; a snapshot that still
+    carries one (an older build, a hand-made one) is not ranked on it."""
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(blocks, "month")
+    def month(**over):
+        return leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["month"]
+    low = month(is_financial=True, opm_yoy_chg=-12.0)
+    high = month(is_financial=True, opm_yoy_chg=12.0)
+    assert low["score"] == high["score"]
+    assert not any("margin" in w for w in low["why"] + high["why"])
+    # A manufacturer's margin still counts.
+    assert month(opm_yoy_chg=12.0)["score"] > month(opm_yoy_chg=-12.0)["score"]
+    def long(**over):
+        return leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["long"]
+    assert long(is_financial=True, opm_trend_2y=-6.0)["score"] == long(is_financial=True, opm_trend_2y=6.0)["score"]
+
+
+def test_long_refuses_a_negative_equity_and_ranks_its_debt_last():
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(blocks, "long")
+    neg = healthy(total_equity_cr=-2900.0, debt_equity_x=None, roce_pct=None, roe_pct=None)
+    got = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: neg}))[x]["lists"]["long"]
+    assert got["why_not"] == "Shareholders' equity is negative: it owes more than it owns."
+    quality = next(r for r in got["breakdown"] if r["factor"] == "quality")
+    plain = next(r for r in leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: dict(neg, total_equity_cr=None)}))
+                 [x]["lists"]["long"]["breakdown"] if r["factor"] == "quality")
+    assert quality["value"] < plain["value"], "debt against a negative equity read as the middle"
+
+
+def test_month_reads_the_top_half_by_rank_not_by_score():
+    """An industry's money-flow score is a mean of percentiles, so a score of
+    50 is not the middle rank. The gate and the card read the rank."""
+    cands, sectors, snaps = market(n=200, k=20)
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    for s, b in blocks.items():
+        e, row = b["lists"]["month"], b.get("sector_flow")
+        if not row:
+            continue
+        in_top = row["rank"] <= row["of"] / 2
+        if e.get("eligible"):
+            assert in_top, (s, row)
+            assert any(w.endswith(": top half on money flow") for w in e["why"])
+        for w in e["why"]:
+            if w.endswith("top half on money flow"):
+                assert in_top, (s, row, w)
+
+
+def test_results_ranks_a_move_on_heavy_volume_and_faster_growth_above_a_bigger_move_on_neither():
+    cands, results = reporters(n=12, step=0.008)
+    cands += [cand("LOUD", jump=(1, 0.06), volume_on=(1, 4.0), seed=51),
+              cand("QUIET", jump=(1, 0.06), volume_on=(1, 1.0), seed=52),
+              cand("SPIKE", jump=(1, 0.08), volume_on=(1, 1.0), seed=53)]
+    results.update(LOUD=filed(2), QUIET=filed(2), SPIKE=filed(2))
+    snaps = reported(results)
+    snaps["LOUD"] = healthy(revenue_yoy_pct=35.0, prev_revenue_yoy_pct=22.0, opm_yoy_chg=4.0)
+    snaps["QUIET"] = snaps["SPIKE"] = healthy(revenue_yoy_pct=9.0, prev_revenue_yoy_pct=14.0, opm_yoy_chg=-0.5)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    rank = {s: blocks[s]["lists"]["results"]["rank"] for s in ("LOUD", "QUIET", "SPIKE")}
+    assert rank["LOUD"] < rank["QUIET"] and rank["LOUD"] < rank["SPIKE"]
+    parts = {r["factor"]: r for r in blocks["LOUD"]["lists"]["results"]["breakdown"]}
+    assert parts["volume"]["value"] == 100.0 and parts["growth"]["value"] == 100.0
+    assert "sales growing faster than the quarter before" in parts["growth"]["detail"]
+    assert any(w.startswith("Volume ") and w.endswith("usual") for w in blocks["LOUD"]["lists"]["results"]["why"])
+
+
+def test_a_fresh_result_is_not_judged_on_the_quarter_before_it():
+    """The fundamentals tables read a filing a few hours to a day after the
+    exchange does. A result whose quarter is not in them yet is not judged on
+    the previous quarter's numbers."""
+    cands, results = reporters(n=12)
+    snaps = reported(results)
+    results["S11"] = {"filed_at": f"{DAYS[-3]} 18:30:00", "quarter": "Q2 FY27"}
+    snaps["S11"] = healthy(filed_at="2026-08-10 17:00:00", quarter="Q1 FY27")
+    snaps["S10"] = healthy(filed_at=f"{DAYS[-3]} 18:35:00", quarter="Q2 FY27", revenue_yoy_pct=3.0)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    assert blocks["S11"]["lists"]["results"]["why_not"] == \
+        "The figures it reported are not in the fundamentals tables yet."
+    assert blocks["S10"]["lists"]["results"]["why_not"].startswith("Sales grew 3%"), \
+        "a table row filed with the result is the result"
+
+
+def test_fewer_than_eight_companies_passing_every_test_is_no_list():
+    cands, results = reporters(n=12)
+    snaps = reported(results)
+    for s in list(results)[:5]:
+        snaps[s] = healthy(other_income_share_pct=70.0)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    assert not ranked(blocks, "results")
+    passed = [s for s in results if s not in list(results)[:5]]
+    assert all(blocks[s]["lists"]["results"]["why_not"] ==
+               "Fewer than 8 companies passed every test this results season." for s in passed)
+    assert blocks["S00"]["results"]["qualified"] == 7 and blocks["S00"]["results"]["reported"] == 12
+
+
+def _long_market():
+    """A market where the strongest climbers carry the worst balance sheets,
+    middling climbers are compounders, and five lenders file no ROCE."""
+    cands, sectors, snaps = market(120, 10)
+    compounders = [f"S{i:02d}" for i in range(60, 70)]
+    mediocre = [f"S{i:02d}" for i in range(100, 110)]
+    for s in compounders:
+        snaps[s] = healthy(roce_pct=40.0, cfo_to_pat=1.3, fcf_pos_years_3y=3, debt_equity_x=0.0, pledge_pct=0.0,
+                           promoter_chg_4q=1.0, fii_dii_chg_1q=1.0, rev_cagr_3y=25.0, pat_cagr_3y=28.0,
+                           revenue_ttm_yoy_pct=24.0, pat_ttm_yoy_pct=27.0, opm_trend_2y=2.0, peg=0.9,
+                           ev_ebitda=12.0, pe=25.0)
+    for s in mediocre:
+        snaps[s] = healthy(roce_pct=15.0, cfo_to_pat=0.75, fcf_pos_years_3y=1, debt_equity_x=0.9, pledge_pct=4.5,
+                           promoter_chg_4q=-1.0, fii_dii_chg_1q=-1.0, rev_cagr_3y=6.0, pat_cagr_3y=5.0,
+                           revenue_ttm_yoy_pct=5.0, pat_ttm_yoy_pct=4.0, opm_trend_2y=-1.0, peg=3.5,
+                           ev_ebitda=35.0, pe=60.0)
+    snaps["S119"] = healthy(debt_equity_x=2.5)
+    snaps["S118"] = healthy(cfo_cr=-40.0, cfo_to_pat=-0.6)
+    snaps["S117"] = healthy(pe=150.0, peg=5.0, pat_cagr_3y=30.0)
+    snaps["S116"] = healthy(pe=120.0, peg=1.2, pat_cagr_3y=45.0)
+    # Five calm lenders, in NSE's own industry for them.
+    for s, roe in zip(LENDERS, (20.0, 9.0, 14.0, 16.0, 18.0)):
+        sectors[s] = "Financial Services"
+        snaps[s] = healthy(is_financial=True, roce_pct=None, roe_pct=roe, debt_equity_x=9.0,
+                           cfo_cr=-800.0, cfo_to_pat=-3.0, fcf_pos_years_3y=0, f_score=None, ev_ebitda=None)
+    return cands, sectors, snaps, compounders, mediocre
+
+
+LENDERS = ("S45", "S46", "S47", "S54", "S55")
+
+
+def test_long_ranks_cash_backed_compounders_above_debt_cash_burn_and_bubbles():
+    cands, sectors, snaps, compounders, mediocre = _long_market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    why = {s: blocks[s]["lists"]["long"]["why_not"] for s in ("S119", "S118", "S117", "S116")}
+    assert why["S119"] == "Debt is 2.5× equity: the list allows 1×."
+    assert why["S118"] == "Operations used cash last year."
+    assert why["S117"] == "P/E of 150: priced past the list's ceiling of 90."
+    assert why["S116"] is None, "a P/E over 90 on a PEG of 1.2 and 45% growth a year is not priced out"
+    # The mediocre ten climbed harder (their drift is higher), and every one
+    # of them scores under every compounder; none reaches the list's top 15.
+    good = [blocks[s]["lists"]["long"]["score"] for s in compounders if blocks[s]["lists"]["long"]["eligible"]]
+    middling = [blocks[s]["lists"]["long"]["score"] for s in mediocre]
+    assert len(good) >= 6 and min(good) > max(middling)
+    first = set(ranked(blocks, "long")[:leaders.LIST_SIZE])
+    assert not first & set(mediocre) and len(first & set(compounders)) >= 6
+    year = lambda group: np.median([blocks[s]["facts"]["return_12m_pct"] for s in group])
+    assert year(mediocre) > year(compounders)
+    best = min(compounders, key=lambda s: blocks[s]["lists"]["long"]["rank"] or 999)
+    assert blocks[best]["lists"]["long"]["why"][:3] == ["ROCE 40%, cash flow 1.3× profit",
+                                                        "Sales +25% a year for 3 years", "No shares pledged"]
+
+
+def test_long_judges_a_bank_on_its_return_on_equity():
+    """A lender's debt is its stock in trade and its cash flow follows its
+    lending: debt nine times equity and cash used by operations do not
+    count against it. Its return on equity does."""
+    cands, sectors, snaps, _c, _m = _long_market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    best, weak, *others = LENDERS
+    assert blocks[weak]["lists"]["long"]["why_not"] == "Return on equity 9%: a lender needs 13%."
+    for s in [best] + others:
+        assert blocks[s]["lists"]["long"]["eligible"], (s, blocks[s]["lists"]["long"]["why_not"])
+    quality = {s: next(r for r in blocks[s]["lists"]["long"]["breakdown"] if r["factor"] == "quality")
+               for s in LENDERS}
+    # Ranked on return on equity among the five lenders: 20% is the best of them.
+    assert quality[best]["value"] == 100.0 and quality[weak]["value"] == 20.0
+    assert quality[best]["detail"] == "Return on equity 20%"
+    assert blocks[best]["lists"]["long"]["why"][0] == "ROE 20%"
+    assert blocks[best]["fundamentals"]["is_financial"] is True
+
+
+def test_long_checks_its_gates_in_the_order_the_page_explains():
+    cands, sectors, snaps, _c, _m = _long_market()
+    x = first_on(leaders.rank(cands, sectors=sectors, snapshot=snaps), "long")
+    def why(**over):
+        snap = dict(snaps, **{x: healthy(**over)})
+        return leaders.rank(cands, sectors=sectors, snapshot=snap)[x]["lists"]["long"]["why_not"]
+    assert why(eps_ttm=-1.0, f_score=3, pledge_pct=30.0, roce_pct=5.0, pe=200.0) == \
+        "Lost money over the last four quarters."
+    assert why(f_score=3, pledge_pct=30.0, roce_pct=5.0, pe=200.0) == "F-score 3 of 9: the list needs 5."
+    assert why(pledge_pct=30.0, roce_pct=5.0, pe=200.0) == "Promoters have pledged 30% of the company."
+    assert why(roce_pct=13.6, pe=200.0) == "Return on capital 13.6%: the list needs 14%."
+    assert why(cfo_to_pat=0.69, pe=200.0) == "Cash from operations was 0.69× profit: the list needs 0.7×."
+    assert why(debt_equity_x=1.04) == "Debt is 1.04× equity: the list allows 1×."
+    assert why(pe=95.0, peg=1.4, pat_cagr_3y=30.0) == "P/E of 95: priced past the list's ceiling of 90."
+    assert why() is None
+
+
+def test_the_recipe_dictionaries_drive_every_threshold_and_weight(monkeypatch):
+    """The lab swaps the whole dictionary, as it does for each declared
+    version; the engine reads the one in place when it ranks."""
+    cands, sectors, snaps, _c, _m = _long_market()
+    x = first_on(leaders.rank(cands, sectors=sectors, snapshot=snaps), "month")
+    snaps[x] = healthy(pledge_pct=25.0)
+    assert leaders.rank(cands, sectors=sectors, snapshot=snaps)[x]["lists"]["month"]["why_not"].startswith(
+        "Promoters have pledged")
+    monkeypatch.setattr(leaders, "MONTH", dict(leaders.MONTH, pledge_max=50.0, sector_cap=2,
+                                               pull_mix={"dip21": 1.0}))
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    assert blocks[x]["lists"]["month"]["eligible"]
+    per = {}
+    for s in ranked(blocks, "month"):
+        per[sectors[s]] = per.get(sectors[s], 0) + 1
+    assert max(per.values()) == 2
+    pull = next(r for r in blocks[x]["lists"]["month"]["breakdown"] if r["factor"] == "pull")
+    assert pull["value"] == blocks[x]["parts"]["dip_month"] or abs(pull["value"] - blocks[x]["parts"]["dip_month"]) <= 0.5
+    # Long term without its valuation ceiling takes the bubble back.
+    assert blocks["S117"]["lists"]["long"]["why_not"].startswith("P/E of 150")
+    monkeypatch.setattr(leaders, "LONG", dict(leaders.LONG, valuation_ceiling=False,
+                                              mix={"trendq": 1.0, "quality": 0.0}))
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    assert blocks["S117"]["lists"]["long"]["eligible"]
+    e = blocks["S117"]["lists"]["long"]
+    assert [r["factor"] for r in e["breakdown"]] == ["trendq"] and e["score"] == e["breakdown"][0]["value"]
+    # The results list on its reaction alone ranks in the order of the move.
+    cands, results = reporters(n=12)
+    monkeypatch.setattr(leaders, "RESULTS", dict(leaders.RESULTS, mix={"reaction": 1.0, "volume": 0.0,
+                                                                        "growth": 0.0}))
+    blocks = leaders.rank(cands, results=results, snapshot=reported(results))
+    assert ranked(blocks, "results") == [f"S{i:02d}" for i in range(11, -1, -1)]
+    assert [r["factor"] for r in blocks["S11"]["lists"]["results"]["breakdown"]] == ["reaction"]
+
+
+def test_every_score_is_its_breakdown_and_every_fact_is_an_observation():
+    cands, sectors, snaps, results = realistic(n=240, seed=7)
+    blocks = leaders.rank(cands, results=results, sectors=sectors, snapshot=snaps)
+    seen = 0
+    for b in blocks.values():
+        for key in leaders.ORDER:
+            e = b["lists"][key]
+            if e["breakdown"]:
+                seen += 1
+                # The score prints to a decimal and each part to two: at most 0.05 + 5 x 0.005 apart.
+                assert sum(r["points"] for r in e["breakdown"]) == pytest.approx(e["score"], abs=0.08)
+                assert sum(r["weight"] for r in e["breakdown"]) == pytest.approx(1.0)
+                for r in e["breakdown"]:
+                    assert set(r) == {"factor", "label", "weight", "value", "points", "detail"}
+                    assert 0 <= r["value"] <= 100 and r["label"] == leaders.FACTOR_LABELS[r["factor"]]
+                    # `value` is printed to a decimal; the points are worked on the exact figure.
+                    assert r["points"] == pytest.approx(r["weight"] * r["value"], abs=0.03)
+                    assert r["detail"] and not WORDS_NEVER_USED.search(r["detail"])
+            assert len(e["why"]) <= 4
+            for text in e["why"] + [e["why_not"] or ""]:
+                assert not WORDS_NEVER_USED.search(text), (key, text)
+    assert seen > 400
+
+
+def test_each_block_carries_the_figures_the_page_shows_from_its_filings():
+    cands, sectors, snaps = market(60, 5)
+    snaps["S00"] = healthy(sector_mf_quadrant="Leading", f_score=8)
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    f = blocks["S00"]["fundamentals"]
+    assert tuple(f) == leaders.FUNDAMENTALS_SHOWN
+    assert f["sector_mf_quadrant"] == "Leading" and f["f_score"] == 8 and f["roce_pct"] == 24.0
+    assert f["pledge_pct"] == 0.0 and f["is_financial"] is False and f["quarter"] == "Q2 FY27"
+
+
+def test_signals_carry_a_month_of_sessions_and_each_sessions_volume():
+    df = frame(320, seed=3, volume_on=(4, 3.0))
+    g = leaders.signals(df)
+    assert len(g["days"]) == len(g["day_vols"]) == leaders.DAYS_KEPT == 23
+    assert [d for d, _m in g["days"]] == [d for d, _v, _u in g["day_vols"]]
+    v = df["Volume"].values
+    for k, (d, vol, usual) in enumerate(g["day_vols"]):
+        t = len(v) - leaders.DAYS_KEPT + k
+        assert vol == pytest.approx(v[t]) and usual == pytest.approx(np.median(v[t - 20:t]))
+    heavy = g["day_vols"][-5]
+    assert heavy[1] / heavy[2] == pytest.approx(3.0, rel=0.05)
+    assert all(vol is None and usual is None for _d, vol, usual in
+               leaders.signals(df.drop(columns=["Volume"]))["day_vols"])
+
+
+def test_a_result_is_read_over_the_window_asked_for_with_its_volume():
+    cands, results = reporters(n=12)
+    results["S40"] = filed(16)                        # priced fifteen sessions ago
+    pool = [(c["symbol"], c["leader_sig"]) for c in cands]
+    ten = leaders.result_reactions(pool, results)
+    month = leaders.result_reactions(pool, results, window=21)
+    assert "S40" not in ten and month["S40"]["sessions_ago"] == 15
+    assert set(ten) < set(month)
+    ev = ten["S05"]
+    assert ev["vol_x"] == pytest.approx(2.0 / np.exp(0.06), rel=0.05)
+    assert ev["above_sma50"] is True and ev["sma200_ratio"] > 1.0

@@ -8,6 +8,12 @@ and `research/separation-lab.json`. The trials behind the fifth list, the
 younger companies and everything in "What did not earn a place" are in
 `research/signals_lab.py` and `research/signals-lab.json`.
 
+December 2026: the page now leads with three lists that read each company's
+filings beside its chart, in place of the five below. Their trials and their
+record come from `research/fundamental_ideas_lab.py` (all of it in
+`research/fundamental-ideas-lab.json`); see "Three fundamental lists
+(December 2026)".
+
 ## The problem
 
 The tracker had closed 33 ideas. 30% made money, the average was −2.6%, and
@@ -59,6 +65,17 @@ stock trading ₹5 crore a day:
 | Turnover against its own history | −0.016 | 0.001 | 0.016 | 0.012 |
 
 ## The five lists
+
+*Replaced in December 2026* by the three lists in "Three fundamental lists"
+below. This month became Swing / This month, long term became Long-term
+compounders and after results kept its name, all three rebuilt on company
+filings; this week was folded into the first and momentum into the third.
+This section, "One stock,
+one list", "What a reader asked for, tested" and "Two tabs" are the record of
+the five as they ran, with the figures measured in November 2026. The study
+file keeps this week's and momentum's records under `retired`;
+`research/fundamental-ideas-lab.json` replays all five again on the windows
+the new lists were chosen and checked on.
 
 Four rank on price. Each of those ranks every liquid stock (a typical day trades ₹10 crore or more, price
 ₹20 or more: about 390 companies on a median day, 721 today) on percentile
@@ -170,6 +187,313 @@ The finding above stands.
 
 Momentum held six months instead of three, on a line 20% under: 57% rose,
 +9.9% a pick against +6.4% for the index.
+
+## Three fundamental lists (December 2026)
+
+Four of the five lists above read a stock's chart and nothing else, and the
+fifth read only when a company's results came out, so a company whose profit
+had just collapsed could top them. Since December 2026 the page
+leads with three lists that read each company's own filings beside its
+chart. This week was folded into the first and momentum into the third; an
+old link to either opens the list that replaced it. The figures the lists
+read (sales and margin growth, return on capital, cash against profit, debt,
+F-score, P/E and the rest) are built by `backend/fund_snapshot.py`, the same
+code for the live scan and for the replay.
+
+| List | What it is | Hold | Exit line |
+|---|---|---|---|
+| **Swing / This month** | A market leader (a leader score of 70 or more out of 100) in an uptrend and outside the most volatile fifth, in an industry ranked in the top half of industries on money flow. A pullback is ranked, not required. Left out: a loss or a fall in profit last quarter, results the market sold (more than 2% under the average stock that day) in the last 21 sessions, more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, last quarter's sales and margin growth (a lender's sales alone), the industry's money flow and a live catalyst | 21 sessions | close 12% under |
+| **After results** | A company whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more on a year ago; a profit and an operating profit, both up on a year ago, with one-off items left out of the operating profit; other income no more than 35% and an exceptional gain no more than 30% of profit before tax; cash from operations positive in the last full year. A lender is tested on its sales, its profit and the exceptional share only. Not already up more than 18% on the day, nor more than 15% under its 200-day average. Ranked half on the day's move against the average stock, a quarter on the volume behind it and a quarter on the growth: a rise on the day is ranked, not required. No list unless eight pass | 21 | close 12% under |
+| **Long-term compounders** | Above its 200-day average and outside the most volatile fifth; a profit over the last four quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, cash from operations positive and at least 0.7 times profit, debt no more than equity (a lender instead: a return on equity of 13% or more), a positive shareholders' equity, and a P/E of 90 or under unless its PEG is 1.5 or under on three-year profit growth of 35% a year or more. Ranked on quality, three-year compounding, governance, valuation against its own industry and the year-long trend | 252 | close 30% under |
+
+Each holds at most four stocks of one NSE industry. A figure a company has not
+filed is unknown, never zero: it counts as the middle of the field and skips
+only the check that needs it. The results list's profit is the one exception:
+a result whose profit is not yet in the filings tables is not listed.
+
+### The protocol, declared before the run
+
+`research/fundamental_ideas_lab.py` replays the engine itself
+(`backend/leaders.rank`), not a copy of it, on every fifth session from
+January 2017: candidates cut from the price panel at that session, and each
+company's figures rebuilt from the filings that had reached the exchange by
+that session's close (filed by 15:30 on a trading day, that day; later, the
+next). Picks are bought at the next open, as everywhere in this study.
+
+Each list had a few versions, all declared before any run:
+
+| List | Versions |
+|---|---|
+| Swing / This month | **M0** as specified: a leader score of 65 or more, the pullback half the month's and half the week's. **M1** M0 without the industry gate. **M2** M0 without the profit and results guards. **M3** M0 with a leader score of 70 or more and the pullback over the month alone |
+| After results | **R1** the quality gate and the chase guard, ranked on the day's move alone. **R2** R1, and not more than 15% under the 200-day average. **R3** R1, and above the 50-day average. **R4** as specified: R2 ranked half on the move, a quarter on volume and a quarter on growth. **R5** R4 without the floor |
+| Long-term compounders | **L1** as specified, with a 30% line. **L2** L1 with a 25% line. **L3** L1 with valuation's weight moved to the trend. **L4** L1's gates with the old long-term ranking, the trend alone |
+
+The rule: on the first window, the highest mean lead over the average liquid
+stock after a 0.49% round trip, among versions with enough picks there (400
+for the month list, 250 for after results, 300 for long term) and a positive
+mean after costs; within 0.05 of a point, the one with fewer rules. The
+second window is then printed whatever it shows.
+
+- **Swing / This month and After results**: first window, lists made from
+  June 2018 to December 2021; second, from January 2022 to the last list
+  whose month had run, 23 October 2026.
+- **Long-term compounders**: balance sheets are on file only from September
+  2022, so its windows are later: November 2022 to April 2024, then May 2024
+  to the last list whose year had run, 17 November 2025. 2018–22, with the
+  balance-sheet checks skipped as unknown, is reported for reference only.
+  The checks did not all start with the sheets. A check is made only where
+  its figure is known, and the lab counts, on every list date from 24 January
+  2017 (`coverage` in its file), how many of the liquid companies the list
+  ranks, lenders aside, had each figure. Over 2017–21 return on capital, debt
+  to equity and the F-score were known for 0% of them on average and cash
+  from operations against profit for 9.4%. At least half had cash against
+  profit from 28 May 2021 on, debt to equity from 9 November 2022, return on
+  capital from 19 May 2023 and an F-score, which needs two year-end sheets
+  running, only from 21 May 2024. In the first window the F-score was known
+  for 0.4% of them on average, so the version was chosen with its F-score
+  floor effectively untested.
+
+What each version did, the lead over the average stock with its t:
+
+| List | Version | Picks, first window | After costs | Lead, first window | Lead, second window |
+|---|---|---|---|---|---|
+| Swing / This month | M0 | 2,386 | +2.05% | +1.40 (2.2) | +0.26 (0.9) |
+| | M1 | 2,647 | +2.13% | +1.40 (2.3) | +0.31 (1.0) |
+| | M2 | 2,448 | +2.00% | +1.34 (2.2) | +0.09 (0.3) |
+| | **M3, taken** | 2,316 | +2.08% | +1.49 (2.4) | +0.22 (0.6) |
+| After results | R1 | 1,261 | +1.90% | +0.86 (1.1) | +0.89 (4.0) |
+| | R2 | 1,195 | +1.57% | +1.02 (1.4) | +0.76 (3.4) |
+| | R3 | 939 | +1.71% | +0.99 (1.0) | +1.22 (4.1) |
+| | **R4, taken** | 1,195 | +1.59% | +1.17 (1.6) | +0.70 (2.7) |
+| | R5 | 1,261 | +1.82% | +0.90 (1.2) | +0.84 (3.3) |
+| Long-term compounders | **L1, taken** | 1,110 | +49.18% | +4.87 (2.1) | +5.13 (3.9) |
+| | L2 | 1,110 | +48.50% | +4.19 (1.9) | +4.33 (3.4) |
+| | L3 | 1,110 | +46.23% | +1.92 (2.4) | +0.38 (0.3) |
+| | L4 | 1,093 | +45.61% | +1.21 (0.4) | +0.60 (0.3) |
+
+The rule took **M3**, **R4** and **L1**. R4 and L1 are the recipes as
+specified. M3 is not: the specification asked for a leader score of 65 or more
+and a pullback read half over the week, and M3's two values were written back
+into `backend/leaders.py`. Before the
+record was written, `--publish` re-ranked seven list dates with `leaders.py`
+as it stands and found every list the one replayed (21 of 21).
+
+### Before and after, on the same windows
+
+"Before" is each list the new one replaced, replayed on the same dates by
+`research/ideas_study.py`'s price recipes. This week is held 5 sessions and
+momentum 63, so their averages are not comparable with a month's or a
+year's; the lead over the average liquid stock, held over the same sessions,
+is. Worst 1 in 20 is the fifth percentile of picks.
+
+**Swing / This month, June 2018 to December 2021**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (M3)** | 2,316 | 56.4% | +2.57% | +2.08% | +1.52% | −13.1% | +1.09 | +1.49 (2.4) |
+| This month as it ran (21, 12%) | 2,649 | 56.5% | +2.67% | +2.18% | +1.60% | −13.3% | +1.19 | +1.45 (2.5) |
+| This week (5 sessions, 7% line) | 2,653 | 52.7% | +0.53% | +0.04% | +0.27% | −8.0% | +0.21 | +0.41 (2.9) |
+
+**Swing / This month, January 2022 to October 2026**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (M3)** | 3,562 | 50.6% | +1.14% | +0.65% | +0.16% | −14.0% | +0.34 | +0.22 (0.6) |
+| This month as it ran (21, 12%) | 3,569 | 51.5% | +1.05% | +0.56% | +0.35% | −13.5% | +0.25 | +0.13 (0.5) |
+| This week (5 sessions, 7% line; lists to 16 November 2026) | 3,615 | 51.1% | +0.29% | −0.20% | +0.09% | −8.6% | +0.08 | +0.22 (2.1) |
+
+**After results, June 2018 to December 2021**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (R4)** | 1,195 | 55.1% | +2.08% | +1.59% | +1.19% | −13.5% | +0.83 | +1.17 (1.6) |
+| After results as it ran (21, 12%) | 1,629 | 53.6% | +1.78% | +1.29% | +0.86% | −13.9% | +0.46 | +0.62 (1.1) |
+
+**After results, January 2022 to October 2026**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (R4)** | 1,719 | 54.9% | +1.63% | +1.14% | +1.09% | −13.9% | +0.79 | +0.70 (2.7) |
+| After results as it ran (21, 12%) | 1,935 | 54.1% | +1.73% | +1.24% | +1.05% | −13.9% | +0.89 | +0.79 (3.0) |
+
+**Long-term compounders, November 2022 to April 2024**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (L1)** | 1,110 | 81.1% | +49.67% | +49.18% | +37.50% | −30.3% | +23.29 | +4.87 (2.1) |
+| Long term as it ran (252, 30%) | 1,099 | 79.9% | +50.24% | +49.75% | +35.84% | −30.5% | +23.86 | +5.54 (3.4) |
+| Momentum (63 sessions, 15% line) | 1,110 | 62.9% | +9.65% | +9.16% | +6.09% | −17.2% | +3.35 | −0.54 (−0.5) |
+
+**Long-term compounders, May 2024 to November 2025**
+
+| | Picks | Rose | Average | After costs | Median | Worst 1 in 20 | vs Nifty 500 | vs the average stock (t) |
+|---|---|---|---|---|---|---|---|---|
+| **New (L1)** | 1,155 | 49.7% | +6.53% | +6.04% | −0.18% | −32.4% | +4.29 | +5.13 (3.9) |
+| Long term as it ran (252, 30%) | 1,142 | 44.2% | +10.11% | +9.62% | −4.96% | −32.2% | +7.87 | +8.78 (1.4) |
+| Momentum (63 sessions, 15% line; lists to 25 August 2026) | 1,719 | 46.5% | +1.84% | +1.35% | −1.43% | −18.2% | +1.28 | +0.74 (0.6) |
+
+Read plainly:
+
+- **After results led the average stock in both windows, and in 2018–21 it
+  beat the list it replaced on every figure but the number of picks.** Against
+  the average liquid stock it was +1.17 a pick in 2018–21 and +0.70 in
+  2022–26, against +0.62 and +0.79. In 2022–26 more of its picks rose (54.9%
+  against 54.1%) and its median was higher (+1.09% against +1.05%), but its
+  average was lower (+1.63% against +1.73%) and so was its lead over the
+  average stock. Against the other companies that had just reported, the
+  comparison the old list was chosen on, it led by +0.83 (t 2.8). Its tests of
+  real growth make it a shorter list: 2,914 picks over the whole replay
+  against 3,564, and a list on 205 of the 415 dates tried against 247.
+- **Swing / This month made less after costs than the month list it replaced
+  in 2018–21, and more in 2022–26**: +2.08% and +0.65% a pick, against +2.18%
+  and +0.56% (this week made +0.04% and −0.20%). In 2018–21 it still led the
+  average stock by a little more (+1.49, t 2.4, against +1.45, t 2.5). **Its
+  lead over the average stock in 2022–26 is small and not distinguishable from
+  luck**: +0.22 a pick with a t of 0.6. In those years it also rose a little
+  less often than the old month list (50.6% against 51.5%) and its median pick
+  made less (+0.16% against +0.35%). Most of its 2018–21 edge did not carry
+  over.
+- **Long-term compounders rose more often, with a better median, and made less
+  on average, in both windows.** In its second window 49.7% of picks rose
+  against 44.2% for the long-term list it replaced, the median pick lost 0.18%
+  against 4.96%, and its lead over the average stock was +5.13 with a t of 3.9
+  against +8.78 with a t of 1.4. But the average pick made +6.53% against
+  +10.11%, and in the selection window +49.67% against +50.24%. **The old
+  price-momentum list made more on average in both windows**, and in the
+  selection window it also led the average stock by more and more steadily
+  (+5.54, t 3.4, against +4.87, t 2.1). Its average leaned on its largest
+  winners: in the second window its best one in twenty made 78.5% or more,
+  against 71.8%.
+
+The record the page prints beside each list is the whole replay, every list
+date from 2017 whose hold had finished:
+
+| List | List dates | Picks | Rose | Average | After costs | Median | Nifty 500 | Worst 1 in 20 | vs the average stock (t) | 2017–21 / 2022–26 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Swing / This month | 482 | 6,765 | 53.6% | +1.68% | +1.19% | +0.85% | +1.13% | −13.6% | +0.71 (2.3) | +1.20 / +0.22 |
+| After results (from June 2018) | 205 | 2,914 | 55.0% | +1.81% | +1.32% | +1.14% | +1.01% | −13.7% | +0.90 (2.7) | +1.17 / +0.70 |
+| Long-term compounders | 436 | 6,512 | 58.4% | +21.88% | +21.39% | +9.32% | +13.70% | −32.7% | +5.74 (2.4) | +7.33 / +3.72 |
+
+On the same dates the lists they replaced made +1.76% (this month), +1.75%
+(after results) and +23.91% (long term) a pick, and led the average stock by
++0.70 (t 2.5), +0.71 (t 2.4) and +7.88 (t 2.2). Before late 2022 the long list
+had no balance sheets to read; see below.
+
+- **They share few names.** On 486 list dates the swing and long-term lists
+  shared 2.73 of their fifteen on average (one or more on 92.4% of dates). On
+  the 209 dates the results list was made, it shared 1.22 with long term
+  (68.9%) and 0.97 with the swing list (51.2%), and the three held 38.9
+  different stocks between them. No list gives way to another.
+- **The exit lines and the mark say what they said before.** Held with no line
+  at all the swing list made +1.80% a pick against +1.68% with its 12% line;
+  sold at a mark 12% over, more picks rose (55.2%) and the average fell to
+  +1.34%. On long term a mark 30% over raised the share rising from 58.4% to
+  65.4% and cut the average from +21.88% to +9.22%. The page prints these
+  beside the mark (`leaders.target_tested`); after results has no tested mark.
+
+What to hold against it:
+
+- **The rule chose on the first window, and the second does not always agree
+  with it.** On 2022–26 the swing list as specified (M0) led the average stock
+  by more than the version taken (+0.26, t 0.9, against +0.22), and so did M1,
+  M0 without the industry gate (+0.31, t 1.0). Every other results version did
+  better there than R4 (+0.70, t 2.7), and R3, the one that stays above its
+  50-day average, did best (+1.22, t 4.1). On long term the two windows agree:
+  L1 led every other version in both. Taking any of the others now would turn
+  the second window into a second selection, so none is taken; the live record
+  is left to settle them.
+- **Long term's windows are short.** Eighteen months of list dates in each (74
+  and 77), every hold a year long and overlapping its neighbours. A t of 3.9
+  on 77 overlapping holds is fragile. Before September 2022 there are no
+  balance sheets: return on capital, debt and the F-score were unknown and
+  skipped, and on 2018–22 the list led the average stock by +6.64 with a t
+  of 1.4. So the 2017–21 half of its record on the page was ranked mostly on
+  its trend and its income figures. Nor did the sheets bring every check at
+  once: return on capital ran for half the companies only from May 2023 and
+  the F-score only from May 2024, so the first window, which chose L1, left
+  its F-score floor effectively untested (the protocol above has the dates).
+- **Some years were behind the index**: the swing list's lists made in 2017
+  and 2025, after results in 2018, 2019, 2022 and 2025, long term in 2017,
+  2018 and 2024.
+- **Inputs the replay could not test.** Pledges, promoter and institutional
+  holdings, delivery surges and order wins have no history to replay. Here
+  they were unknown, which every list counts as neutral: no stock was refused
+  for a pledge and no catalyst moved a pick. The live lists read them, so a
+  live list can refuse a stock, or rank one higher on a catalyst, in a way the
+  record never saw.
+- **What the filings tables hold.** Balance sheets from September 2022,
+  full-year cash flows from 2020–21, quarterly results from mid-2018 (before
+  then the swing list's profit guard passed everyone). The tables hold
+  companies listed today, so a company delisted after a bad year is missing
+  from them (not from the prices), and it then passes a check unread. They
+  hold the latest filing for each period: a revised quarter is seen from the
+  revision's date, which is later than the original and never earlier, but
+  with the revised figures. Industries are NSE's list as it stands today.
+- **P/E** is the traded price over the last four quarters' earnings per share
+  as filed. It reads low for up to three quarters after a split or bonus, and
+  where a filing put the year to date's EPS in a quarter's row, so a stock can
+  pass the long list's ceiling of 90 on a P/E that is too low. Why it is not
+  restated is under "What the review changed".
+- **Thirteen versions were run.** One rule chose among them, declared before
+  the run, but some of what passed will have passed by luck.
+
+### What the review changed
+
+A review of the engine led to these changes:
+
+1. **Lenders.** A financial company is one in NSE's Financial Services
+   industry, or one whose own filings show bank-format lines, deposits over
+   20% of its liabilities or loans over half its assets. For a company outside
+   NSE's list, the live scan reads its stored Yahoo sector instead. Such a
+   company now carries no operating margin at all, so no list ranks or prints
+   one. Before, a lender's margin change counted in all three lists.
+2. **Margins leave exceptional items out.** Every margin, and the results
+   list's test that operating profit grew, now reads EBITDA without
+   exceptional items (core EBITDA). The stored figures had one-off gains in
+   them. In one example from the review, a 474 crore exceptional gain made a
+   quarter's stored margin 103%.
+3. **A negative shareholders' equity** fails the long list's floors and ranks
+   last on debt. Before, it had no debt ratio, and the unknown ratio skipped
+   the floors.
+4. **EV/EBITDA** is worked out only where net debt is known, on core EBITDA.
+   Before, a missing net debt counted as none.
+5. **The month list's industry gate is the top half by rank**, as specified.
+   It had been a money-flow score of 50 or more, which let in industries
+   ranked 10th and 11th of 18.
+6. **Trailing EPS stays the quarters as filed.** Restating it on profit over
+   EPS was tried and dropped. Profit is the group's, minority interests
+   included, and EPS is the owners', so the ratio moves with no share issued.
+   On the 1,986 companies with a fresh trailing year it restated 173, and only
+   40 of those had a recorded split or bonus. A stricter version still
+   misfired on about a quarter of what it restated, because some filings put
+   the year to date's EPS in a quarter's row. So for up to three quarters
+   after a split or bonus the P/E reads low.
+7. **The recipe stamp became v4**, and the record was replayed and published
+   again. The rule took M3, R4 and L1 again.
+
+What the record now says:
+
+- **Swing / This month** led the average liquid stock by +0.71 a pick (t 2.3):
+  +1.20 in 2017–21 and +0.22 (t 0.6) in 2022–26. The replay could pick only
+  companies in NSE's industry map as it stands today, and on the same dates
+  the liquid stocks in that map beat the average liquid stock by 0.23% a hold
+  (0.22% in 2017–21, 0.25% in 2022–26). Against those stocks it led by +0.48
+  (t 1.6): +0.98 in 2017–21 and −0.04 (t −0.1) in 2022–26. In 2022–26 it did
+  not lead those stocks.
+- **After results** led the average liquid stock by +0.90 a pick (t 2.7):
+  +1.17 in 2018–21 and +0.70 in 2022–26. Against the companies whose results
+  were priced in the same 10 sessions it led by +0.83 (t 2.8): +1.09 (t 1.8)
+  in 2018–21 and +0.64 (t 2.7) in 2022–26.
+- **Long-term compounders** led the average liquid stock by +5.74 a pick
+  (t 2.4): +7.33 in 2017–21 and +3.72 in 2022–26. A check is made only where
+  its figure is known. In 2017–21 return on capital, debt to equity and the
+  F-score were known for 0% of the companies it ranks, lenders aside, and cash
+  against profit for 9.4%, so that half ran without the return, debt and
+  F-score checks. In the window that chose L1 the F-score was known for 0.4%
+  of them (85.9% in the window after), so it was effectively untested there.
+  Its two windows hold 74 and 77 list dates, a list every 5 sessions held 252
+  sessions, so each window's Newey-West t (2.1 and 3.9) rests on about one and
+  a half independent years: it is indicative only.
 
 ## One stock, one list
 
@@ -787,6 +1111,10 @@ filing history to measure them on.
 
 ## What this does not show
 
+*For the three lists the page leads with since December 2026, see "What to
+hold against it" under "Three fundamental lists". The points below were
+written for the five lists they replaced and for the setup lists.*
+
 - **Barely more than half the picks rose.** The edge is in the size of the
   winners. Anyone holding two or three picks from a list is not holding the
   list.
@@ -830,6 +1158,10 @@ the tracker and attaches forward returns. Before it existed the store held
 python research/ideas_study.py --fetch      # NSE daily files and the results table, once
 python research/ideas_study.py --build      # adjusted price panel
 python research/ideas_study.py --baseline   # replay the old ranking (about 30 minutes)
+python research/fundamental_ideas_lab.py --prepare   # the engine's candidates on every fifth session (about 8 minutes)
+python research/fundamental_ideas_lab.py --replay    # every declared version, through the engine (about 2.5 minutes)
+python research/fundamental_ideas_lab.py --report    # the windows and the choice: research/fundamental-ideas-lab.json
+python research/fundamental_ideas_lab.py --publish   # the chosen versions' records, into research/ideas-study.json
 python research/ideas_study.py --study      # tables and research/ideas-study.json
 python research/separation_lab.py           # every trial behind "One stock, one list"
 python research/signals_lab.py              # every trial behind "What a reader asked for"
@@ -840,12 +1172,34 @@ python research/setups_lab.py --sector      # the sector-breakout screens
 python research/ideas_study.py --setups     # the setup lists' records alone, into the same file
 ```
 
-`--study` first checks that `backend/leaders.py` picks the same stocks the
-study picked: 810 picks, on six past dates for the four price lists, six on
-which a young company made a list and six on which the results list was made.
-It stops if they differ. It also stops if the young picks no longer lead the
-average stock in both halves on a list that admits them.
+The fundamental lab needs the filings tables beside the price panel:
+`income_quarterly_full.csv`, `income_annual.csv`, `balance.csv` and
+`cashflow.csv` in the data folder, from the same `/fundamentals/table`
+endpoint as the results table (`--fetch` downloads only the quarterly one),
+and NSE's industries (`IDEAS_SECTORS_CSV=backend/nse_industries.csv` when the
+data folder has none). `--replay` runs every version as overrides of the
+recipe as specified (`SPEC`), so it replays the same versions now that M3 is
+the default. `--publish` first checks that the cached candidates still carry
+the values `signals()` gives and that `leaders.rank` with today's defaults
+ranks what the chosen versions picked on seven list dates, and stops if
+either differs. It then writes the three lists' records, their exit lines and
+their overlap, moves this week's and momentum's records under `retired`,
+keeps the old overlap as `overlap_before`, stamps the file with the recipe
+(`2026-12 fundamental lists v4`) and leaves every other key as it was.
 
-`--fetch` downloads the results table from the site's own API. Without it
-`--study` keeps the results record it last wrote and says so; without the
-half-hour `--baseline` replay it keeps the last "what was wrong" table.
+`--study` first checks that `backend/leaders.py` still reads the market the
+way the price recipes here do, stock by stock, on eighteen past dates: six
+spread over the decade, six on which a young company made a list and six on
+which the results list was made. Every established liquid stock must have the
+same leader score, uptrend, calm and dips, every young company the same
+place, and every company that had just reported the same move against the
+average stock that session. It stops if any differs. The engine no longer
+runs the price lists, so this is what can still be held equal. The three
+fundamental lists have no second implementation to check: `--study` takes
+their records from the lab's replay, with the same check `--publish` makes,
+or without a replay keeps the records the file last held for this recipe.
+
+`--fetch` downloads the results table from the site's own API. Without it the
+lab cannot replay the lists and `--study` keeps the three lists' records it
+last wrote for this recipe, and says so; without the half-hour `--baseline`
+replay it keeps the last "what was wrong" table.

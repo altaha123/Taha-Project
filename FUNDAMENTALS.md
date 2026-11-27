@@ -169,11 +169,33 @@ the two name industries differently. The payload's `classifier` says which.
 The lenses get the same classification, plus Yahoo's share count and price
 wherever NSE's are missing.
 
-The five screens (`fundamentals_screens.py`): four quarters in a row of revenue
-up more than 20% YoY; back to profit against a loss a year earlier; operating
-margin up 3+ points YoY with revenue higher; cash and current investments above
-borrowings with a profitable latest year; free cash flow positive three full
-years running with operating cash flow above profit in the latest. The lenses
+The three screens (`fundamentals_screens.py`, December 2026; every figure
+from `fund_snapshot.py`, the same one the Ideas lists read):
+
+- **Fast growers with expanding margins** (`steady_growers`): revenue up more
+  than 20% on a year ago in each of the last four quarters, or at least 15% in
+  each of the last two with the operating margin up 2.5 points or more; profit
+  in the latest quarter and the last four together; for non-lenders an
+  operating margin of 8% or more that has not fallen more than 1.5 points.
+  Every margin is EBITDA without exceptional items over revenue, so a one-off
+  gain neither lifts a margin nor, a year later, reads as its collapse; a
+  lender (by its industry, or a balance sheet that is mostly loans) has none.
+  Ordered on growth and margin change together, not on size.
+- **Operational turnarounds** (`turnarounds`): profit now against a loss in the
+  same quarter a year ago, on higher revenue; for non-lenders an operating
+  profit (without exceptional items) that is positive and higher than a year
+  ago; other income at most 30% and exceptional items at most 25% of profit
+  before tax, so a one-off is not a turnaround. Ordered on the swing in net
+  margin.
+- **Cash-rich FCF compounders** (`fcf_compounders`): never a lender; free cash
+  flow positive in each of the last three full years; operating cash flow above
+  a positive profit; little debt (0.3× equity or less, or more cash than debt);
+  sales up 8% a year or more over three years; return on capital 15% or more
+  where known. Ordered on free-cash-flow yield (on return on capital where
+  there is no price), so a large company is not first for being large.
+
+The two screens that were folded in still answer by their old ids:
+`margin_expanders` opens the growers and `net_cash` the compounders. The lenses
 do the same for investing philosophies over full years; these answer what
 changed in the latest quarters.
 

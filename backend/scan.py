@@ -240,9 +240,11 @@ LEADER_SHARE = 0.67
 # beside this file is what a scan uses when NSE does not answer.
 SECTORS_URL = "https://archives.nseindia.com/content/indices/ind_niftytotalmarket_list.csv"
 SECTORS_FILE = os.path.join(_HERE, "nse_industries.csv")
-# How far back to ask for results filings: ten sessions is a fortnight, and a
-# week more covers a run of holidays.
-RESULTS_LOOKBACK_DAYS = 21
+# How far back to ask for results filings. The results list reads the last ten
+# sessions, and the month list asks whether the market sold a company's
+# results in the last twenty-one: five weeks of calendar covers those and a
+# run of holidays.
+RESULTS_LOOKBACK_DAYS = 35
 # How far down each of the four lists a name may sit and still get a place.
 # The page shows 15; the rest are the reserve for the sector cap and for
 # names removed over an adverse filing.
@@ -945,6 +947,303 @@ def latest_growth(today=None):
     return out
 
 
+# ---------------------------------------------------------------------------
+# Each company's fundamentals, for the three fundamental pick lists
+#
+# leaders.rank() ranks the month, results and long-term lists on a company's
+# own filings (backend/fund_snapshot.py turns its rows into the figures). This
+# reads those rows from the fundamentals tables while phase 1's signals are
+# still in memory, so it is built to be small: a few hundred companies at a
+# time, only the columns fund_snapshot reads, and only the years it needs.
+# ---------------------------------------------------------------------------
+
+SNAPSHOT_CHUNK = 250               # companies per query
+# How far back each table is read: two years of quarters make the trailing
+# year and the one before it, four annual rows a three-year growth rate and a
+# two-year margin trend, three full-year cash flows the free-cash-flow record,
+# two year-end balance sheets the averages. One year more of each is slack
+# for a late filer.
+SNAPSHOT_YEARS = {"quarterly": 3, "annual": 5, "cashflow": 4, "balance": 3}
+_YEAR_DAYS = 366
+# The columns fund_snapshot.build reads from each table (and the keys every
+# read needs). Nothing else is fetched.
+_SNAP_KEYS = ["symbol", "basis", "period_end", "filed_at"]
+SNAPSHOT_COLUMNS = {
+    "quarterly": _SNAP_KEYS + ["label", "months", "revenue_cr", "other_income_cr", "finance_cost_cr",
+                               "operating_profit_pre_provision_cr", "provisions_cr", "ebitda_cr",
+                               "exceptional_cr", "pbt_cr", "pat_cr", "eps_basic", "opm_pct",
+                               "other_income_share_pct", "interest_cover_x", "revenue_yoy_pct",
+                               "ebitda_yoy_pct", "pat_yoy_pct"],
+    "annual": _SNAP_KEYS + ["label", "months", "revenue_cr", "finance_cost_cr", "pbt_cr", "pat_cr",
+                            "ebitda_cr", "exceptional_cr", "opm_pct", "interest_cover_x"],
+    "cashflow": _SNAP_KEYS + ["months", "cfo_cr", "fcf_cr"],
+    "balance": _SNAP_KEYS + ["total_assets_cr", "current_investments_cr", "cash_and_equivalents_cr",
+                             "other_bank_balances_cr", "total_equity_cr", "equity_capital_cr",
+                             "total_liabilities_cr", "borrowings_non_current_cr", "deposits_cr",
+                             "loans_cr", "total_borrowings_cr", "net_debt_cr", "debt_equity_x",
+                             "current_ratio_x", "current_assets_cr", "current_liabilities_cr"],
+}
+# The live-only facts (no history exists to replay them, so the lab reads
+# them as unknown). Every snapshot carries each key, None until read.
+LIVE_ONLY_FIELDS = ("promoter_pct", "pledge_pct", "promoter_chg_4q", "fii_dii_chg_1q", "delivery_spike",
+                    "order_win_pct_mcap", "sector_mf_quadrant", "sector_mf_score")
+# Shareholding: the promoter's stake a year back, and institutions' a quarter
+# back, are the filings this many days before the latest one.
+PROMOTER_BACK_DAYS = (300, 430)
+INSTITUTIONS_BACK_DAYS = (60, 135)
+# Deliveries: the last five sessions' average delivered shares at 1.5 times
+# or more the median of the twenty before them, while the price fell over
+# those five sessions: someone taking stock off sellers. A delivery panel
+# whose last session is older than a week says nothing about this week.
+DELIVERY_RECENT = 5
+DELIVERY_BASE = 20
+DELIVERY_SPIKE_X = 1.5
+DELIVERY_FRESH_DAYS = 7
+# Loading the delivery panel from disk holds about 30 MB; a scan with less
+# room than this left reads deliveries as unknown rather than risk the box.
+DELIVERY_LOAD_HEADROOM_MB = 120
+# Orders: the largest firm order of the last thirty days, against the
+# company's value, as the order ledger's own public cards count one.
+ORDER_DAYS = 30
+
+
+def _snapshot_rows(conn, table, symbols, day):
+    """{SYMBOL: [rows]} of one table for some companies, the recent years
+    only and nothing filed after `day`."""
+    import fundamentals_store as fs
+    cols = SNAPSHOT_COLUMNS[table]
+    name = fs.TABLES["income" if table in ("quarterly", "annual") else table]["name"]
+    since = (day - dt.timedelta(days=SNAPSHOT_YEARS[table] * _YEAR_DAYS)).isoformat()
+    upto = f"{day.isoformat()} 23:59:59"
+    where = ["symbol IN (%s)" % ",".join("?" * len(symbols)), "period_end >= ?",
+             "(filed_at IS NULL OR filed_at <= ?)"]
+    if table in ("quarterly", "annual"):
+        where.append("freq = '%s'" % table)
+    if table == "cashflow":
+        where.append("months IN (0, 12)")          # full years; 0 is a year whose length was not stated
+    sql = "SELECT %s FROM %s WHERE %s" % (", ".join(cols), name, " AND ".join(where))
+    out = {}
+    for r in conn.execute(sql, list(symbols) + [since, upto]):
+        out.setdefault(r["symbol"], []).append(dict(r))
+    return out
+
+
+def _holding_facts(symbols):
+    """{SYMBOL: {promoter_pct, pledge_pct, promoter_chg_4q, fii_dii_chg_1q}}
+    from the stored shareholding filings (lens_store): the latest filing, the
+    promoter's change on the filing a year back and the institutions' (FII
+    and DII together) on the one a quarter back. A pledge the filing says is
+    nil is 0. Read a chunk of companies at a time, a handful of columns."""
+    import lens_store
+    conn = lens_store._connect()
+    out = {}
+    syms = sorted(symbols)
+
+    def back(rows, latest, span):
+        d0 = _iso_day(latest.get("period_end"))
+        for r in rows[1:]:
+            d = _iso_day(r.get("period_end"))
+            if d0 and d and span[0] <= (d0 - d).days <= span[1]:
+                return r
+        return None
+
+    def inst(r):
+        f, d = r.get("fii_pct"), r.get("dii_pct")
+        return None if f is None or d is None else float(f) + float(d)
+    for i in range(0, len(syms), SNAPSHOT_CHUNK):
+        part = syms[i:i + SNAPSHOT_CHUNK]
+        by = {}
+        for r in conn.execute(
+                "SELECT symbol, period_end, promoter_pct, fii_pct, dii_pct, pledged, pledge_pct"
+                " FROM lens_shareholding WHERE symbol IN (%s) ORDER BY symbol, period_end DESC"
+                % ",".join("?" * len(part)), part):
+            by.setdefault(r["symbol"], []).append(dict(r))
+        for sym, rows in by.items():
+            top = rows[0]
+            pledge = top.get("pledge_pct")
+            if pledge is None and top.get("pledged") == 0:
+                pledge = 0.0
+            year, quarter = back(rows, top, PROMOTER_BACK_DAYS), back(rows, top, INSTITUTIONS_BACK_DAYS)
+            p_now, p_then = top.get("promoter_pct"), (year or {}).get("promoter_pct")
+            i_now, i_then = inst(top), (inst(quarter) if quarter else None)
+            out[sym] = {"promoter_pct": None if p_now is None else round(float(p_now), 2),
+                        "pledge_pct": None if pledge is None else round(float(pledge), 2),
+                        "promoter_chg_4q": (round(float(p_now) - float(p_then), 2)
+                                            if p_now is not None and p_then is not None else None),
+                        "fii_dii_chg_1q": (round(i_now - i_then, 2)
+                                           if i_now is not None and i_then is not None else None)}
+    return out
+
+
+def _iso_day(v):
+    try:
+        return dt.date.fromisoformat(str(v)[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+def _delivery_spikes(symbols, day):
+    """{SYMBOL: True | False} from the delivery panel special.py keeps, read
+    from memory or from its file and never built or fetched here: this runs
+    inside the scan, and a fetch would hold it on the exchange's archive."""
+    import special
+    if special._state.get("panel") is None:
+        if not os.path.exists(special.CACHE):
+            return {}
+        head = headroom_mb()
+        if head is not None and head < DELIVERY_LOAD_HEADROOM_MB:
+            return {}
+    P = special._load_cache()
+    if not P or P.get("close") is None or P.get("deliv") is None or P.get("qty") is None:
+        return {}
+    close = P["close"]
+    if not len(close) or (day - close.index[-1].date()).days > DELIVERY_FRESH_DAYS:
+        return {}
+    cols = [s for s in symbols if s in close.columns]
+    if not cols:
+        return {}
+    span = DELIVERY_RECENT + DELIVERY_BASE
+    c = close[cols].iloc[-(DELIVERY_RECENT + 1):]
+    delivered = (P["deliv"][cols].iloc[-span:] / 100.0) * P["qty"][cols].iloc[-span:]
+    recent = delivered.iloc[-DELIVERY_RECENT:].mean()
+    usual = delivered.iloc[:-DELIVERY_RECENT].median()
+    out = {}
+    for s in cols:
+        r, u, c0, c1 = recent.get(s), usual.get(s), c[s].iloc[0], c[s].iloc[-1]
+        if any(x is None or x != x for x in (r, u, c0, c1)) or u <= 0:
+            continue
+        out[s] = bool(r >= DELIVERY_SPIKE_X * u and c1 < c0)
+    return out
+
+
+def _order_wins(day):
+    """{SYMBOL: the largest firm order of the last ORDER_DAYS, as a % of the
+    company's market value}, counted as the order ledger counts a public card
+    (wow_orders._shareable): a firm order, its value labelled as the order's
+    in the filing, sized against the company."""
+    import wow_orders
+    out = {}
+    for r in wow_orders.history(day - dt.timedelta(days=ORDER_DAYS), day) or []:
+        if not wow_orders._shareable(r):
+            continue
+        sym, pct = str(r.get("symbol") or "").upper(), r.get("pct_of_market_cap")
+        try:
+            pct = float(pct)
+        except (TypeError, ValueError):
+            continue
+        if sym and pct == pct and pct > (out.get(sym) or float("-inf")):
+            out[sym] = round(pct, 2)
+    return out
+
+
+def _sector_money_flow():
+    """{NSE industry: (quadrant, score)} from Money Flow's latest stored
+    session; its sector names are NSE's industries."""
+    import money_flow_store as mfs
+    _date, cards = mfs.sector_cards()
+    return {name: (card.get("quadrant"), card.get("score")) for name, card in (cards or {}).items()}
+
+
+def _stored_sectors(conn, symbols):
+    """{SYMBOL: sector} from the stored Yahoo profiles, for the companies
+    given; {} when there are none or the table cannot be read."""
+    if not symbols:
+        return {}
+    try:
+        marks = ",".join("?" * len(symbols))
+        return {r[0]: r[1] for r in conn.execute(
+            "SELECT symbol, sector FROM yf_profile WHERE symbol IN (%s)" % marks, list(symbols)) if r[1]}
+    except Exception:
+        return {}
+
+
+def fundamental_snapshot(today=None, symbols=None, prices=None, sectors=None):
+    """
+    {SYMBOL: snapshot} for the three fundamental pick lists:
+    fund_snapshot.build on each company's rows of the four fundamentals
+    tables, with its valuation at `prices[SYMBOL]` (fund_snapshot.with_price),
+    plus the live-only facts: promoter holding, pledge, the promoter's change
+    over a year and institutions' over a quarter (lens_store), a delivery
+    surge on a falling week (special.py's panel, only if already built),
+    the largest recent order against the company's value (wow_orders) and
+    its industry's Money Flow quadrant and score.
+
+    `symbols` defaults to every company in the tables; the scan passes its
+    liquid candidates. `sectors` is {SYMBOL: NSE industry}, which tells
+    fund_snapshot who is a lender and maps a company to its Money Flow card.
+    Read as of `today` (default today): nothing filed after it.
+
+    Memory: the tables are read SNAPSHOT_CHUNK companies at a time, only the
+    columns fund_snapshot reads and only SNAPSHOT_YEARS of rows. Each live
+    fact is read in its own try, and a failure leaves that field None. An
+    empty store, or any failure here, returns {}: the scan's ranking must
+    never fail on a fundamentals read.
+    """
+    try:
+        import fundamentals_store as fs
+        import fund_snapshot as FS
+        day = today or dt.date.today()
+        if isinstance(day, dt.datetime):
+            day = day.date()
+        sectors = {str(k).upper(): v for k, v in (sectors or {}).items() if v}
+        prices = {str(k).upper(): v for k, v in (prices or {}).items()}
+        conn = fs._connect()
+        if symbols is None:
+            syms = [r[0] for r in conn.execute(
+                "SELECT DISTINCT symbol FROM income_statement WHERE freq = 'quarterly'")]
+        else:
+            syms = sorted({str(s).strip().upper() for s in symbols if s and str(s).strip()})
+        out = {}
+        for i in range(0, len(syms), SNAPSHOT_CHUNK):
+            part = syms[i:i + SNAPSHOT_CHUNK]
+            rows = {t: _snapshot_rows(conn, t, part, day) for t in SNAPSHOT_COLUMNS}
+            # A company outside NSE's industry list is told apart as a lender
+            # by its stored Yahoo sector, as the quarterly screens do.
+            stored = _stored_sectors(conn, [sym for sym in part if not sectors.get(sym)])
+            for sym in part:
+                snap = FS.build(rows["quarterly"].get(sym, ()), rows["annual"].get(sym, ()),
+                                rows["cashflow"].get(sym, ()), rows["balance"].get(sym, ()),
+                                sector=sectors.get(sym) or stored.get(sym), asof=day)
+                if not snap:
+                    continue
+                snap = FS.with_price(snap, prices.get(sym))
+                snap.update({k: None for k in LIVE_ONLY_FIELDS})
+                out[sym] = snap
+            del rows
+        if not out:
+            return {}
+    except Exception:
+        return {}
+
+    held = list(out)
+    try:
+        for sym, facts in _holding_facts(held).items():
+            if sym in out:
+                out[sym].update(facts)
+    except Exception:
+        pass
+    try:
+        for sym, spike in _delivery_spikes(held, day).items():
+            out[sym]["delivery_spike"] = spike
+    except Exception:
+        pass
+    try:
+        for sym, pct in _order_wins(day).items():
+            if sym in out:
+                out[sym]["order_win_pct_mcap"] = pct
+    except Exception:
+        pass
+    try:
+        flow = _sector_money_flow()
+        for sym, snap in out.items():
+            card = flow.get(sectors.get(sym))
+            if card:
+                snap["sector_mf_quadrant"], snap["sector_mf_score"] = card
+    except Exception:
+        pass
+    return out
+
+
 def _chart_pattern(df, symbol):
     """
     The clearest classical chart pattern in the bars, or None: its name,
@@ -1270,6 +1569,33 @@ def _dump(payload):
             pass
 
 
+def rank_leaders(cands):
+    """
+    leaders.rank() on phase 1's candidates, with everything it reads beside
+    their prices: who reported, NSE's industries, the last quarter's growth
+    (the setup lists), the Nifty 500, Money Flow, and each liquid company's
+    fundamentals snapshot (the three fundamental lists). {} if ranking fails.
+
+    The snapshot is built first and on its own: a failure there costs the
+    three lists their filings (every company then reads as unknown), never
+    the ranking, whose failure would empty every list on the page.
+    """
+    sector_map_result = sector_map()              # never raises: {} when neither source reads
+    try:
+        liquid = [c for c in cands if leaders.in_universe(c.get("leader_sig"))]
+        snapshot = fundamental_snapshot(symbols=[c["symbol"] for c in liquid],
+                                        prices={c["symbol"]: c["leader_sig"]["price"] for c in liquid},
+                                        sectors=sector_map_result)
+    except Exception:
+        snapshot = {}
+    try:
+        return leaders.rank(cands, results=recent_results(), sectors=sector_map_result,
+                            fundamentals=latest_growth(), benchmark=benchmark_returns(),
+                            institutional=institutional_map(), snapshot=snapshot)
+    except Exception:
+        return {}
+
+
 def run_scan(progress=None, names=None, checkpoint=None):
     """
     checkpoint: optional callable(payload) invoked with a partial payload
@@ -1306,12 +1632,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
     ill += prefiltered
     # Rank the leaders against the whole liquid universe while phase 1's
     # inputs are still held, then drop the inputs: the block is all a row needs.
-    try:
-        blocks = leaders.rank(cands, results=recent_results(), sectors=sector_map(),
-                              fundamentals=latest_growth(), benchmark=benchmark_returns(),
-                              institutional=institutional_map())
-    except Exception:
-        blocks = {}
+    blocks = rank_leaders(cands)
     # Every sector's standing on money flow, once, for the page's table.
     flow_table = {}
     for b in blocks.values():

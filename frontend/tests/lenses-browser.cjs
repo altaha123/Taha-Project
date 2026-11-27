@@ -139,21 +139,52 @@ async function viewText(page, id) {
   await page.screenshot({ path: path.join(output, 'index-desktop.png'), fullPage: true });
 
   // ── Quarterly screens, under the cards ─────────────────────────────────
-  // Every screen with its count; matches fetched only when one is opened,
-  // each carrying the figures that met the condition. A stale company that
-  // would otherwise match is not listed.
+  // The three screens with their counts; matches fetched only when one is
+  // opened, each carrying the figures that met the condition, in the units
+  // they are measured in. A stale company that would otherwise match is not
+  // listed.
   const items = page.locator('#screens-body details.sc-item');
   await items.first().waitFor({ state: 'visible' });
-  assert.equal(await items.count(), 5);
+  assert.equal(await items.count(), 3);
+  assert.deepEqual(await items.evaluateAll(els => els.map(e => e.getAttribute('data-screen'))),
+    ['steady_growers', 'turnarounds', 'fcf_compounders']);
   assert.deepEqual(screenCalls, ['index'], 'no screen is fetched until it is opened');
+  const grow = page.locator('#screens-body details[data-screen="steady_growers"]');
+  assert.match(await grow.locator('summary').innerText(), /Fast growers with expanding margins\s+3 companies/);
+  await grow.locator('summary').click();
+  await grow.locator('.sc-table tbody tr').first().waitFor();
+  // What it looks for, its exact rule and its order, before the companies.
+  const growFx = screensFx.index.screens.find(x => x.id === 'steady_growers');
+  assert.equal(await grow.locator('.sc-desc').innerText(), growFx.description);
+  assert.equal(await grow.locator('.sc-rule').innerText(), growFx.rule);
+  assert.equal(await grow.locator('.sc-order').innerText(), growFx.order);
+  assert.equal(await grow.locator('.sc-table tbody tr').count(), 3);
+  const trent = await grow.locator('.sc-table tbody tr', { hasText: 'TRENT' }).innerText();
+  assert.match(trent, /Revenue YoY, Q1 FY27 26\.8%/);
+  assert.match(trent, /Operating margin vs a year earlier \+1\.5 pts/, 'a margin change is in points, signed');
+  const lender = await grow.locator('.sc-table tbody tr', { hasText: 'BAJFINANCE' }).innerText();
+  assert.doesNotMatch(lender, /Operating margin/, 'a lender is shown without an operating margin');
   const turn = page.locator('#screens-body details[data-screen="turnarounds"]');
-  assert.match(await turn.locator('summary').innerText(), /Back to profit\s+1 company/);
+  assert.match(await turn.locator('summary').innerText(), /Operational turnarounds\s+1 company/);
   await turn.locator('summary').click();
   await turn.locator('.sc-table tbody tr').first().waitFor();
   assert.equal(await turn.locator('.sc-table tbody tr').count(), 1);
   const turnRow = await turn.locator('.sc-table tbody tr').innerText();
   assert.match(turnRow, /VODAIDEA/);
   assert.match(turnRow, /-₹6,400 cr/, 'the year-ago loss is printed, not implied');
+  assert.match(turnRow, /Net margin vs a year earlier \+63\.8 pts/);
+  const cash = page.locator('#screens-body details[data-screen="fcf_compounders"]');
+  await cash.locator('summary').click();
+  await cash.locator('.sc-table tbody tr').first().waitFor();
+  const cashRows = await cash.locator('.sc-table tbody tr').allInnerTexts();
+  assert.equal(cashRows.length, 2);
+  assert.match(cashRows[0], /PAGEIND/, 'the company with a free cash flow yield comes first');
+  assert.match(cashRows[0], /FCF yield 1\.5%/);
+  assert.match(cashRows[0], /ROCE 49\.2%/);
+  assert.match(cashRows[0], /Operating cash flow ÷ PAT, FY26 1\.29×/);
+  assert.match(cashRows[1], /ECLERX/);
+  assert.doesNotMatch(cashRows[1], /FCF yield/, 'no price, no yield: never a yield of 0');
+  assert.deepEqual(screenCalls, ['index', 'steady_growers', 'turnarounds', 'fcf_compounders']);
   assert.doesNotMatch(await page.locator('#screens-body').innerText(), /OLDCO/);
   assert.match(await page.locator('#screens-body').innerText(), /not a recommendation/);
   assert.doesNotMatch(await viewText(page, 'view-lenses'), BANNED);
