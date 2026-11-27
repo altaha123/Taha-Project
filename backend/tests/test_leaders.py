@@ -1340,6 +1340,43 @@ def test_the_short_lists_watch_is_its_own_tight_forty_session_base():
     assert [r["symbol"] for r in leaders.short_watch(blocks)] == ["AAA"]
 
 
+def test_an_industry_index_at_a_fresh_high_is_a_sector_breakout():
+    up = [[0.002] * leaders.SECTOR_PATH] * leaders.FLOW_MIN_MEMBERS
+    assert leaders._sector_breakout(up) == {"breakout": True, "near_high": True, "from_high_pct": 0.0}
+    fell = [[0.002] * 60 + [-0.008] * 10] * leaders.FLOW_MIN_MEMBERS
+    got = leaders._sector_breakout(fell)
+    assert got["breakout"] is False and got["near_high"] is False and got["from_high_pct"] > 3
+    # Too few stocks to make an index is unknown, not a no.
+    assert leaders._sector_breakout(up[:3])["near_high"] is None
+
+
+def test_every_sector_row_says_whether_its_industry_is_breaking_out():
+    _c, _s, blocks = _ranked_with_sectors()
+    rows = [b["sector_flow"] for b in blocks.values() if b.get("sector_flow")]
+    assert rows and all({"breakout", "near_high", "from_high_pct"} <= set(r) for r in rows)
+    assert all(isinstance(r["near_high"], bool) for r in rows)
+
+
+def test_a_breakout_in_an_industry_far_from_its_high_is_refused():
+    g = _sig(_ratnaveer_like())
+    far = {"Alpha": {"sector": "Alpha", "rank": 2, "of": 10, "score": 80.0,
+                     "breakout": False, "near_high": False, "from_high_pct": 8.2}}
+    _s, why, _o = leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx(flow_by=far))
+    assert leaders.BREAKOUT_SECTOR_NEAR_HIGH and why and "8.2% under its 60-session high" in why
+    near = {"Alpha": dict(far["Alpha"], near_high=True, from_high_pct=1.0)}
+    assert leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx(flow_by=near))[1] is None
+    # No industry, or one too small to index: passes, as every sector screen does.
+    unknown = {"Alpha": dict(far["Alpha"], near_high=None)}
+    assert leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx(flow_by=unknown))[1] is None
+
+
+def test_the_sector_screen_is_the_one_the_lab_adopted():
+    with open(os.path.join(HERE, "..", "..", "research", "setups-lab-sector.json"), encoding="utf-8") as f:
+        lab = json.load(f)["lists"]
+    assert lab["breakout A"]["adopted"] == "gate: near_high"
+    assert lab["technical (pullback)"]["adopted"] is None
+
+
 def test_technicals_still_read_only_three_hundred_bars():
     long = _bars(np.linspace(50, 150, 900))
     assert leaders.technicals(long) == leaders.technicals(long.iloc[-300:])

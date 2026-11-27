@@ -99,6 +99,11 @@ except Exception:
     wow_orders = None
 
 try:
+    import concalls
+except Exception:
+    concalls = None
+
+try:
     from data_source import resolve as _resolve
 except Exception:
     _resolve = None
@@ -865,6 +870,108 @@ def chart_facts(tech, facts=None, pattern=None, price=None):
     return out
 
 
+# ---- Live catalysts on the setup lists (December 2026) ---------------------
+# A reader pointed out that RATNAVEER's and HFCL's moves came with news: an
+# order, an earnings call that raised the outlook, a story in the press. The
+# site reads all three as they arrive, but keeps no history of them, so they
+# cannot be tested. They are shown beside a setup pick, and they move a pick
+# up its own list; they never put a stock on a list or take one off.
+CATALYST_LISTS = ("breakout", "technical", "quick", "flow", "emerging")
+CONCALL_DAYS = 100        # an earnings call older than this is last quarter's news
+CATALYST_NEWS_HOURS = 168 # a story older than a week is not a catalyst
+CATALYST_ORDER_PCT = 1.0  # an order worth this share of the company's value or more
+
+
+def _concall_for(symbol):
+    """The company's newest earnings-call transcript read in the last
+    CONCALL_DAYS, as {"date", "quarter", "headline", "weight", "said",
+    "guidance_count"}, or None. "said" is a commitment management made on the
+    call, quoted from the transcript (the brief checks quotes word for word);
+    "weight" is how much the brief thought the call mattered."""
+    if concalls is None or not symbol:
+        return None
+    try:
+        rows = concalls.filed_since(symbol=str(symbol).upper(), limit=1)
+    except Exception:
+        return None
+    if not rows:
+        return None
+    r = rows[0]
+    if r.get("epoch") and time.time() - float(r["epoch"]) > CONCALL_DAYS * 86400:
+        return None
+    try:
+        brief = concalls.briefs_for([r["pdf"]]).get(r["pdf"]) or {}
+    except Exception:
+        brief = {}
+    dg = r.get("digest") or {}
+    said = ((brief.get("commitments") or [{}])[0].get("said")
+            or (dg.get("guidance") or [{}])[0].get("said"))
+    return {"date": (r.get("at") or "")[:10] or None, "quarter": dg.get("quarter"),
+            "headline": brief.get("headline") or r.get("headline"),
+            "weight": brief.get("weight"), "guidance_count": dg.get("guidance_count"),
+            "said": (said[:220] + "\u2026") if said and len(said) > 220 else said}
+
+
+def _recent_news(stories, hours=CATALYST_NEWS_HOURS):
+    """Stories from the last `hours`, rumours left out."""
+    cut = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=hours)
+    out = []
+    for st in stories or []:
+        if st.get("speculative"):
+            continue
+        when = str(st.get("when") or "")
+        try:
+            t = dt.datetime.fromisoformat(when.replace("Z", "+00:00"))
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            continue
+        if t >= cut:
+            out.append(st)
+    return out
+
+
+def _finite_num(v):
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return False
+    return f == f and f not in (float("inf"), float("-inf"))
+
+
+def catalysts(symbol, stories=None, order=None):
+    """
+    What has happened to a company lately that the chart cannot show:
+    {"order", "concall", "news", "lines", "score"}, or None when there is
+    nothing. `lines` are the facts in words; `score` only orders a list's
+    picks among themselves (an order worth 1% or more of the company 1 to 3,
+    a call the brief rated high or medium 1 or 0.5, a week's news 0.3).
+    """
+    order = order if order is not None else _order_for(symbol)
+    call = _concall_for(symbol)
+    news = _recent_news(stories)
+    lines, score = [], 0.0
+    if order and _finite_num(order.get("value_cr")):
+        pct = order.get("pct_of_market_cap")
+        lines.append(f"Order worth \u20b9{float(order['value_cr']):,.0f} crore"
+                     + (f", {float(pct):.1f}% of its market value" if _finite_num(pct) else "")
+                     + (f", disclosed {order['date']}" if order.get("date") else ""))
+        if _finite_num(pct) and float(pct) >= CATALYST_ORDER_PCT:
+            score += min(3.0, 1.0 + float(pct) / 5.0)
+    if call:
+        lines.append("Earnings call" + (f" ({call['quarter']})" if call.get("quarter") else "")
+                     + (f" on {call['date']}" if call.get("date") else "")
+                     + (f": {call['headline']}" if call.get("headline") else ""))
+        score += {"high": 1.0, "medium": 0.5}.get(call.get("weight"), 0.25)
+    if news:
+        lines.append(f"In the news: {news[0].get('title')}"
+                     + (f" ({len(news)} stories this week)" if len(news) > 1 else ""))
+        score += 0.3
+    if not lines:
+        return None
+    return {"order": order, "concall": call, "news": news[:3], "lines": lines[:3], "score": round(score, 2)}
+
+
 def _order_for(symbol):
     """The largest order this company disclosed in the last few weeks, with
     its size against the company's market value, or None. Read from the order
@@ -1001,6 +1108,12 @@ def _setup_evidence(key, block):
         line("Long-term trend", f"Above its 200-day average (\u20b9{facts.get('sma200')}).", True)
         if f:
             line("Industry", f"{f.get('sector')} ranks {f.get('rank')} of {f.get('of')} on money flow.", True)
+            if f.get("near_high") is not None:
+                line("Industry breaking out",
+                     (f"Its industry index made a new 60-session high in the last 10 sessions."
+                      if f.get("breakout") else
+                      f"Its industry index is {f.get('from_high_pct')}% under its 60-session high.")
+                     + " The list wants it within 3%.", bool(f.get("near_high")))
         line("Strength", lead, True)
         if q.get("pat_yoy_pct") is not None:
             line("Last quarter", f"Profit {'rose' if q['pat_yoy_pct'] >= 0 else 'fell'} "
@@ -1175,7 +1288,8 @@ SETUP_METHOD = {
                  "or tightening before the break (a calmer last fortnight, or volume drying up): a VCP "
                  "launchpad. The breakout needs 1.6 times the usual volume and a close in the top 45% of the "
                  "day's range. The stock must be above its 200-day average, with a leader score of 45 or "
-                 "more, its industry in the top 60% on money flow, and a month better than the Nifty 500's. "
+                 "more, its industry in the top 60% on money flow and its industry's own index within 3% of "
+                 "its 60-session high, and a month better than the Nifty 500's. "
                  "It is left out if it is already more than 16% above its 50-day average or up 55% in three "
                  "months, if its last quarter's profit fell more than 10%, or if the market sold its results. "
                  "Newest breakouts first, then the heaviest volume. Held about three months." + _REPLAYED),
@@ -1226,6 +1340,18 @@ SETUP_NOTE = {
     "emerging": ("Listed six to eighteen months, so each has less history to judge by. Much of the average "
                  "comes from a few large winners; more than half the picks fell in the test."),
 }
+
+
+def _watch_with_catalysts(rows, news_idx):
+    """The breakout watch list with each base's live catalyst, if any: a
+    base with a fresh order or earnings call behind it is the one to watch."""
+    out = []
+    for r in rows:
+        r = dict(r)
+        c = catalysts(r.get("symbol"), (news_idx or {}).get(str(r.get("symbol") or "").upper()))
+        r["catalyst"] = c["lines"][0] if c else None
+        out.append(r)
+    return out
 
 
 def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
@@ -1305,13 +1431,25 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
             # Its sector on Money Flow. A fact beside the pick; not ranked.
             "sector_tailwind": sector_tailwind(sym),
         })
+        if key in CATALYST_LISTS:
+            # An order, an earnings call, a week's news: live facts, untested,
+            # that move a pick up its list and never put one on it.
+            row["catalysts"] = catalysts(sym, row["news"], row["order"])
         band = "High" if entry["score"] >= 85 else ("Moderate" if entry["score"] >= 70 else "Speculative")
         row["conviction_band"] = band
         row["conviction_why"] = f"Ranked {entry['rank']} of the stocks that passed every gate."
         row["thesis"] = spec["idea"]
         chosen.append(row)
 
+    if key in CATALYST_LISTS and any(r.get("catalysts") for r in chosen):
+        # Picks with a fresh catalyst first, the strongest first; the rest keep
+        # the list's own order. Which stocks are on the list does not change.
+        chosen.sort(key=lambda r: (-((r.get("catalysts") or {}).get("score") or 0.0), r["pick_rank"]))
     notes = []
+    if key in CATALYST_LISTS and any(r.get("catalysts") for r in chosen):
+        notes.append("Picks with a fresh catalyst (an order worth 1% or more of the company, an earnings "
+                     "call, a week's news) are shown first. Catalysts were not part of the test: there is "
+                     "no history of them to test on, so they reorder the list and never choose it.")
     if excluded_adverse:
         notes.append("Removed for a serious adverse filing: "
                      + ", ".join(f"{e['symbol']} ({e['category']})" for e in excluded_adverse[:4]) + ".")
@@ -1401,7 +1539,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "flow_sectors": leaders.FLOW_SECTORS if key == "flow" else None,
         # Tight bases not yet broken, nearest their top first: the breakout
         # list's waiting room. Watched, not picked.
-        "watch": ((payload.get("breakout_watch") or []) if key == "breakout" else
+        "watch": (_watch_with_catalysts(payload.get("breakout_watch") or [], news_idx) if key == "breakout" else
                   # A scan from before December 2026 has no short_watch; its
                   # breakout_watch was the short list's own.
                   (payload.get("short_watch") if "short_watch" in payload else payload.get("breakout_watch") or [])

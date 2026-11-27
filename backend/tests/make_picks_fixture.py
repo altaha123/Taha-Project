@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "research"))
 OUT = ROOT / "frontend" / "tests" / "fixtures" / "picks.json"
 
 ROW_KEYS = ("symbol", "name", "price", "sector", "list", "setup", "setup_key", "horizon", "pick_rank",
-            "young", "conviction", "conviction_band", "why", "pattern", "evidence", "plan", "results", "order",
+            "young", "conviction", "conviction_band", "why", "pattern", "catalysts", "evidence", "plan", "results", "order",
             "technicals", "chart", "news", "adverse_filing", "avg_turnover_cr", "liquidity_tier",
             "tracked", "composite", "technical", "fundamental", "f_score", "setup_fit", "call")
 TOP_KEYS = ("available", "degraded", "method_key", "list", "horizon", "label", "idea", "hold_text",

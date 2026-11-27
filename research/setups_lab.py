@@ -1212,8 +1212,155 @@ def main_v2():
     print("\nwrote", V2_OUT)
 
 
+
+# ==========================================================================
+# SECTOR BREAKOUT (December 2026)
+#
+#     python research/setups_lab.py --sector     # research/setups-lab-sector.json
+#
+# A reader pointed out that RATNAVEER and HFCL broke out while their whole
+# industry was breaking out. Asked: does requiring the stock's SECTOR to be
+# breaking out too improve the shipped lists? Two screens, declared before
+# the run, each built from an equal-weight index of the industry's liquid
+# stocks (NSE's industry list; a stock with no industry passes, as with
+# every other sector screen):
+#
+#   new_high   the sector index made a new 60-session closing high in the
+#              last 10 sessions
+#   near_high  the sector index is within 3% of its 60-session high
+#
+# applied as a gate, and (breakouts only) as an order: sector breakouts first.
+# Tried on the shipped breakout (pattern A), on A or B (the HFCL pattern) and
+# on the shipped technical list, each with its shipped exit.
+#
+# THE RULE, set before the run: a screen is adopted on a list if, on
+# 2017-2021, it raises the lead over the Nifty 500 above the list's own,
+# keeps a profit after costs, a pick on 25% of sessions and 150 picks. Its
+# 2022-2026 record is printed whatever it is.
+# ==========================================================================
+
+SECTOR_OUT = os.environ.get("SETUPS_LAB_SECTOR_OUT", "").strip() or os.path.join(HERE, "setups-lab-sector.json")
+SECTOR_HIGH_WINDOW = 60
+SECTOR_RECENT = 10
+SECTOR_NEAR = 0.97
+
+
+def sector_index_frames(P, U, sector):
+    """date x stock: does the stock's industry index stand at (or near) a
+    60-session high. The index is the mean daily return of the industry's
+    liquid stocks, chained. NaN where the stock has no industry."""
+    r1 = (P.C / P.C.shift(1) - 1).where(U)
+    names = sorted(s for s in sector.dropna().unique())
+    new_high = np.full(P.C.shape, np.nan)
+    near_high = np.full(P.C.shape, np.nan)
+    idx_out = {}
+    for s in names:
+        js = np.flatnonzero((sector == s).values)
+        count = U.values[:, js].sum(axis=1)
+        ret = np.nanmean(r1.values[:, js], axis=1) if len(js) else np.full(len(P.C), np.nan)
+        ret = np.where(count >= 8, ret, 0.0)
+        level = pd.Series(np.cumprod(1 + np.nan_to_num(ret)), index=P.C.index)
+        top = level.rolling(SECTOR_HIGH_WINDOW, min_periods=SECTOR_HIGH_WINDOW).max()
+        at = (level >= top).astype(float).where(top.notna())
+        nh = at.rolling(SECTOR_RECENT, min_periods=1).max().values
+        near = (level >= SECTOR_NEAR * top).astype(float).where(top.notna()).values
+        ok = count >= 8
+        new_high[:, js] = np.where(ok, nh, np.nan)[:, None]
+        near_high[:, js] = np.where(ok, near, np.nan)[:, None]
+        idx_out[s] = level
+    f = lambda a: pd.DataFrame(a, index=P.C.index, columns=P.C.columns)
+    return {"new_high": f(new_high), "near_high": f(near_high), "levels": idx_out}
+
+
+def main_sector():
+    P = S.Panel()
+    U = P.universe(10)
+    F = L.features(P)
+    B = L.base_parts(P, U)
+    M = measures(P)
+    R = S.load_results(P)
+    sector = load_sectors(P)
+    X = v2_measures(P, U, M, F, B, R, sector)
+    SB = sector_index_frames(P, U, sector)
+    days = P.C.index[262:-1]
+    nd = len(days)
+    out = {"generated": pd.Timestamp.today().date().isoformat(),
+           "from": str(days[0].date()), "to": str(P.C.index[-1].date()),
+           "screens": {"new_high": "the sector index made a new 60-session closing high in the last 10 sessions",
+                       "near_high": "the sector index is within 3% of its 60-session high"},
+           "rule": ("Adopted on a list if, on 2017-2021, it raises the lead over the Nifty 500 above the list's own, "
+                    "keeps a profit after costs, a pick on 25% of sessions and 150 picks. 2022-2026 printed "
+                    "whatever it is."),
+           "lists": {}}
+
+    def run(picks, kw):
+        return summary(run_rule(P, picks, **kw), nd)
+
+    def gate(screen):
+        g = SB[screen]
+        return g.isna() | (g >= 1)                         # no industry: passes, as every sector screen does
+
+    def show(name, r):
+        h = r["by_half"]
+        print(f"{name:52s} n {r['picks']:6d} days {r['days_with_a_pick_pct']:5.1f}% up {r['up_pct']:5.1f} "
+              f"net {r['after_costs_pct']:6.2f} lead {r['lead_pct']} t {r['lead_t']} big {r['big_winner_pct']} | "
+              f"17-21 up {h['2017-21']['up_pct']} net {h['2017-21']['after_costs_pct']} lead {h['2017-21']['lead_pct']} | "
+              f"22-26 up {h['2022-26']['up_pct']} net {h['2022-26']['after_costs_pct']} lead {h['2022-26']['lead_pct']}",
+              flush=True)
+
+    ex = dict(max_hold=63, stop_pct=12.0)
+    cases = {}
+    for pat in ("A", "AB"):
+        f, _lv, rb, _w = breakout_v2(P, U, M, F, B, X, pattern=pat)
+        cases[f"breakout {pat}"] = (f, rb)
+    f, rb = technical_v2(P, U, M, F, B, X)
+    cases["technical (pullback)"] = (f, rb)
+    for base, (flag, rb) in cases.items():
+        rec = {}
+        flat = lambda picks: [(d, [(n, None) for n, _l in names]) for d, names in picks]
+        rec["as shipped"] = run(flat(daily_picks(flag, rb, U, days)), ex)
+        for screen in ("new_high", "near_high"):
+            rec[f"gate: {screen}"] = run(flat(daily_picks(flag & gate(screen), rb, U, days)), ex)
+        if base.startswith("breakout"):
+            boosted = rb + 1000.0 * (SB["new_high"].fillna(0) >= 1)
+            rec["order: sector new highs first"] = run(flat(daily_picks(flag, boosted, U, days)), ex)
+        for k, r in rec.items():
+            show(f"{base} | {k}", r)
+        mine = rec["as shipped"]["by_half"]["2017-21"]["lead_raw"]
+        adopted = {k: r for k, r in rec.items() if k != "as shipped" and r and _eligible_lead(r)
+                   and r["by_half"]["2017-21"]["lead_raw"] > mine}
+        best = max(adopted, key=lambda k: adopted[k]["by_half"]["2017-21"]["lead_raw"]) if adopted else None
+        print(f"  {base}: adopted -> {best}", flush=True)
+        for r in rec.values():
+            r.pop("lead_raw", None)
+            for h in r["by_half"].values():
+                if h:
+                    h.pop("lead_raw", None)
+        out["lists"][base] = {"versions": rec, "adopted": best}
+
+    # The two stocks a reader named: was their industry breaking out the day the breakout fired?
+    sector_of = sector.to_dict()
+    named = {}
+    for sym, d in (("RATNAVEER", "2026-07-27"), ("HFCL", "2026-04-09"), ("HFCL", "2023-08-07"),
+                   ("HFCL", "2022-10-31")):
+        if sym not in P.C.columns:
+            continue
+        sec = sector_of.get(sym)
+        i = P.C.index.get_loc(pd.Timestamp(d))
+        named[f"{sym} {d}"] = {"sector": sec,
+                               "sector_new_high": (None if not sec else bool(SB["new_high"].at[P.C.index[i], sym] >= 1)),
+                               "sector_near_high": (None if not sec else bool(SB["near_high"].at[P.C.index[i], sym] >= 1))}
+    out["named_stocks"] = named
+    print(json.dumps(named, indent=1), flush=True)
+    with open(SECTOR_OUT, "w", encoding="utf-8") as fh:
+        json.dump(L._clean(out), fh, indent=1)
+    print("\nwrote", SECTOR_OUT)
+
+
 if __name__ == "__main__":
     if "--v2" in sys.argv[1:]:
         main_v2()
+    elif "--sector" in sys.argv[1:]:
+        main_sector()
     else:
         main()

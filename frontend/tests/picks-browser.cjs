@@ -37,6 +37,10 @@ const root = path.resolve('frontend');
 const output = path.resolve('test-results/picks');
 fs.mkdirSync(output, { recursive: true });
 const FIX = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/picks.json'), 'utf8'));
+/* A live catalyst on the first breakout pick, as ideas.catalysts() writes one.
+   The fixture is made from the price panel, which has no orders or calls. */
+const CATALYST = 'Order worth \u20b9420 crore, 6.1% of its market value, disclosed 2026-11-20';
+FIX.breakout.rows[0].catalysts = { lines: [CATALYST], score: 2.2 };
 const KEYS = ['week', 'month', 'results', 'momentum', 'long'];
 const PORT = 8793;
 
@@ -307,6 +311,9 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.ok((await page.locator('#pickhead .pk-sectors tbody tr').count()) === FIX.flow.sector_flow.length, 'flow: every sector is ranked');
   assert.ok((await page.locator('#pickhead .pk-sectors tbody tr.on').count()) === FIX.flow.flow_sectors, 'flow: the sectors picked from are marked');
   assert.equal(FIX.flow.flow_sectors, 3, 'flow: the list takes the top three sectors');
+  // Each sector's own index against its 60-session high: a sector breakout.
+  assert.match(await page.locator('#pickhead .pk-sectors thead').innerText(), /Index/);
+  assert.match(await page.locator('#pickhead .pk-sectors tbody').innerText(), /New high|% under/);
   /* Breakouts: the ledger is pass or fail, and the watch list is separate. */
   await page.locator('#hzseg2 .hz[data-h="breakout"]').click();
   const b0 = page.locator(`#idearows .idea[data-t="${FIX.breakout.rows[0].symbol}"]`);
@@ -317,6 +324,9 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.ok(/VCP launchpad|Base turnaround/.test(await b0.locator('.evwrap').innerText())
     && !/null|undefined|NaN/.test(await b0.locator('.evwrap').innerText()),
     'breakout: the ledger names the pattern and reads as conditions met');
+  // A live catalyst is marked on the pick and said in full in its details.
+  assert.equal(await b0.locator('.pk-cat').innerText(), 'Catalyst');
+  assert.match(await b0.locator('.pk-catalyst').innerText(), /Order worth/);
   // The pattern is a badge on the pick, and is not said twice.
   assert.equal(await b0.locator('.pk-badge').innerText(), FIX.breakout.rows[0].pattern);
   assert.equal((await b0.locator('.pk-why span').allInnerTexts()).filter(t => t === FIX.breakout.rows[0].pattern).length, 0);

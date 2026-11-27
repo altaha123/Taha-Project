@@ -117,7 +117,9 @@ of the index), its 2022-2026 record then printed whatever it was:
   Breakouts    a VCP launchpad: a close above a 40- or 60-session base 28%
                wide or less that was tight or tightened, on 1.6 times the
                usual volume, not already stretched (16% over the 50-day, 55%
-               in three months). Held 63 sessions, out on a close 12% under.
+               in three months), its industry's own index within 3% of
+               its 60-session high (research/setups-lab-sector.json).
+               Held 63 sessions, out on a close 12% under.
                The base-turnaround pattern (a first 60-session high on twice
                the volume, for a stock not yet a leader) is measured too and
                is on the watch list; see LAUNCH_PATTERNS.
@@ -210,6 +212,21 @@ RESULTS_MIN_POOL = 8
 # by the NEXT session's close.
 MARKET_CLOSE_MIN = 15 * 60 + 30
 DAYS_KEPT = 12                     # recent daily moves each stock carries for that
+# Sector breakout (research/setups_lab.py --sector): an industry's own index,
+# the mean daily move of its liquid stocks chained, at a new 60-session
+# closing high in the last 10 sessions, or within 3% of that high.
+SECTOR_PATH = 70                   # daily moves each stock carries to build it
+SECTOR_HIGH_WINDOW = 60
+SECTOR_RECENT = 10
+SECTOR_NEAR = 0.97
+# The breakout list asks the stock's industry to be near a high too. The lab
+# (research/setups-lab-sector.json) tried two such screens, declared before
+# the run; the rule adopted "within 3% of its 60-session high" for this list
+# because it raised the 2017-2021 lead over the Nifty 500 (2.26 points a pick
+# against 2.22), with fewer picks and 2022-2026 about level (1.33 against
+# 1.35). It made the technical list worse in both halves, so only here. A
+# stock with no industry on NSE's list passes, as on every sector screen.
+BREAKOUT_SECTOR_NEAR_HIGH = True
 # Stamped on every block rank() writes. A scan made under an earlier recipe
 # still serves its lists after a deploy, but the page must not print this
 # recipe's tested record beside them. Change it whenever LISTS changes.
@@ -448,6 +465,10 @@ def signals(df):
         "ret_5d": float(c[-1] / c[-6] - 1.0),
         "tech": _safe_technicals(frame),
         "days": _recent_days(frame, c),
+        # The last SECTOR_PATH daily moves and the date of the last, so
+        # sector_flow() can chain an industry's own index (sector breakout).
+        "path": [round(float(x), 5) for x in (c[-SECTOR_PATH:] / c[-SECTOR_PATH - 1:-1] - 1.0)],
+        "path_end": _last_day(frame),
     }
 
 
@@ -863,6 +884,16 @@ def _launch_watch(c, h, low, v, lr, has_vol, t_out):
     return None
 
 
+def _last_day(frame):
+    """The ISO date of a frame's last bar, or None for an undated frame."""
+    try:
+        d = frame.index[-1]
+        d = d.date().isoformat() if hasattr(d, "date") else str(d)[:10]
+        return d if len(d) == 10 and d[4] == "-" else None
+    except Exception:
+        return None
+
+
 def _recent_days(frame, c):
     """The last DAYS_KEPT sessions as (ISO date, close-to-close move), oldest
     first, or None for a frame with no dates. What the results list needs to
@@ -1146,6 +1177,24 @@ def _tech_block(t):
     }
 
 
+def _sector_breakout(paths):
+    """An industry's own index from its stocks' last SECTOR_PATH daily moves
+    (their mean, chained): whether it made a new 60-session closing high in
+    the last 10 sessions, whether it is within 3% of that high, and how far
+    under the high it is. Unknown (None) with fewer than FLOW_MIN_MEMBERS."""
+    paths = [p for p in paths if p]
+    if len(paths) < FLOW_MIN_MEMBERS:
+        return {"breakout": None, "near_high": None, "from_high_pct": None}
+    moves = np.mean(np.asarray(paths, dtype=float), axis=0)
+    level = np.cumprod(1.0 + moves)
+    n = len(level)
+    new_high = any(level[k] >= level[k - SECTOR_HIGH_WINDOW + 1:k + 1].max()
+                   for k in range(max(SECTOR_HIGH_WINDOW - 1, n - SECTOR_RECENT), n))
+    top = float(level[-SECTOR_HIGH_WINDOW:].max())
+    return {"breakout": bool(new_high), "near_high": bool(level[-1] >= SECTOR_NEAR * top),
+            "from_high_pct": round(float((1 - level[-1] / top) * 100), 1)}
+
+
 def sector_flow(pool, sectors):
     """
     Where money is moving: every sector with enough liquid stocks, ranked.
@@ -1159,6 +1208,11 @@ def sector_flow(pool, sectors):
       breadth  the share of its stocks above their own 50-day average
       month    the median move of its stocks over the last 21 sessions
       month3   the median move of its stocks over the last 63 sessions
+
+    and, beside the rank, whether the industry is breaking out: its own
+    index (the mean daily move of its stocks, chained) at a new 60-session
+    high in the last 10 sessions (`breakout`), within 3% of it
+    (`near_high`), and how far under it (`from_high_pct`).
 
     Since December 2026 the sectors are ordered on rotation: 45% the
     three-month median, 35% breadth, 20% the turnover shift
@@ -1188,13 +1242,22 @@ def sector_flow(pool, sectors):
         xs = sorted(xs)
         mid = len(xs) // 2
         return xs[mid] if len(xs) % 2 else (xs[mid - 1] + xs[mid]) / 2.0
+    # The session most stocks' paths end on: a stock whose last bar is older
+    # (halted, or a stale feed) is left out of its industry's index.
+    ends = {}
+    for _sym, g in pool:
+        if g.get("path_end"):
+            ends[g["path_end"]] = ends.get(g["path_end"], 0) + 1
+    last = max(ends, key=lambda d: (ends[d], d)) if ends else None
     rows = []
     for sec, members in groups.items():
         if len(members) < FLOW_MIN_MEMBERS or tot5 <= 0 or tot60 <= 0:
             continue
         s5, s60 = sum(m[2] for m in members), sum(m[3] for m in members)
+        brk = _sector_breakout([m[1].get("path") for m in members
+                                if m[1].get("path_end") == last and len(m[1].get("path") or ()) == SECTOR_PATH])
         rows.append({
-            "sector": sec, "stocks": len(members),
+            "sector": sec, "stocks": len(members), **brk,
             "shift": (s5 / tot5) / (s60 / tot60) if s60 > 0 else None,
             "breadth": sum(1 for m in members if m[4]) / len(members),
             "month": median([_finite(m[1].get("ret_1m")) or 0.0 for m in members]),
@@ -1351,6 +1414,9 @@ def _setup(key, sym, g, part, is_calm, ctx):
         if r1 is None or r1 <= bench["ret_1m"]:
             why = (f"Its month ({(r1 or 0) * 100:+.1f}%) did not beat the market's "
                    f"({bench['ret_1m'] * 100:+.1f}%).")
+        if not why and BREAKOUT_SECTOR_NEAR_HIGH and row and row.get("near_high") is False:
+            why = (f"Its industry, {row['sector']}, is {row.get('from_high_pct')}% under its 60-session high: "
+                   "the list wants the industry within 3% of it.")
         why = why or _chasing(g, t) or _quarter_bad(fund, ev)
         # The newest breakout first, then the heaviest volume.
         return score, why, (BOX_LOOKBACK - L["sessions_ago"]) * 10.0 + min(vol, 9.9)
@@ -1778,6 +1844,8 @@ def breakout_watch(blocks, limit=20):
             continue
         flow, q = b.get("sector_flow"), b.get("quarter") or {}
         if q.get("pat_yoy_pct") is not None and q["pat_yoy_pct"] < BAD_PROFIT_PCT:
+            continue
+        if BREAKOUT_SECTOR_NEAR_HIGH and flow is not None and flow.get("near_high") is False:
             continue
         if w["pattern"] == "VCP launchpad":
             if (b.get("score") or 0) < LAUNCH_A_LEADER * 100:

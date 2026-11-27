@@ -118,6 +118,22 @@
     }).join('') + '</div>';
   }
 
+  /* Live catalysts beside a setup pick: an order worth a share of the company,
+     an earnings call, a week's news. The server's words. They were not part
+     of the test (there is no history of them) and they only move a pick up
+     its own list, which the list's note says. */
+  function catalystHTML(s) {
+    var c = s && s.catalysts;
+    if (!c || !(c.lines || []).length) return '';
+    return c.lines.map(function (l) {
+      return '<div class="pk-fact pk-catalyst"><b>Catalyst</b> ' + esc(l) + '</div>';
+    }).join('');
+  }
+  function catalystBadge(s) {
+    return s && s.catalysts && (s.catalysts.lines || []).length
+      ? '<span class="pk-badge pk-cat" title="' + esc(s.catalysts.lines[0]) + '">Catalyst</span>' : '';
+  }
+
   /* Which breakout pattern a pick is: a VCP launchpad (a base that tightened
      before it broke) or a base turnaround (a first 60-session high after a
      long sideways base). The server's word; nothing here decides it. */
@@ -282,21 +298,31 @@
     if (!rows.length) return '';
     var top = d.flow_sectors || 3;
     var three = rows.some(function (r) { return finite(r.month3_pct); });
+    /* The industry's own index against its 60-session high: a sector breakout. */
+    var idx = rows.some(function (r) { return r.near_high != null; });
+    function idxCell(r) {
+      if (r.near_high == null) return '—';
+      return r.breakout ? 'New high' : (finite(r.from_high_pct) ? Number(r.from_high_pct).toFixed(1) + '% under' : '—');
+    }
     return '<details class="pk-sectors" open><summary>Where money is moving: ' + rows.length + ' sectors ranked</summary>' +
       '<div class="pk-sectors-scroll"><table><thead><tr><th>Sector</th>' +
       (three ? '<th title="Median stock, last 63 sessions">3 months</th>' : '') +
+      (idx ? '<th title="The industry\u2019s own index against its 60-session high">Index</th>' : '') +
       '<th title="Stocks above their 50-day average">Above 50-day</th>' +
       '<th title="Share of market turnover this week against its share over sixty sessions">Turnover</th>' +
       '<th title="Median stock, last 21 sessions">Month</th></tr></thead><tbody>' +
       rows.map(function (r) {
         return '<tr' + (r.rank <= top ? ' class="on"' : '') + '><td><b>' + r.rank + '</b> ' + esc(r.sector) +
           ' <small>' + r.stocks + '</small></td>' + (three ? '<td>' + signed(r.month3_pct) + '</td>' : '') +
+          (idx ? '<td>' + idxCell(r) + '</td>' : '') +
           '<td>' + (finite(r.breadth_pct) ? Math.round(r.breadth_pct) + '%' : '—') + '</td><td>' +
           (finite(r.shift) ? Number(r.shift).toFixed(2) + '×' : '—') + '</td><td>' + signed(r.month_pct) + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
       '<p>Sectors are ranked on rotation: their median stock\u2019s three months counts most, then how many of their stocks ' +
       'are above the 50-day average, then their share of trading this week against their usual share (above 1× means ' +
-      'money is moving in). The list takes the strongest stocks from the top ' + top + '.</p></details>';
+      'money is moving in). The list takes the strongest stocks from the top ' + top + '.' +
+      (idx ? ' Index is the sector\u2019s own: \u201cNew high\u201d means it broke out to a 60-session high in the last ' +
+        'ten sessions. The breakouts list wants a stock\u2019s industry within 3% of that high.' : '') + '</p></details>';
   }
 
   /* Breakouts: tight bases that have not broken yet. Watched, not picked. */
@@ -304,15 +330,17 @@
     var rows = (d && d.watch) || [];
     if (!rows.length) return '';
     var patterns = rows.some(function (r) { return r.pattern; });
+    var cats = rows.some(function (r) { return r.catalyst; });
     return '<details class="pk-sectors pk-watch"><summary>Setting up: ' + rows.length + ' bases not yet broken</summary>' +
       '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th>' + (patterns ? '<th>Pattern</th>' : '') +
-      '<th>Top of base</th><th>Away</th><th>Range</th></tr></thead><tbody>' +
+      '<th>Top of base</th><th>Away</th><th>Range</th>' + (cats ? '<th>Catalyst</th>' : '') + '</tr></thead><tbody>' +
       rows.map(function (r) {
         return '<tr><td><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a>' +
           (r.sector ? ' <small>' + esc(r.sector) + '</small>' : '') + '</td>' +
           (patterns ? '<td>' + esc(r.pattern || '') + '</td>' : '') + '<td>' + inr(r.top) + '</td><td>' +
           (finite(r.to_top_pct) ? Number(r.to_top_pct).toFixed(1) + '%' : '—') + '</td><td>' +
-          (finite(r.width_pct) ? Number(r.width_pct).toFixed(0) + '%' : '—') + '</td></tr>';
+          (finite(r.width_pct) ? Number(r.width_pct).toFixed(0) + '%' : '—') + '</td>' +
+          (cats ? '<td>' + esc(r.catalyst || '') + '</td>' : '') + '</tr>';
       }).join('') + '</tbody></table></div>' +
       (patterns
         ? '<p>Within 3% of the top of a base. A VCP launchpad is a base 28% wide or less that tightened; a base turnaround ' +
@@ -392,7 +420,7 @@
       '<span class="pk-rank">' + (i + 1) + '</span>' +
       '<span class="pk-main">' +
         '<span class="pk-name">' + esc(s.name || s.symbol) + '</span>' +
-        '<span class="pk-sym">' + esc(s.symbol) + '</span>' + patternHTML(s) +
+        '<span class="pk-sym">' + esc(s.symbol) + '</span>' + patternHTML(s) + catalystBadge(s) +
         whyHTML(s) +
       '</span>' +
       /* Three prices in a row, read left to right: where it is, where a good
@@ -480,7 +508,8 @@
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
     resultsHTML: resultsHTML, orderHTML: orderHTML, flowHTML: flowHTML, chartHTML: chartHTML, marketHTML: marketHTML,
-    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML, patternHTML: patternHTML
+    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML, patternHTML: patternHTML,
+    catalystHTML: catalystHTML, catalystBadge: catalystBadge
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AltahaPicks = api;
