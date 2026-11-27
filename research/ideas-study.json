@@ -966,150 +966,150 @@
    "bias": "Industries are NSE's list as it stands today, and quarterly results start in 2018 and cover companies listed today. Before 2018 the profit screen passes everyone."
   },
   "breakout": {
-   "list_dates": 422,
-   "picks": 2504,
-   "up_pct": 51.9,
-   "beat_index_pct": 47.1,
-   "avg_pct": 3.36,
-   "median_pct": 0.9,
-   "index_avg_pct": 2.52,
-   "big_winner_pct": 10.2,
+   "list_dates": 356,
+   "picks": 2131,
+   "up_pct": 52.6,
+   "beat_index_pct": 46.9,
+   "avg_pct": 3.6,
+   "median_pct": 1.09,
+   "index_avg_pct": 2.39,
+   "big_winner_pct": 10.4,
    "worst_5pct": -14.8,
-   "best_5pct": 35.5,
-   "exit_hit_pct": 31.8,
-   "lists_ahead_of_index_pct": 55.2,
+   "best_5pct": 36.5,
+   "exit_hit_pct": 31.7,
+   "lists_ahead_of_index_pct": 52.2,
    "by_half": {
     "2017-21": {
-     "list_dates": 204,
-     "picks": 1048,
-     "up_pct": 51.6,
-     "beat_index_pct": 48.9,
-     "avg_pct": 3.18,
-     "median_pct": 0.71,
-     "index_avg_pct": 2.58,
-     "big_winner_pct": 9.1,
+     "list_dates": 172,
+     "picks": 879,
+     "up_pct": 51.9,
+     "beat_index_pct": 48.0,
+     "avg_pct": 3.42,
+     "median_pct": 0.83,
+     "index_avg_pct": 2.78,
+     "big_winner_pct": 9.8,
      "worst_5pct": -15.2,
-     "best_5pct": 32.2,
-     "exit_hit_pct": 32.5,
-     "lists_ahead_of_index_pct": 53.4
+     "best_5pct": 34.2,
+     "exit_hit_pct": 33.8,
+     "lists_ahead_of_index_pct": 51.2
     },
     "2022-26": {
-     "list_dates": 218,
-     "picks": 1456,
-     "up_pct": 52.1,
-     "beat_index_pct": 45.8,
-     "avg_pct": 3.49,
-     "median_pct": 1.03,
-     "index_avg_pct": 2.48,
-     "big_winner_pct": 11.0,
+     "list_dates": 184,
+     "picks": 1252,
+     "up_pct": 53.0,
+     "beat_index_pct": 46.2,
+     "avg_pct": 3.72,
+     "median_pct": 1.16,
+     "index_avg_pct": 2.04,
+     "big_winner_pct": 10.9,
      "worst_5pct": -14.7,
-     "best_5pct": 37.1,
-     "exit_hit_pct": 31.2,
-     "lists_ahead_of_index_pct": 56.9
+     "best_5pct": 37.8,
+     "exit_hit_pct": 30.2,
+     "lists_ahead_of_index_pct": 53.3
     }
    },
    "by_year": {
     "2017": {
-     "avg_pct": 5.04,
-     "index_avg_pct": 5.07,
-     "up_pct": 60.2,
-     "picks": 299
+     "avg_pct": 4.82,
+     "index_avg_pct": 5.1,
+     "up_pct": 59.0,
+     "picks": 278
     },
     "2018": {
-     "avg_pct": -3.03,
-     "index_avg_pct": -0.97,
-     "up_pct": 37.2,
-     "picks": 207
-    },
-    "2019": {
-     "avg_pct": 1.3,
-     "index_avg_pct": -0.37,
-     "up_pct": 49.7,
-     "picks": 175
-    },
-    "2020": {
-     "avg_pct": 4.74,
-     "index_avg_pct": 4.29,
-     "up_pct": 45.8,
+     "avg_pct": -4.55,
+     "index_avg_pct": -2.1,
+     "up_pct": 30.3,
      "picks": 142
     },
+    "2019": {
+     "avg_pct": 0.5,
+     "index_avg_pct": -1.23,
+     "up_pct": 50.0,
+     "picks": 128
+    },
+    "2020": {
+     "avg_pct": 5.74,
+     "index_avg_pct": 4.84,
+     "up_pct": 47.7,
+     "picks": 128
+    },
     "2021": {
-     "avg_pct": 6.9,
-     "index_avg_pct": 5.14,
-     "up_pct": 58.7,
-     "picks": 225
+     "avg_pct": 7.45,
+     "index_avg_pct": 5.72,
+     "up_pct": 61.1,
+     "picks": 203
     },
     "2022": {
-     "avg_pct": -1.61,
-     "index_avg_pct": -0.13,
-     "up_pct": 39.8,
-     "picks": 206
+     "avg_pct": -1.92,
+     "index_avg_pct": -0.84,
+     "up_pct": 39.9,
+     "picks": 163
     },
     "2023": {
-     "avg_pct": 12.17,
-     "index_avg_pct": 7.91,
-     "up_pct": 73.6,
-     "picks": 398
+     "avg_pct": 12.01,
+     "index_avg_pct": 7.45,
+     "up_pct": 72.4,
+     "picks": 369
     },
     "2024": {
-     "avg_pct": 1.87,
-     "index_avg_pct": 1.88,
-     "up_pct": 48.4,
-     "picks": 337
+     "avg_pct": 2.81,
+     "index_avg_pct": 1.93,
+     "up_pct": 52.4,
+     "picks": 292
     },
     "2025": {
-     "avg_pct": -0.06,
-     "index_avg_pct": 1.26,
-     "up_pct": 44.1,
-     "picks": 288
+     "avg_pct": -0.14,
+     "index_avg_pct": -0.09,
+     "up_pct": 44.4,
+     "picks": 243
     },
     "2026": {
-     "avg_pct": -0.16,
-     "index_avg_pct": 0.29,
-     "up_pct": 41.0,
-     "picks": 227
+     "avg_pct": -1.34,
+     "index_avg_pct": -0.85,
+     "up_pct": 38.4,
+     "picks": 185
     }
    },
    "hold_sessions": 63,
    "exit_pct": 12.0,
-   "avg_after_costs_pct": 2.87,
+   "avg_after_costs_pct": 3.11,
    "vs_average_stock": {
-    "excess_pct": 1.6,
-    "t": 2.12,
-    "lists_ahead_pct": 56.4,
+    "excess_pct": 1.7,
+    "t": 1.99,
+    "lists_ahead_pct": 55.6,
     "by_half": {
      "2017-21": {
-      "excess_pct": 3.23,
-      "t": 2.93,
-      "lists_ahead_pct": 63.2
+      "excess_pct": 3.4,
+      "t": 2.68,
+      "lists_ahead_pct": 62.8
      },
      "2022-26": {
-      "excess_pct": 0.08,
-      "t": 0.09,
-      "lists_ahead_pct": 50.0
+      "excess_pct": 0.11,
+      "t": 0.12,
+      "lists_ahead_pct": 48.9
      }
     }
    },
    "market": {
     "above_200d": {
-     "list_dates": 343,
-     "picks": 2252,
-     "up_pct": 50.6,
-     "avg_pct": 3.01,
-     "index_avg_pct": 1.81
+     "list_dates": 311,
+     "picks": 1991,
+     "up_pct": 51.8,
+     "avg_pct": 3.39,
+     "index_avg_pct": 1.91
     },
     "below_200d": {
-     "list_dates": 79,
-     "picks": 252,
-     "up_pct": 63.1,
-     "avg_pct": 6.53,
-     "index_avg_pct": 5.64
+     "list_dates": 45,
+     "picks": 140,
+     "up_pct": 62.9,
+     "avg_pct": 6.47,
+     "index_avg_pct": 5.78
     }
    },
    "dates_tried": 486,
-   "picks_per_list": 5.9,
+   "picks_per_list": 6.0,
    "kind": "setup",
-   "what": "A close above the top of a 40- or 60-session base 28% wide or less that was 20% or tighter or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's range, within the last five sessions and still above it; above the 200-day average with the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on money flow; a month better than the Nifty 500's; not more than 16% above its 50-day average or 55% up in three months; no known fall in profit over 10% or results sold by the market. Held 63 sessions, left on a close 12% under.",
+   "what": "A close above the top of a 40- or 60-session base 28% wide or less that was 20% or tighter or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's range, within the last five sessions and still above it; above the 200-day average with the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on money flow and its industry's index within 3% of its 60-session high; a month better than the Nifty 500's; not more than 16% above its 50-day average or 55% up in three months; no known fall in profit over 10% or results sold by the market. Held 63 sessions, left on a close 12% under.",
    "replay": "The site's own engine run on every fifth session; its top fifteen bought at the next open.",
    "version": "2026-12",
    "bias": "Industries are NSE's list as it stands today, so a company since delisted has no industry here and passes that screen unread. Quarterly results start in 2018 and cover companies listed today; without one a stock is never refused for it."
@@ -2118,32 +2118,32 @@
   },
   "breakout": {
    "no exit line": {
-    "list_dates": 422,
-    "picks": 2500,
-    "up_pct": 56.0,
-    "beat_index_pct": 49.6,
-    "avg_pct": 3.81,
-    "median_pct": 1.99,
-    "index_avg_pct": 2.52,
-    "big_winner_pct": 10.7,
-    "worst_5pct": -22.1,
-    "best_5pct": 36.2,
+    "list_dates": 356,
+    "picks": 2127,
+    "up_pct": 56.7,
+    "beat_index_pct": 49.5,
+    "avg_pct": 4.08,
+    "median_pct": 2.17,
+    "index_avg_pct": 2.39,
+    "big_winner_pct": 11.0,
+    "worst_5pct": -21.9,
+    "best_5pct": 37.1,
     "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 58.5
+    "lists_ahead_of_index_pct": 57.6
    },
    "close 12% under": {
-    "list_dates": 422,
-    "picks": 2504,
-    "up_pct": 51.9,
-    "beat_index_pct": 47.1,
-    "avg_pct": 3.36,
-    "median_pct": 0.9,
-    "index_avg_pct": 2.52,
-    "big_winner_pct": 10.2,
+    "list_dates": 356,
+    "picks": 2131,
+    "up_pct": 52.6,
+    "beat_index_pct": 46.9,
+    "avg_pct": 3.6,
+    "median_pct": 1.09,
+    "index_avg_pct": 2.39,
+    "big_winner_pct": 10.4,
     "worst_5pct": -14.8,
-    "best_5pct": 35.5,
-    "exit_hit_pct": 31.8,
-    "lists_ahead_of_index_pct": 55.2
+    "best_5pct": 36.5,
+    "exit_hit_pct": 31.7,
+    "lists_ahead_of_index_pct": 52.2
    }
   },
   "technical": {

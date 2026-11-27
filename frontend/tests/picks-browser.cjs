@@ -312,8 +312,8 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.ok((await page.locator('#pickhead .pk-sectors tbody tr.on').count()) === FIX.flow.flow_sectors, 'flow: the sectors picked from are marked');
   assert.equal(FIX.flow.flow_sectors, 3, 'flow: the list takes the top three sectors');
   // Each sector's own index against its 60-session high: a sector breakout.
-  assert.match(await page.locator('#pickhead .pk-sectors thead').innerText(), /Index/);
-  assert.match(await page.locator('#pickhead .pk-sectors tbody').innerText(), /New high|% under/);
+  assert.match(await page.locator('#pickhead .pk-sectors thead').textContent(), /Index/);
+  assert.match(await page.locator('#pickhead .pk-sectors tbody').textContent(), /New high|% under/);
   /* Breakouts: the ledger is pass or fail, and the watch list is separate. */
   await page.locator('#hzseg2 .hz[data-h="breakout"]').click();
   const b0 = page.locator(`#idearows .idea[data-t="${FIX.breakout.rows[0].symbol}"]`);
@@ -328,7 +328,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.equal(await b0.locator('.pk-cat').innerText(), 'Catalyst');
   assert.match(await b0.locator('.pk-catalyst').innerText(), /Order worth/);
   // The pattern is a badge on the pick, and is not said twice.
-  assert.equal(await b0.locator('.pk-badge').innerText(), FIX.breakout.rows[0].pattern);
+  assert.equal(await b0.locator('.pk-badge:not(.pk-cat)').innerText(), FIX.breakout.rows[0].pattern);
   assert.equal((await b0.locator('.pk-why span').allInnerTexts()).filter(t => t === FIX.breakout.rows[0].pattern).length, 0);
   await page.screenshot({ path: path.join(output, 'breakout-desktop.png') });
 

@@ -671,7 +671,7 @@ Engine replay, every fifth session, 486 list dates tried, after 0.49% costs:
 
 | List | Picks | Rose | 25%+ winners | After costs | Nifty 500 | Against the average stock (t) | 2017–21 / 2022–26 | Before (after costs) |
 |---|---|---|---|---|---|---|---|---|
-| Breakouts | 2,504 | 51.9% | 10.2% | **+2.87%** | +2.52% | +1.60% (2.1) | +3.23 / +0.08 | +0.56% |
+| Breakouts | 2,131 | 52.6% | 10.4% | **+3.11%** | +2.39% | +1.70% (2.0) | +3.40 / +0.11 | +0.56% |
 | Technicals | 5,637 | 49.3% | 13.7% | **+3.86%** | +3.30% | +0.96% (1.3) | +2.53 / **−0.72** | +0.80% |
 | Swing dips | 4,439 | 50.9% | 4.0% | **+0.87%** | +1.07% | +0.81% (2.5) | +1.31 / +0.32 | **−0.14%** |
 | Money flow | 5,629 | 55.5% | 13.9% | **+4.94%** | +3.32% | +2.12% (2.5) | +3.17 / +1.01 | +0.90% |
@@ -708,6 +708,47 @@ not with its old self alone. Read plainly:
   turnaround, ₹80.40, **+167%** in 63 sessions). The 2026 move came from
   pattern B, which the shipped list does not pick from. The late-2023 and
   mid-2024 rallies were not caught by either version.
+
+### Sector breakout and live catalysts
+
+A reader pointed out that RATNAVEER's and HFCL's moves came with their
+industry breaking out and with news: orders, an earnings call, the press.
+
+**Sector breakout** can be tested. `research/setups_lab.py --sector` builds
+each NSE industry's own index (the mean daily move of its liquid stocks,
+chained) and declared two screens before the run: the index at a new
+60-session high in the last 10 sessions, or within 3% of that high. The rule:
+adopt a screen on a list if it raises the 2017–21 lead over the Nifty 500,
+keeping a profit after costs and enough picks
+(`research/setups-lab-sector.json`).
+
+| List | As shipped (lead 2017–21 / 2022–26) | New high in 10 sessions | Within 3% of the high | Adopted |
+|---|---|---|---|---|
+| Breakouts (pattern A) | +2.22 / +1.35 | +2.25 / +0.84 | +2.26 / +1.33 | **within 3%** |
+| Breakouts (A or B) | +1.62 / +1.19 | +1.88 / +1.26 | +1.86 / +1.47 | (B is off) |
+| Technicals (pullback) | +2.22 / +1.34 | +1.82 / +0.47 | +2.14 / +0.75 | none |
+
+The breakout list now asks for the stock's industry to be within 3% of its
+own 60-session high. The gain is small and honest: replayed, the list made
+**+3.11%** a pick after costs against +2.87% without the screen, 52.6% of
+picks rose against 51.9%, and it led the average stock by +1.70 against
++1.60, a little more in each half. A stock with no industry on NSE's list
+passes; RATNAVEER is one. HFCL's industry, Telecommunication, was at a new
+high on 9 Apr 2026 and on 7 Aug 2023, and not on 31 Oct 2022. Every
+sector on the money-flow table now shows its own index against that high.
+
+**Concalls, orders and news** cannot be tested here: the site reads them as
+they arrive and keeps no ten-year history of them. They are shown on each
+setup pick as **Catalyst** facts:
+- the newest earnings call read in the last 100 days, with its brief's headline;
+- the largest order disclosed in the last 45 days, against the company's
+  market value;
+- the last week's news, rumours left out.
+
+A pick with a fresh catalyst moves up its own list (an order worth 1% or more
+of the company counts most). A catalyst never puts a stock on a list or takes
+one off, so the tested record still describes exactly the stocks on it. The
+watch list shows each base's catalyst too.
 
 ## The daily brief
 
@@ -795,6 +836,7 @@ python research/signals_lab.py              # every trial behind "What a reader 
 python research/short_term_lab.py           # every trial behind "Two tabs"
 python research/setups_lab.py               # every trial behind "The setup lists"
 python research/setups_lab.py --v2          # every trial behind "Rebuilt, December 2026"
+python research/setups_lab.py --sector      # the sector-breakout screens
 python research/ideas_study.py --setups     # the setup lists' records alone, into the same file
 ```
 

@@ -4133,7 +4133,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -6964,7 +6964,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -9313,7 +9313,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":106,
+"scored":105,
 "universe_source":"NSE equity list",
 "universe":null,
 "regime":{
@@ -9457,150 +9457,150 @@
 "hold_text":"about 3 months",
 "exit_pct":12.0,
 "tested":{
-"list_dates":422,
-"picks":2504,
-"up_pct":51.9,
-"beat_index_pct":47.1,
-"avg_pct":3.36,
-"median_pct":0.9,
-"index_avg_pct":2.52,
-"big_winner_pct":10.2,
+"list_dates":356,
+"picks":2131,
+"up_pct":52.6,
+"beat_index_pct":46.9,
+"avg_pct":3.6,
+"median_pct":1.09,
+"index_avg_pct":2.39,
+"big_winner_pct":10.4,
 "worst_5pct":-14.8,
-"best_5pct":35.5,
-"exit_hit_pct":31.8,
-"lists_ahead_of_index_pct":55.2,
+"best_5pct":36.5,
+"exit_hit_pct":31.7,
+"lists_ahead_of_index_pct":52.2,
 "by_half":{
 "2017-21":{
-"list_dates":204,
-"picks":1048,
-"up_pct":51.6,
-"beat_index_pct":48.9,
-"avg_pct":3.18,
-"median_pct":0.71,
-"index_avg_pct":2.58,
-"big_winner_pct":9.1,
+"list_dates":172,
+"picks":879,
+"up_pct":51.9,
+"beat_index_pct":48.0,
+"avg_pct":3.42,
+"median_pct":0.83,
+"index_avg_pct":2.78,
+"big_winner_pct":9.8,
 "worst_5pct":-15.2,
-"best_5pct":32.2,
-"exit_hit_pct":32.5,
-"lists_ahead_of_index_pct":53.4
+"best_5pct":34.2,
+"exit_hit_pct":33.8,
+"lists_ahead_of_index_pct":51.2
 },
 "2022-26":{
-"list_dates":218,
-"picks":1456,
-"up_pct":52.1,
-"beat_index_pct":45.8,
-"avg_pct":3.49,
-"median_pct":1.03,
-"index_avg_pct":2.48,
-"big_winner_pct":11.0,
+"list_dates":184,
+"picks":1252,
+"up_pct":53.0,
+"beat_index_pct":46.2,
+"avg_pct":3.72,
+"median_pct":1.16,
+"index_avg_pct":2.04,
+"big_winner_pct":10.9,
 "worst_5pct":-14.7,
-"best_5pct":37.1,
-"exit_hit_pct":31.2,
-"lists_ahead_of_index_pct":56.9
+"best_5pct":37.8,
+"exit_hit_pct":30.2,
+"lists_ahead_of_index_pct":53.3
 }
 },
 "by_year":{
 "2017":{
-"avg_pct":5.04,
-"index_avg_pct":5.07,
-"up_pct":60.2,
-"picks":299
+"avg_pct":4.82,
+"index_avg_pct":5.1,
+"up_pct":59.0,
+"picks":278
 },
 "2018":{
-"avg_pct":-3.03,
-"index_avg_pct":-0.97,
-"up_pct":37.2,
-"picks":207
-},
-"2019":{
-"avg_pct":1.3,
-"index_avg_pct":-0.37,
-"up_pct":49.7,
-"picks":175
-},
-"2020":{
-"avg_pct":4.74,
-"index_avg_pct":4.29,
-"up_pct":45.8,
+"avg_pct":-4.55,
+"index_avg_pct":-2.1,
+"up_pct":30.3,
 "picks":142
 },
+"2019":{
+"avg_pct":0.5,
+"index_avg_pct":-1.23,
+"up_pct":50.0,
+"picks":128
+},
+"2020":{
+"avg_pct":5.74,
+"index_avg_pct":4.84,
+"up_pct":47.7,
+"picks":128
+},
 "2021":{
-"avg_pct":6.9,
-"index_avg_pct":5.14,
-"up_pct":58.7,
-"picks":225
+"avg_pct":7.45,
+"index_avg_pct":5.72,
+"up_pct":61.1,
+"picks":203
 },
 "2022":{
-"avg_pct":-1.61,
-"index_avg_pct":-0.13,
-"up_pct":39.8,
-"picks":206
+"avg_pct":-1.92,
+"index_avg_pct":-0.84,
+"up_pct":39.9,
+"picks":163
 },
 "2023":{
-"avg_pct":12.17,
-"index_avg_pct":7.91,
-"up_pct":73.6,
-"picks":398
+"avg_pct":12.01,
+"index_avg_pct":7.45,
+"up_pct":72.4,
+"picks":369
 },
 "2024":{
-"avg_pct":1.87,
-"index_avg_pct":1.88,
-"up_pct":48.4,
-"picks":337
+"avg_pct":2.81,
+"index_avg_pct":1.93,
+"up_pct":52.4,
+"picks":292
 },
 "2025":{
-"avg_pct":-0.06,
-"index_avg_pct":1.26,
-"up_pct":44.1,
-"picks":288
+"avg_pct":-0.14,
+"index_avg_pct":-0.09,
+"up_pct":44.4,
+"picks":243
 },
 "2026":{
-"avg_pct":-0.16,
-"index_avg_pct":0.29,
-"up_pct":41.0,
-"picks":227
+"avg_pct":-1.34,
+"index_avg_pct":-0.85,
+"up_pct":38.4,
+"picks":185
 }
 },
 "hold_sessions":63,
 "exit_pct":12.0,
-"avg_after_costs_pct":2.87,
+"avg_after_costs_pct":3.11,
 "vs_average_stock":{
-"excess_pct":1.6,
-"t":2.12,
-"lists_ahead_pct":56.4,
+"excess_pct":1.7,
+"t":1.99,
+"lists_ahead_pct":55.6,
 "by_half":{
 "2017-21":{
-"excess_pct":3.23,
-"t":2.93,
-"lists_ahead_pct":63.2
+"excess_pct":3.4,
+"t":2.68,
+"lists_ahead_pct":62.8
 },
 "2022-26":{
-"excess_pct":0.08,
-"t":0.09,
-"lists_ahead_pct":50.0
+"excess_pct":0.11,
+"t":0.12,
+"lists_ahead_pct":48.9
 }
 }
 },
 "market":{
 "above_200d":{
-"list_dates":343,
-"picks":2252,
-"up_pct":50.6,
-"avg_pct":3.01,
-"index_avg_pct":1.81
+"list_dates":311,
+"picks":1991,
+"up_pct":51.8,
+"avg_pct":3.39,
+"index_avg_pct":1.91
 },
 "below_200d":{
-"list_dates":79,
-"picks":252,
-"up_pct":63.1,
-"avg_pct":6.53,
-"index_avg_pct":5.64
+"list_dates":45,
+"picks":140,
+"up_pct":62.9,
+"avg_pct":6.47,
+"index_avg_pct":5.78
 }
 },
 "dates_tried":486,
-"picks_per_list":5.9,
+"picks_per_list":6.0,
 "kind":"setup",
-"what":"A close above the top of a 40- or 60-session base 28% wide or less that was 20% or tighter or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's range, within the last five sessions and still above it; above the 200-day average with the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on money flow; a month better than the Nifty 500's; not more than 16% above its 50-day average or 55% up in three months; no known fall in profit over 10% or results sold by the market. Held 63 sessions, left on a close 12% under.",
+"what":"A close above the top of a 40- or 60-session base 28% wide or less that was 20% or tighter or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's range, within the last five sessions and still above it; above the 200-day average with the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on money flow and its industry's index within 3% of its 60-session high; a month better than the Nifty 500's; not more than 16% above its 50-day average or 55% up in three months; no known fall in profit over 10% or results sold by the market. Held 63 sessions, left on a close 12% under.",
 "replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open.",
 "version":"2026-12",
 "bias":"Industries are NSE's list as it stands today, so a company since delisted has no industry here and passes that screen unread. Quarterly results start in 2018 and cover companies listed today; without one a stock is never refused for it."
@@ -9619,7 +9619,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -9632,8 +9632,8 @@
 },
 "market_test":{
 "state":"above_200d",
-"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +3.0% (51 in 100 rose), against +6.5% on the other days. The list is not held back in either.",
-"lists":343
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +3.4% (52 in 100 rose), against +6.5% on the other days. The list is not held back in either.",
+"lists":311
 },
 "chart_note":null,
 "empty_text":null,
@@ -9646,10 +9646,6 @@
 [
 "Healthcare",
 2
-],
-[
-"Consumer Durables",
-1
 ],
 [
 "Fast Moving Consumer Goods",
@@ -9665,9 +9661,9 @@
 "Held about three months with no target: much of the average comes from the one pick in ten that made 25% or more. Expect about half to fall."
 ],
 "excluded_adverse":[],
-"count":9,
-"considered":9,
-"method":"A stock is here when it closed above the top of a 40- or 60-session base in the last five sessions and is still above it. The base must be 28% wide or less and either 20% or tighter or tightening before the break (a calmer last fortnight, or volume drying up): a VCP launchpad. The breakout needs 1.6 times the usual volume and a close in the top 45% of the day's range. The stock must be above its 200-day average, with a leader score of 45 or more, its industry in the top 60% on money flow, and a month better than the Nifty 500's. It is left out if it is already more than 16% above its 50-day average or up 55% in three months, if its last quarter's profit fell more than 10%, or if the market sold its results. Newest breakouts first, then the heaviest volume. Held about three months. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
+"count":8,
+"considered":8,
+"method":"A stock is here when it closed above the top of a 40- or 60-session base in the last five sessions and is still above it. The base must be 28% wide or less and either 20% or tighter or tightening before the break (a calmer last fortnight, or volume drying up): a VCP launchpad. The breakout needs 1.6 times the usual volume and a close in the top 45% of the day's range. The stock must be above its 200-day average, with a leader score of 45 or more, its industry in the top 60% on money flow and its industry's own index within 3% of its 60-session high, and a month better than the Nifty 500's. It is left out if it is already more than 16% above its 50-day average or up 55% in three months, if its last quarter's profit fell more than 10%, or if the market sold its results. Newest breakouts first, then the heaviest volume. Held about three months. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
 "primary":[
 {
@@ -9695,33 +9691,8 @@
 "to_top_pct":0.0,
 "rel_volume_5":1.2,
 "leader":64.5,
-"turnover_cr":141.5
-},
-{
-"symbol":"HCLTECH",
-"sector":"Information Technology",
-"pattern":"VCP launchpad",
-"base":40,
-"top":1469.0,
-"low":1172.8,
-"width_pct":25.3,
-"to_top_pct":0.0,
-"rel_volume_5":1.3,
-"leader":64.3,
-"turnover_cr":375.1
-},
-{
-"symbol":"TECHM",
-"sector":"Information Technology",
-"pattern":"Base turnaround",
-"base":60,
-"top":1860.0,
-"low":1442.5,
-"width_pct":28.9,
-"to_top_pct":0.3,
-"rel_volume_5":1.1,
-"leader":86.9,
-"turnover_cr":387.9
+"turnover_cr":141.5,
+"catalyst":null
 },
 {
 "symbol":"MANKIND",
@@ -9734,33 +9705,8 @@
 "to_top_pct":0.7,
 "rel_volume_5":0.6,
 "leader":66.9,
-"turnover_cr":111.1
-},
-{
-"symbol":"SAGILITY",
-"sector":"Information Technology",
-"pattern":"VCP launchpad",
-"base":40,
-"top":47.0,
-"low":41.75,
-"width_pct":12.6,
-"to_top_pct":0.9,
-"rel_volume_5":2.3,
-"leader":61.4,
-"turnover_cr":72.9
-},
-{
-"symbol":"INFY",
-"sector":"Information Technology",
-"pattern":"Base turnaround",
-"base":60,
-"top":1198.8,
-"low":980.4,
-"width_pct":22.3,
-"to_top_pct":1.3,
-"rel_volume_5":1.3,
-"leader":40.5,
-"turnover_cr":1212.5
+"turnover_cr":111.1,
+"catalyst":null
 },
 {
 "symbol":"ANTHEM",
@@ -9773,7 +9719,8 @@
 "to_top_pct":1.4,
 "rel_volume_5":0.9,
 "leader":81.3,
-"turnover_cr":41.1
+"turnover_cr":41.1,
+"catalyst":null
 },
 {
 "symbol":"BECTORFOOD",
@@ -9786,7 +9733,8 @@
 "to_top_pct":1.4,
 "rel_volume_5":1.0,
 "leader":46.4,
-"turnover_cr":18.3
+"turnover_cr":18.3,
+"catalyst":null
 },
 {
 "symbol":"360ONE",
@@ -9799,7 +9747,8 @@
 "to_top_pct":1.5,
 "rel_volume_5":1.4,
 "leader":53.8,
-"turnover_cr":76.9
+"turnover_cr":76.9,
+"catalyst":null
 },
 {
 "symbol":"RADICO",
@@ -9812,7 +9761,8 @@
 "to_top_pct":1.6,
 "rel_volume_5":1.2,
 "leader":81.2,
-"turnover_cr":138.0
+"turnover_cr":138.0,
+"catalyst":null
 },
 {
 "symbol":"GLAND",
@@ -9825,7 +9775,8 @@
 "to_top_pct":1.7,
 "rel_volume_5":0.5,
 "leader":92.6,
-"turnover_cr":98.8
+"turnover_cr":98.8,
+"catalyst":null
 },
 {
 "symbol":"TVSMOTOR",
@@ -9838,20 +9789,8 @@
 "to_top_pct":1.9,
 "rel_volume_5":1.4,
 "leader":79.8,
-"turnover_cr":288.3
-},
-{
-"symbol":"AFFLE",
-"sector":"Information Technology",
-"pattern":"Base turnaround",
-"base":60,
-"top":1659.0,
-"low":1283.0,
-"width_pct":29.3,
-"to_top_pct":1.9,
-"rel_volume_5":0.9,
-"leader":45.9,
-"turnover_cr":21.4
+"turnover_cr":288.3,
+"catalyst":null
 },
 {
 "symbol":"JSWCEMENT",
@@ -9864,7 +9803,8 @@
 "to_top_pct":1.9,
 "rel_volume_5":0.7,
 "leader":43.8,
-"turnover_cr":14.9
+"turnover_cr":14.9,
+"catalyst":null
 },
 {
 "symbol":"LALPATHLAB",
@@ -9877,7 +9817,8 @@
 "to_top_pct":2.0,
 "rel_volume_5":1.2,
 "leader":83.5,
-"turnover_cr":45.1
+"turnover_cr":45.1,
+"catalyst":null
 },
 {
 "symbol":"GPPL",
@@ -9890,7 +9831,8 @@
 "to_top_pct":2.0,
 "rel_volume_5":1.1,
 "leader":66.2,
-"turnover_cr":19.3
+"turnover_cr":19.3,
+"catalyst":null
 },
 {
 "symbol":"MEDANTA",
@@ -9903,7 +9845,8 @@
 "to_top_pct":2.1,
 "rel_volume_5":1.3,
 "leader":63.8,
-"turnover_cr":30.1
+"turnover_cr":30.1,
+"catalyst":null
 },
 {
 "symbol":"BRIGADE",
@@ -9916,7 +9859,8 @@
 "to_top_pct":2.5,
 "rel_volume_5":6.0,
 "leader":50.0,
-"turnover_cr":16.8
+"turnover_cr":16.8,
+"catalyst":null
 },
 {
 "symbol":"ICICIGI",
@@ -9929,7 +9873,8 @@
 "to_top_pct":2.6,
 "rel_volume_5":1.0,
 "leader":39.8,
-"turnover_cr":104.5
+"turnover_cr":104.5,
+"catalyst":null
 },
 {
 "symbol":"AUROPHARMA",
@@ -9942,7 +9887,22 @@
 "to_top_pct":2.7,
 "rel_volume_5":1.2,
 "leader":86.2,
-"turnover_cr":155.5
+"turnover_cr":155.5,
+"catalyst":null
+},
+{
+"symbol":"STARHEALTH",
+"sector":"Financial Services",
+"pattern":"VCP launchpad",
+"base":40,
+"top":581.1,
+"low":502.6,
+"width_pct":15.6,
+"to_top_pct":2.9,
+"rel_volume_5":0.9,
+"leader":56.9,
+"turnover_cr":19.3,
+"catalyst":null
 }
 ],
 "lists":[
@@ -10015,195 +9975,6 @@
 ],
 "rows":[
 {
-"symbol":"SHAILY",
-"name":"Shaily Engineering Plastics Limited",
-"price":3379.6,
-"sector":"Consumer Durables",
-"list":"breakout",
-"setup":"Breakout",
-"setup_key":"pick_breakout",
-"horizon":"about 3 months",
-"pick_rank":1,
-"young":false,
-"conviction":100.0,
-"conviction_band":"High",
-"why":[
-"VCP launchpad",
-"Broke out today",
-"On 22.8× its usual volume",
-"40 sessions inside a 20% range"
-],
-"pattern":"VCP launchpad",
-"evidence":[
-{
-"factor":"Pattern",
-"detail":"VCP launchpad: a base that tightened before it broke.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"The base",
-"detail":"40 sessions between ₹2712.1 and ₹3245.0: a 19.6% range. The list needs 28% or tighter.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"The breakout",
-"detail":"Closed at ₹3379.6, above the top of the base, on 22.8 times its usual volume. Still above it.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"Not stretched",
-"detail":"9.3% above its 50-day average and 3.4% over three months. The list buys 16% or less over the 50-day and 55% or less in three months.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"Long-term trend",
-"detail":"Above its 200-day average (₹2751.77).",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"Industry",
-"detail":"Consumer Durables ranks 10 of 18 on money flow.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"Strength",
-"detail":"Leader score ahead of 66% of 700 liquid stocks.",
-"share_pct":null,
-"points":1,
-"of":1
-},
-{
-"factor":"Last quarter",
-"detail":"Profit rose 20% on a year ago.",
-"share_pct":null,
-"points":1,
-"of":1
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":3379.6,
-"stop":2974.05,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":null,
-"aim_pct":null,
-"hold_sessions":63,
-"hold_text":"about 3 months",
-"review_on":"2027-02-25",
-"sell_rule":null,
-"note":"Hold about 3 months. Leave if it closes below ₹2,974.05, 12% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":3.1,
-"below_6m_high_pct":2.3,
-"breakout":null,
-"squeeze":1.88,
-"range_15_60":0.82,
-"dry_up":1.73,
-"up_down_volume":1.79,
-"rel_volume":22.8,
-"rsi":64.0,
-"macd_hist_pct":0.43,
-"macd_rising":true,
-"above_20d_pct":9.1,
-"adx":10.0,
-"atr_pct":4.3,
-"rsi2":84.0,
-"sma5":3114.4,
-"rel_volume_5":5.2,
-"above_50d":true,
-"above_200d":true,
-"scorecard":7,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"More volume on up days",
-"Volume above its usual this week"
-],
-"box":{
-"sessions_ago":0,
-"top":3245.0,
-"low":2712.1,
-"width_pct":19.6,
-"rel_volume":22.8,
-"close":3379.6,
-"holding":true
-},
-"base":null,
-"ext_50d_pct":9.3,
-"ext_20d_pct":9.1,
-"ema20":3096.78,
-"clv":0.83,
-"sma50_rising":false,
-"sma200_rising":true,
-"closed_up":true,
-"launch":[
-{
-"sessions_ago":0,
-"rel_volume":22.8,
-"close":3379.6,
-"clv":0.83,
-"a":{
-"base":40,
-"top":3245.0,
-"low":2712.1,
-"width_pct":19.6
-},
-"b":null
-}
-],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"3% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 64 · MACD above its signal line and rising · ADX 10."
-},
-{
-"k":"Volume",
-"v":"22.8 times its usual volume in the last session; 1.8 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":32.8,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null
-},
-{
 "symbol":"MCX",
 "name":"MCX",
 "price":3835.0,
@@ -10212,7 +9983,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":2,
+"pick_rank":1,
 "young":false,
 "conviction":43.8,
 "conviction_band":"Speculative",
@@ -10223,6 +9994,7 @@
 "40 sessions inside a 26% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -10262,6 +10034,13 @@
 {
 "factor":"Industry",
 "detail":"Financial Services ranks 2 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 2.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -10396,7 +10175,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":3,
+"pick_rank":2,
 "young":false,
 "conviction":42.9,
 "conviction_band":"Speculative",
@@ -10407,6 +10186,7 @@
 "40 sessions inside a 28% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -10446,6 +10226,13 @@
 {
 "factor":"Industry",
 "detail":"Healthcare ranks 3 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 1.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -10585,7 +10372,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":4,
+"pick_rank":3,
 "young":false,
 "conviction":100.0,
 "conviction_band":"High",
@@ -10596,6 +10383,7 @@
 "40 sessions inside a 16% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -10635,6 +10423,13 @@
 {
 "factor":"Industry",
 "detail":"Financial Services ranks 2 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 2.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -10783,7 +10578,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":5,
+"pick_rank":4,
 "young":false,
 "conviction":55.1,
 "conviction_band":"Speculative",
@@ -10794,6 +10589,7 @@
 "40 sessions inside a 18% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -10833,6 +10629,13 @@
 {
 "factor":"Industry",
 "detail":"Financial Services ranks 2 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 2.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -10982,7 +10785,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":6,
+"pick_rank":5,
 "young":false,
 "conviction":52.0,
 "conviction_band":"Speculative",
@@ -10993,6 +10796,7 @@
 "40 sessions inside a 22% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -11032,6 +10836,13 @@
 {
 "factor":"Industry",
 "detail":"Healthcare ranks 3 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 1.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -11181,7 +10992,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":7,
+"pick_rank":6,
 "young":false,
 "conviction":41.0,
 "conviction_band":"Speculative",
@@ -11192,6 +11003,7 @@
 "40 sessions inside a 27% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -11231,6 +11043,13 @@
 {
 "factor":"Industry",
 "detail":"Financial Services ranks 2 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 2.7% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -11390,7 +11209,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":8,
+"pick_rank":7,
 "young":false,
 "conviction":41.0,
 "conviction_band":"Speculative",
@@ -11401,6 +11220,7 @@
 "40 sessions inside a 20% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -11440,6 +11260,13 @@
 {
 "factor":"Industry",
 "detail":"Fast Moving Consumer Goods ranks 5 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index made a new 60-session high in the last 10 sessions. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -11608,7 +11435,7 @@
 "setup":"Breakout",
 "setup_key":"pick_breakout",
 "horizon":"about 3 months",
-"pick_rank":9,
+"pick_rank":8,
 "young":false,
 "conviction":37.0,
 "conviction_band":"Speculative",
@@ -11619,6 +11446,7 @@
 "40 sessions inside a 17% range"
 ],
 "pattern":"VCP launchpad",
+"catalysts":null,
 "evidence":[
 {
 "factor":"Pattern",
@@ -11658,6 +11486,13 @@
 {
 "factor":"Industry",
 "detail":"Automobile and Auto Components ranks 4 of 18 on money flow.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry breaking out",
+"detail":"Its industry index is 2.0% under its 60-session high. The list wants it within 3%.",
 "share_pct":null,
 "points":1,
 "of":1
@@ -12002,7 +11837,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -12166,6 +12001,7 @@
 "Up 50% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -12317,6 +12153,7 @@
 "Up 501% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -12477,6 +12314,7 @@
 "Up 49% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -12639,6 +12477,7 @@
 "Up 86% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -12798,6 +12637,7 @@
 "Up 21% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -12953,6 +12793,7 @@
 "Up 11% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13104,6 +12945,7 @@
 "Up 59% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13253,6 +13095,7 @@
 "Up 26% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13402,6 +13245,7 @@
 "Up 158% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13550,6 +13394,7 @@
 "Up 3% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13700,6 +13545,7 @@
 "Up 14% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13843,6 +13689,7 @@
 "Up 173% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -13991,6 +13838,7 @@
 "Up 67% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -14136,6 +13984,7 @@
 "Up 3% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -14287,6 +14136,7 @@
 "Up 28% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Uptrend",
@@ -14625,7 +14475,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -14787,6 +14637,7 @@
 "13% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -14938,6 +14789,7 @@
 "8% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15089,6 +14941,7 @@
 "11% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15240,6 +15093,7 @@
 "10% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15391,6 +15245,7 @@
 "8% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15544,6 +15399,7 @@
 "14% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15693,6 +15549,7 @@
 "19% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15844,6 +15701,7 @@
 "Calmer than 9 in 10 stocks"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -15993,6 +15851,7 @@
 "13% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16143,6 +16002,7 @@
 "14% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16296,6 +16156,7 @@
 "8% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16442,6 +16303,7 @@
 "7% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16591,6 +16453,7 @@
 "6% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16741,6 +16604,7 @@
 "7% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -16892,6 +16756,7 @@
 "12% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"The dip",
@@ -17214,7 +17079,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -17270,6 +17135,9 @@
 {
 "sector":"Realty",
 "stocks":13,
+"breakout":true,
+"near_high":true,
+"from_high_pct":0.0,
 "shift":1.174,
 "classic_score":92.6,
 "score":89.7,
@@ -17283,6 +17151,9 @@
 {
 "sector":"Financial Services",
 "stocks":106,
+"breakout":false,
+"near_high":true,
+"from_high_pct":2.7,
 "shift":1.166,
 "classic_score":75.9,
 "score":78.3,
@@ -17296,6 +17167,9 @@
 {
 "sector":"Healthcare",
 "stocks":60,
+"breakout":false,
+"near_high":true,
+"from_high_pct":1.7,
 "shift":0.943,
 "classic_score":63.0,
 "score":77.5,
@@ -17309,6 +17183,9 @@
 {
 "sector":"Automobile and Auto Components",
 "stocks":43,
+"breakout":false,
+"near_high":true,
+"from_high_pct":2.0,
 "shift":1.086,
 "classic_score":79.6,
 "score":76.1,
@@ -17322,6 +17199,9 @@
 {
 "sector":"Fast Moving Consumer Goods",
 "stocks":32,
+"breakout":true,
+"near_high":true,
+"from_high_pct":0.1,
 "shift":1.052,
 "classic_score":81.5,
 "score":74.4,
@@ -17335,6 +17215,9 @@
 {
 "sector":"Services",
 "stocks":18,
+"breakout":true,
+"near_high":true,
+"from_high_pct":2.4,
 "shift":0.813,
 "classic_score":46.3,
 "score":73.9,
@@ -17348,6 +17231,9 @@
 {
 "sector":"Construction Materials",
 "stocks":9,
+"breakout":false,
+"near_high":true,
+"from_high_pct":1.6,
 "shift":0.998,
 "classic_score":68.5,
 "score":71.1,
@@ -17361,6 +17247,9 @@
 {
 "sector":"Textiles",
 "stocks":9,
+"breakout":true,
+"near_high":true,
+"from_high_pct":1.2,
 "shift":1.23,
 "classic_score":79.6,
 "score":59.7,
@@ -17374,6 +17263,9 @@
 {
 "sector":"Information Technology",
 "stocks":33,
+"breakout":false,
+"near_high":false,
+"from_high_pct":5.2,
 "shift":0.98,
 "classic_score":40.7,
 "score":58.9,
@@ -17387,6 +17279,9 @@
 {
 "sector":"Consumer Durables",
 "stocks":22,
+"breakout":false,
+"near_high":false,
+"from_high_pct":4.9,
 "shift":1.355,
 "classic_score":72.2,
 "score":57.5,
@@ -17400,6 +17295,9 @@
 {
 "sector":"Oil Gas & Consumable Fuels",
 "stocks":17,
+"breakout":false,
+"near_high":true,
+"from_high_pct":2.4,
 "shift":0.799,
 "classic_score":33.3,
 "score":55.0,
@@ -17413,6 +17311,9 @@
 {
 "sector":"Power",
 "stocks":17,
+"breakout":false,
+"near_high":false,
+"from_high_pct":6.3,
 "shift":0.999,
 "classic_score":50.0,
 "score":41.4,
@@ -17426,6 +17327,9 @@
 {
 "sector":"Consumer Services",
 "stocks":28,
+"breakout":false,
+"near_high":false,
+"from_high_pct":6.2,
 "shift":0.904,
 "classic_score":37.0,
 "score":35.3,
@@ -17439,6 +17343,9 @@
 {
 "sector":"Metals & Mining",
 "stocks":21,
+"breakout":false,
+"near_high":false,
+"from_high_pct":13.8,
 "shift":1.331,
 "classic_score":42.6,
 "score":25.3,
@@ -17452,6 +17359,9 @@
 {
 "sector":"Capital Goods",
 "stocks":99,
+"breakout":false,
+"near_high":false,
+"from_high_pct":9.8,
 "shift":0.943,
 "classic_score":25.9,
 "score":22.2,
@@ -17465,6 +17375,9 @@
 {
 "sector":"Construction",
 "stocks":15,
+"breakout":false,
+"near_high":false,
+"from_high_pct":9.5,
 "shift":0.717,
 "classic_score":34.3,
 "score":22.1,
@@ -17478,6 +17391,9 @@
 {
 "sector":"Telecommunication",
 "stocks":9,
+"breakout":false,
+"near_high":false,
+"from_high_pct":11.6,
 "shift":0.679,
 "classic_score":7.4,
 "score":16.7,
@@ -17491,6 +17407,9 @@
 {
 "sector":"Chemicals",
 "stocks":35,
+"breakout":false,
+"near_high":false,
+"from_high_pct":8.6,
 "shift":0.675,
 "classic_score":19.4,
 "score":14.9,
@@ -17593,6 +17512,7 @@
 "Up 31% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -17753,6 +17673,7 @@
 "Up 5% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -17916,6 +17837,7 @@
 "Up 5% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18083,6 +18005,7 @@
 "Up 21% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18250,6 +18173,7 @@
 "Up 98% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18427,6 +18351,7 @@
 "Up 36% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18595,6 +18520,7 @@
 "Up 20% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18762,6 +18688,7 @@
 "Up 17% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -18930,6 +18857,7 @@
 "Up 145% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -19092,6 +19020,7 @@
 "Up 78% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -19252,6 +19181,7 @@
 "Up 86% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -19418,6 +19348,7 @@
 "Up 150% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -19593,6 +19524,7 @@
 "Up 106% in a year"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Sector",
@@ -19925,7 +19857,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -20078,6 +20010,7 @@
 "3% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Listed",
@@ -20250,6 +20183,7 @@
 "3% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Listed",
@@ -20405,6 +20339,7 @@
 "7% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Listed",
@@ -20553,6 +20488,7 @@
 "1% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Listed",
@@ -20715,6 +20651,7 @@
 "6% below its 52-week high"
 ],
 "pattern":null,
+"catalysts":null,
 "evidence":[
 {
 "factor":"Listed",
@@ -21038,7 +20975,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -22355,7 +22292,7 @@
 },
 "scanned_at":"26 Nov 2026, 18:10",
 "partial":false,
-"scored":126,
+"scored":125,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
