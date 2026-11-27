@@ -165,6 +165,19 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.strictEqual(L.rail({ entry: 100, stop: 99 }), null, "a plan with no price yet has no rail");
 }
 
+/* ── what the score is made of, and what Select's checks said ────────── */
+{
+  assert.strictEqual(L.scoreTitle({ score: 78, score_parts: { volume: 23, level: 15, risk: 3, range: 0, index: 10, book: -2 } }),
+    "Score 78 out of 100: volume +23, level +15, index +10, risk +3, order book −2", "biggest first, nothing that counted for nothing");
+  assert.strictEqual(L.scoreTitle({ score: 71 }), "Score 71 out of 100");
+  assert.strictEqual(L.scoreTitle({}), "");
+  assert.deepStrictEqual(L.shadowWords({ shadow: [] }), [], "passed every Select check");
+  assert.deepStrictEqual(L.shadowWords({ shadow: ["rpos", "sector", "newcheck"] }),
+    ["not near the day’s extreme", "sector against it", "newcheck"]);
+  assert.strictEqual(L.shadowWords({ engine: "select", shadow: [] }), null, "a Select call needs no second opinion");
+  assert.strictEqual(L.shadowWords({}), null, "an older row says nothing");
+}
+
 /* ── filters ───────────────────────────────────────────────────────────── */
 {
   let f = L.normFilter(null);
@@ -251,7 +264,7 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.strictEqual(bySym("INFY")[0].tone, "open");
   assert.strictEqual(bySym("BEL")[0].label, "10:02 am, Buy BEL, Classic, half-book reached");
   assert.strictEqual(bySym("HINDALCO")[0].label, "9:47 am, Sell HINDALCO, Classic, stopped out");
-  assert.strictEqual(bySym("SBIN")[0].label, "11:12 am, Buy SBIN, ★ Select, live");
+  assert.strictEqual(bySym("SBIN")[0].label, "11:12 am, Buy SBIN, Select, live", "a label is read aloud: no star glyph in it");
   // A busy few minutes lifts marks onto the next level; a fourth goes back to the first.
   const busy = ["10:00", "10:02", "10:04", "10:05"].map((t, i) => ({ date: D, time: t, symbol: "S" + i, direction: "UP" }));
   assert.deepStrictEqual(L.tlDots(busy).map(d => d.stack), [0, 1, 2, 0]);
@@ -337,6 +350,20 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.deepStrictEqual(rows.map(r => r.key), ["early", "open", "mid", "pm"], "the three sessions, plus the opening minutes Classic traded in");
   assert.strictEqual(rows[1].select.win_rate, 60);
   assert.strictEqual(rows[2].select, null);
+}
+
+/* ── would Select's checks have helped Classic? ─────────────────────── */
+{
+  assert.deepStrictEqual(L.shadowRows({}), []);
+  const rows = L.shadowRows({ by_shadow: {
+    rpos: { failed: { trades: 31, win_rate: 39 }, passed: { trades: 183, win_rate: 52 } },
+    extended: { failed: null, passed: null },
+    pdh: { failed: { trades: 0 }, passed: { trades: 12, win_rate: 50 } },
+    later: { failed: { trades: 2 }, passed: null } } });
+  assert.deepStrictEqual(rows.map(r => r.code), ["rpos", "pdh", "later"], "checks with no trade either side are left out");
+  assert.strictEqual(rows[0].label, "Not near the day’s extreme");
+  assert.strictEqual(rows[1].failed, null);
+  assert.strictEqual(rows[1].passed.trades, 12);
 }
 
 /* ── the owner's funnel ────────────────────────────────────────────────── */

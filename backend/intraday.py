@@ -1021,8 +1021,10 @@ def _track_live(snap, now=None):
             if not events:
                 continue
             moved = True
-            if "target" in events and "t1" in events:
-                events.remove("t1")         # the target says it, and more
+            if out and "t1" in events:
+                # Reached half-book on the pass the trade ended (the target,
+                # or the 3:15 pm close): "move the stop loss" is moot by then.
+                events.remove("t1")
             # One follow-up stream per break: the record whose full card
             # the owner saw (a paired record carried by the other's card
             # is marked tg_card False).

@@ -1,5 +1,5 @@
 """
-Altaha Screener — Alert delivery  (v24)
+Altaha Screener — Alert delivery  (v25)
 
 WHAT CHANGED FROM v23 AND WHY
 -----------------------------

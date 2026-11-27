@@ -372,6 +372,21 @@ def test_follow_ups_go_by_alert_updates_tg(loop, clock, monkeypatch, mode, expec
     assert win["live_outcome"] == "TARGET" and lose["live_outcome"] == "STOP"
 
 
+def test_half_book_reached_as_the_trade_ends_is_not_a_message(loop, clock, monkeypatch):
+    d, n, _ = loop
+    monkeypatch.setattr(intraday, "ALERT_UPDATES_TG", "all")
+    logged().extend([call(symbol="JUMP", time="10:00"), call(symbol="LATE", time="14:00")])
+    clock.set(10, 5)
+    d.quotes.update(quotes(JUMP=103.0, LATE=100.8))       # straight through half-book to the target
+    intraday.scan_once()
+    clock.set(15, 15, 5)
+    d.quotes.update(quotes(JUMP=103.0, LATE=101.6))       # half-book on the closing pass
+    intraday.scan_once()
+    assert [ICON[t[0]] for t in n.plain] == ["target"]
+    jump, late = logged()
+    assert jump["t1_hit"] and late["t1_hit"] and late["live_outcome"] == "OPEN_AT_CLOSE"
+
+
 def test_a_follow_up_is_saved_before_it_is_sent_and_never_sent_twice(loop, clock, monkeypatch):
     d, n, _ = loop
     monkeypatch.setattr(intraday, "ALERT_UPDATES_TG", "all")

@@ -1841,6 +1841,7 @@
       </div>
       <div class="la-eng" id="leng"></div>
       <div id="lfunnel"></div>
+      <div class="la-sess" id="lshadow"></div>
     </section>
 
     <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.
@@ -2746,7 +2747,7 @@ function alertCard(it, open){
 
   const pills = [];
   const sc = L.num(a.score), rv = L.num(a.rvol), sp = L.num(a.sector_pct), sec = L.sectorShort(a.sector);
-  if(sc !== null) pills.push(`<span class="la-pill score${sc >= 75 ? " hi" : ""}" title="Score out of 100">${Math.round(sc)}/100</span>`);
+  if(sc !== null) pills.push(`<span class="la-pill score${sc >= 75 ? " hi" : ""}" title="${esc(L.scoreTitle(a))}">${Math.round(sc)}/100</span>`);
   if(a.setup) pills.push(`<span class="la-pill">${esc(a.setup)}</span>`);
   if(rv !== null) pills.push(`<span class="la-pill" title="Volume against its usual for this time of day">RVOL ${rv.toFixed(1)}×</span>`);
   if(sec) pills.push(`<span class="la-pill" title="${esc(a.sector)}${sp !== null ? ": the sector's typical move today" : ""}">${esc(sec)}${sp !== null ? " " + esc(L.pct(sp)) : ""}</span>`);
@@ -2771,13 +2772,20 @@ function alertCard(it, open){
     state = `<div class="la-state"><span class="la-live ${st.tone}">${esc(st.label)}</span>${fig}${note ? `<small>${esc(note)}</small>` : ""}</div>`;
   }
 
-  const rl = L.rail(a);
+  // The rail is the live tracker's picture; once the close's check has
+  // ruled, its line stands alone rather than beside a picture it may differ from.
+  const rl = st.key === "final" ? null : L.rail(a);
   const rail = rl ? `<div class="la-rail" role="img" aria-label="${esc(laRailWords(rl))}">
       <span class="ex" style="left:${rl.lo}%;width:${Math.max(0, rl.hi - rl.lo).toFixed(1)}%"></span>
       <span class="tk" style="left:${rl.entry}%"></span><span class="tk" style="left:${rl.t1}%"></span>
       <span class="nw ${rl.r > 0 ? "up" : rl.r < 0 ? "dn" : ""}" style="left:${rl.now}%"></span>
     </div>
     <div class="la-rail-l" aria-hidden="true"><span>Stop</span><span style="left:${rl.entry}%">Entry</span><span style="left:${rl.t1}%">Half</span><span>Target</span></div>` : "";
+
+  // For the owner, on a Classic call Select did not make: what Select's own
+  // checks said about it. The running measure of whether they help.
+  const sw = isOwner() && !pair ? L.shadowWords(a) : null;
+  const shadow = sw ? `<p class="la-shadow">${LA_STAR} ${sw.length ? "Select's checks would have skipped it: " + esc(sw.join(", ")) : "Select's checks: all passed"}</p>` : "";
 
   const t1hit = !!a.t1_hit;
   const when = `<span class="la-when"><time${a.date && a.time ? ` datetime="${esc(a.date)}T${esc(a.time)}+05:30"` : ""}>${esc(L.clock12(a.time) || a.time || "")}</time>${
@@ -2796,7 +2804,7 @@ function alertCard(it, open){
       <div class="tgt"><span>Target</span><b>${boMoney(a.target)}</b></div>
     </div>
     ${state}${rail}
-    <p class="la-why">${esc(a.why || a.headline || "")}</p>
+    <p class="la-why">${esc(a.why || a.headline || "")}</p>${shadow}
   </article>`;
 }
 
@@ -2865,7 +2873,7 @@ function renderTimeline(rows, pace, open){
   }
   // Marks closer than 16px are lifted apart: a percentage of this strip.
   const wide = host.querySelector(".la-tl-strip").clientWidth || 900;
-  const bands = L.tlBands(pace, rows), dots = L.tlDots(rows, {gap: Math.round(1600 / wide) / 10});
+  const bands = L.tlBands(pace, rows), dots = L.tlDots(rows, {gap: Math.round(16000 / wide) / 10});
   const marks = bands.map(b => `<div class="la-tl-band${b.current ? " now" : ""}" style="left:${b.left}%;width:${b.width}%">
         <span aria-hidden="true"><b>${esc(b.label)}</b> ${laNum(b.used)}/${laNum(b.cap)}</span>
         <span class="la-sr">${esc(b.label)} session, ${esc(L.clock12(b.from))} to ${esc(L.clock12(b.to))}: ${laNum(b.used)} of ${laNum(b.cap)} Select slots used.</span></div>`).join("")
@@ -2906,7 +2914,9 @@ function renderFunnel(b, d){
   const eng = [];
   const ln = b.lanes, pr = b.profiles, cp = b.checkpoint, mf = b.money_flow;
   if(ln && ln.select && ln.select.enabled === false) eng.push("Select lane is off (BO_LANES)");
-  if(pr) eng.push(`Volume profiles ${laNum(pr.ready)} of ${laNum(pr.universe)}${pr.built_for ? ", built for " + esc(laDay(pr.built_for)) : ""}`);
+  if(pr) eng.push(laNum(pr.universe) && laNum(pr.ready)
+    ? `Volume profiles ${laNum(pr.ready)} of ${laNum(pr.universe)}${pr.built_for ? ", built for " + esc(laDay(pr.built_for)) : ""}`
+    : "Volume profiles not built yet");
   if(cp && cp.saved_at) eng.push(`Checkpoint saved ${esc(cp.saved_at)}${cp.restored ? `, restored after a ${laNum(cp.restored_gap_min)}-minute gap` : ""}`);
   if(mf) eng.push(mf.ready ? `Money flow ready, ${laNum(mf.sectors)} sectors` : "Money flow still loading");
   if(d && d.live_tracked !== undefined && d.live_tracked !== null) eng.push(`Tracking ${laNum(d.live_tracked)} open call${laNum(d.live_tracked) === 1 ? "" : "s"} live`);
@@ -3190,7 +3200,7 @@ async function loadHitRate(){
   if(laSet($("lhit"), html)) laFill($("lhit"));
   const rows = L.sessionRows(d);
   const cell = bk => bk
-    ? `<td class="num"><b>${Math.round(laNum(bk.win_rate))}%</b><small>${laNum(bk.trades)} call${laNum(bk.trades) === 1 ? "" : "s"} · ${esc(L.rmult(bk.expectancy_R))}</small></td>`
+    ? `<td class="num"><b>${Math.round(laNum(bk.win_rate))}%</b><small>${laNum(bk.trades)}<span class="w"> call${laNum(bk.trades) === 1 ? "" : "s"}</span> · ${esc(L.rmult(bk.expectancy_R))}</small></td>`
     : `<td class="num none">—</td>`;
   laSet($("lsess"), rows.length ? `<h4>By session</h4>
     <table>
@@ -3199,6 +3209,16 @@ async function loadHitRate(){
       <tbody>${rows.map(r => `<tr><th scope="row">${esc(r.label)}<small>${esc(r.span)}</small></th>${cell(r.classic)}${cell(r.select)}</tr>`).join("")}</tbody>
     </table>
     <p class="la-note">Each cell: the share of closed calls that made money, then how many and the average result. One R is the distance from entry to stop loss, so a target is +2R and a stop −1R. Under about 30 calls a cell is mostly luck.</p>` : "");
+  // The owner's question of Classic's record: would each of Select's checks
+  // have kept its worse calls out? (In the owner's panel; hidden from visitors.)
+  const sh = L.shadowRows(d);
+  laSet($("lshadow"), sh.length ? `<h4>Would Select's checks have helped Classic?</h4>
+    <table>
+      <caption class="la-sr">Classic's closed calls, split by whether each Select check would have passed them: the share that made money, how many, and the average result in R.</caption>
+      <thead><tr><th scope="col">Check</th><th scope="col" class="num">Failed it</th><th scope="col" class="num">Passed it</th></tr></thead>
+      <tbody>${sh.map(r => `<tr><th scope="row">${esc(r.label)}</th>${cell(r.failed)}${cell(r.passed)}</tr>`).join("")}</tbody>
+    </table>
+    <p class="la-note">A check earns its place when the calls that failed it did worse than the ones that passed.</p>` : "");
 }
 
 $("lownerbtn").addEventListener("click", ()=>{

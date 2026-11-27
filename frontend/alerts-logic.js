@@ -268,6 +268,31 @@
     return { r: r, rr: rr, now: at(r), entry: at(0), t1: at(1), lo: at(lo), hi: at(hi), best: hi, worst: lo };
   }
 
+  /* What the score is made of, for the score pill's tooltip: the parts
+     breakouts.py added up, the ones that counted, biggest first. */
+  var PART_WORDS = { volume: 'volume', level: 'level', risk: 'risk', range: 'tight range', index: 'index',
+                     strength: 'strength', sector: 'sector', flow: 'money flow', book: 'order book' };
+  function scoreTitle(a) {
+    var sc = num(a && a.score);
+    if (sc === null) return '';
+    var parts = (a && a.score_parts) || {};
+    var bits = Object.keys(parts).map(function (k) { return [k, num(parts[k])]; })
+      .filter(function (x) { return x[1] !== null && Math.round(x[1]) !== 0; })
+      .sort(function (x, y) { return y[1] - x[1]; })
+      .map(function (x) { return (PART_WORDS[x[0]] || x[0]) + ' ' + (x[1] > 0 ? '+' : '−') + Math.abs(Math.round(x[1])); });
+    return 'Score ' + Math.round(sc) + ' out of 100' + (bits.length ? ': ' + bits.join(', ') : '');
+  }
+
+  /* On a Classic call, what Select's own quality checks said about it (the
+     `shadow` list: the checks it would have failed). The owner's running
+     measure of whether those checks help. Null when the row does not say. */
+  var SHADOW_WORDS = { rpos: 'not near the day’s extreme', extended: 'too far past VWAP', book: 'order book against it',
+                       sector: 'sector against it', pdh: 'yesterday’s level on its own' };
+  function shadowWords(a) {
+    if (!a || !Array.isArray(a.shadow) || isSelect(a)) return null;
+    return a.shadow.map(function (c) { return SHADOW_WORDS[c] || String(c); });
+  }
+
   /* ── filters ────────────────────────────────────────────────────────── */
 
   var FILTER = { lane: 'all', side: null, active: false, score: false };
@@ -439,7 +464,7 @@
           key: keyOf(a), lane: lane, star: lane === 'select', left: left, stack: k, tone: tone,
           time: a.time, symbol: a.symbol,
           label: clock12(a.time) + ', ' + (a.direction === 'DOWN' ? 'Sell ' : 'Buy ') + a.symbol + ', ' +
-                 (lane === 'select' ? '★ Select' : 'Classic') + ', ' + words
+                 (lane === 'select' ? 'Select' : 'Classic') + ', ' + words   // read aloud: no star glyph
         };
       });
   }
@@ -600,6 +625,22 @@
     return rows.filter(function (r) { return !r.extra || r.classic || r.select; });
   }
 
+  /* Would Select's checks have helped Classic? stats().by_shadow splits
+     Classic's closed trades, check by check, into the ones that failed it
+     and the ones that passed. A check earns its place when the failed side
+     does worse. Rows only for checks with a trade on either side. */
+  function shadowRows(stats) {
+    var by = (stats && stats.by_shadow) || {};
+    var has = function (b) { return !!(b && num(b.trades)); };
+    var codes = ['rpos', 'extended', 'book', 'sector', 'pdh'];
+    Object.keys(by).forEach(function (k) { if (codes.indexOf(k) < 0) codes.push(k); });
+    return codes.filter(function (k) { return by[k] && (has(by[k].failed) || has(by[k].passed)); })
+      .map(function (k) {
+        return { code: k, label: GATE_LABEL[k] || k,
+                 failed: has(by[k].failed) ? by[k].failed : null, passed: has(by[k].passed) ? by[k].passed : null };
+      });
+  }
+
   /* ── the owner's funnel ─────────────────────────────────────────────── */
 
   var GATE_LABEL = {
@@ -607,7 +648,7 @@
     rpos: 'Not near the day’s extreme', sector: 'Sector not moving with it', extended: 'Too far past VWAP',
     book: 'Order book leaning against it', confirm: 'Did not hold for a second pass', risk: 'Stop too wide',
     room: 'No room to the next level', index: 'Index against it', spent: 'Already moved too far today',
-    cap: 'Held back by the slot budget', pdh: 'Below yesterday’s high'
+    cap: 'Held back by the slot budget', pdh: 'Yesterday’s high or low on its own'
   };
 
   /* breakouts.status() counts, per check, the stocks (one per stock and
@@ -629,11 +670,12 @@
     ist: ist, callAt: callAt, ago: ago,
     engineOf: engineOf, isSelect: isSelect, keyOf: keyOf, pairs: pairs, items: items, countCalls: countCalls,
     liveState: liveState, isActive: isActive, isWin: isWin, isStopped: isStopped, rail: rail,
+    scoreTitle: scoreTitle, shadowWords: shadowWords,
     normFilter: normFilter, press: press, pressed: pressed, view: view, describe: describe,
     loadPrefs: loadPrefs, savePrefs: savePrefs, unseen: unseen, pollDelay: pollDelay,
     tlPos: tlPos, tlNow: tlNow, tlBands: tlBands, tlDots: tlDots, tlHours: tlHours,
     reason: reason, progress: progress, radarSort: radarSort, pastLevel: pastLevel,
     sectorShort: sectorShort, sectorTape: sectorTape,
-    record: record, lanesRecord: lanesRecord, sessionRows: sessionRows, funnel: funnel
+    record: record, lanesRecord: lanesRecord, sessionRows: sessionRows, shadowRows: shadowRows, funnel: funnel
   };
 });

@@ -245,12 +245,13 @@
                  font-family:var(--font-sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .la-levels b{ display:block; margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body); color:var(--text-primary);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
-/* The half-book reached: where half was booked and the stop went to cost. */
-.la-levels .t1.hit{ position:relative; background:var(--gain-bg) }
-.la-levels .t1.hit span{ color:var(--gain); padding-right:var(--sp-3) }
-.la-levels .t1.hit::after{ content:"\2713"; position:absolute; top:6px; right:8px; font-size:var(--fs-label); font-weight:600;
-                           line-height:var(--lh-label); color:var(--gain) }
+/* The half-book reached: where half was booked and the stop went to cost.
+   The T1 HIT pill says so in words; the cell only takes the gain tint. */
+.la-levels .t1.hit{ background:var(--gain-bg) }
+.la-levels .t1.hit span{ color:var(--gain) }
 .la-why{ font-size:var(--fs-body); line-height:var(--lh-small); color:var(--text-secondary); margin:0 }
+/* The owner's note on a Classic call: what Select's own checks said. */
+.la-shadow{ margin:var(--sp-2) 0 0; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-muted) }
 
 /* where the call stands now: the live state pill, the P&L, a note */
 .la-state{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3); margin:0 0 var(--sp-3) }
@@ -272,9 +273,9 @@
    same way. The band is how far the price has travelled since the entry,
    from the live tracker's own samples; the dot is where it is now. */
 .la-rail{ position:relative; height:14px; margin:0 6px }
-.la-rail::before{ content:""; position:absolute; left:0; right:0; top:6px; height:2px; border-radius:var(--r-pill); background:var(--wash-strong) }
+.la-rail::before{ content:""; position:absolute; left:0; right:0; top:6px; height:2px; border-radius:var(--r-pill); background:var(--border-strong) }
 .la-rail .ex{ position:absolute; top:5px; height:4px; border-radius:var(--r-pill); background:color-mix(in srgb, var(--text-primary) 18%, transparent) }
-.la-rail .tk{ position:absolute; top:2px; width:2px; height:10px; margin-left:-1px; border-radius:var(--r-xs); background:var(--border-strong) }
+.la-rail .tk{ position:absolute; top:2px; width:2px; height:10px; margin-left:-1px; border-radius:var(--r-xs); background:var(--text-muted) }
 .la-rail .nw{ position:absolute; top:2px; width:10px; height:10px; margin-left:-5px; border-radius:50%;
               background:var(--text-secondary); outline:2px solid var(--surface) }
 .la-rail .nw.up{ background:var(--gain) }
@@ -459,6 +460,7 @@
   .la-tl-head{ flex-direction:column; gap:var(--sp-1) }
   .la-tl-sum{ text-align:left }
   .la-sess th, .la-sess td{ padding:var(--sp-2) }
+  .la-sess td small .w{ display:none }
 }
 
 /* ── no motion for those who ask for none ────────────────────────────────── */
