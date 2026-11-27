@@ -398,20 +398,31 @@ def test_a_fall_deep_enough_to_lose_the_lead_takes_a_stock_off_the_month_list():
     assert "leader" in deep["lists"]["month"]["why_not"]
 
 
-def test_the_published_record_is_for_lists_that_do_not_share_names():
-    # Reads today's study file, whose lists are the November ones; the lab
-    # regenerates it for the three fundamental lists (research/IDEAS-STUDY.md).
+def _study_file():
     with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
-        study = json.load(f)
-    if "overlap" not in study:
-        pytest.skip("the study file carries no overlap table; the lab's own file does")
-    now = study["overlap"]["now"]
-    if "momentum / long" in now:
-        assert now["momentum / long"] == 0
-        assert now["distinct in all four"] > study["overlap"]["first version"]["distinct in all four"]
-    else:
-        pairs = [v for k, v in now.items() if " / " in k and isinstance(v, (int, float))]
-        assert pairs and all(v <= leaders.LIST_SIZE // 3 for v in pairs)
+        return json.load(f)
+
+
+def _lab_file():
+    with open(os.path.join(HERE, "..", "..", "research", "fundamental-ideas-lab.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_the_published_record_is_for_lists_that_do_not_share_names():
+    """The three lists as replayed (research/fundamental_ideas_lab.py) share
+    few names on a date, with no list made to give way to another; the
+    overlap of the four price lists they replaced is kept beside it."""
+    study = _study_file()
+    now = study["overlap"]
+    pairs = {k: v for k, v in now.items() if " / " in k}
+    assert set(pairs) == {"month / results", "month / long", "results / long"}
+    assert all(v["dates"] > 150 and v["mean_shared"] <= leaders.LIST_SIZE / 5 for v in pairs.values())
+    assert now["distinct in all three"] > 2 * leaders.LIST_SIZE
+    # Exactly as the lab measured it.
+    assert pairs == _lab_file()["overlap"]
+    before = study["overlap_before"]
+    assert before["now"]["momentum / long"] == 0
+    assert before["now"]["distinct in all four"] > before["first version"]["distinct in all four"]
 
 
 # --- the recipes are the ones the study measured ----------------------------
@@ -452,11 +463,81 @@ def test_the_record_shown_is_read_from_the_study_file():
     for key in leaders.ORDER:
         rec = ideas.tested_record(key)
         # The results list makes a list only in the weeks companies report,
-        # and its filings begin in 2018: fewer picks, a later first half.
+        # when eight or more pass its tests, and its filings begin in 2018:
+        # fewer picks, a later first half.
         event = bool(leaders.LISTS[key].get("event"))
-        assert rec["picks"] > (3000 if event else 5000) and 0 < rec["up_pct"] < 100
+        assert rec["picks"] > (2500 if event else 5000) and 0 < rec["up_pct"] < 100
         assert set(rec["by_half"]) == ({"2018-21", "2022-26"} if event else {"2017-21", "2022-26"})
+        assert all(rec["by_half"].values()), key
+        assert set(rec["vs_average_stock"]["by_half"]) == set(rec["by_half"])
         assert set(rec["market"]) == {"above_200d", "below_200d"}
+        assert rec["avg_after_costs_pct"] == round(rec["avg_pct"] - leaders.TESTED["round_trip_cost_pct"], 2)
+        assert "big_winner_pct" in rec and rec["median_pct"] is not None and rec["what"] and rec["bias"]
+    rec = ideas.tested_record("results")
+    assert rec["from"].startswith("2018") and rec["vs_reporters"]["by_half"].keys() == {"2018-21", "2022-26"}
+
+
+def test_the_study_file_is_stamped_with_the_recipe_the_lists_run():
+    """The page prints a fundamental list's record only beside a scan ranked
+    with the recipe the study file was written for (ideas._study_current)."""
+    study = _study_file()
+    assert study["recipe"] == leaders.RECIPE == leaders.TESTED["recipe"]
+    assert all(ideas._study_current(k) for k in leaders.ALL)
+
+
+def test_the_record_served_for_each_fundamental_list_is_the_labs_chosen_version(quiet):
+    """
+    Each of the three lists' records is the replay of the version the lab's
+    declared rule chose (research/fundamental-ideas-lab.json), the version
+    backend/leaders.py now runs; and that is the record a reader is shown.
+    """
+    study, lab = _study_file(), _lab_file()
+    chosen = lab["chosen"]
+    assert chosen == {"month": "M3", "results": "R4", "long": "L1"}
+    cfgs = {"month": leaders.MONTH, "results": leaders.RESULTS, "long": leaders.LONG}
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
+    for key in leaders.ORDER:
+        rec, version = study["lists"][key], chosen[key]
+        measured = lab["records"][key][version]
+        assert rec["lab"]["variant"] == version
+        assert rec["lab"]["first"] == measured["first"] and rec["lab"]["second"] == measured["second"]
+        assert rec["lab"]["rule"] == lab["rule"]["text"]
+        assert set(rec["lab"]["before"]) == set(lab["before"][key])
+        # The whole replay is the chosen version's, figure for figure.
+        for k in ("list_dates", "picks", "up_pct", "avg_pct", "median_pct", "index_avg_pct", "worst_5pct",
+                  "best_5pct", "big_winner_pct", "exit_hit_pct"):
+            assert rec[k] == measured["all"][k], (key, k)
+        assert rec["exit_pct"] == measured["exit_pct"] == leaders.LISTS[key]["exit_pct"]
+        assert rec["hold_sessions"] == measured["hold_sessions"] == leaders.LISTS[key]["hold_sessions"]
+        # The version the rule chose is the engine's default now.
+        for k, v in lab["variants"][key][version]["overrides"].items():
+            assert k.startswith("_") or cfgs[key][k] == v, (key, k)
+        # And it is what the page is sent (the results list's, between
+        # seasons too).
+        assert ideas.select(p, horizon=key)["tested"] == rec
+
+
+def test_the_replaced_lists_records_are_never_served_beside_the_new_ones(quiet):
+    """This week and momentum were folded into the fundamental lists. Their
+    records are kept under `retired`, with what replaced each, and nothing
+    the page reads can reach them: an old link opens the new list with the
+    new list's record."""
+    study = _study_file()
+    for old, new in (("week", "month"), ("momentum", "long")):
+        assert old not in study["lists"] and old not in study["exits"]
+        gone = study["retired"][old]
+        assert gone["replaced_by"] == new and leaders.LISTS[new]["label"] in gone["note"]
+        assert gone["record"]["picks"] > 5000 and gone["exits"]["no exit line"]
+        assert ideas.tested_record(old) is None and leaders.target_tested(old) is None
+    cands, sectors, snaps = big_market()
+    p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
+    for old, gone, new in (("week", "week", "month"), ("trade", "week", "month"),
+                           ("momentum", "momentum", "long"), ("position", "momentum", "long")):
+        sel = ideas.select(p, horizon=old)
+        assert sel["list"] == new and sel["tested"] == study["lists"][new]
+        assert sel["tested"] != study["retired"][gone]["record"]
+        assert sel["target_test"]["held"]["avg_pct"] == study["lists"][new]["avg_pct"]
 
 
 def test_every_old_horizon_name_still_resolves():
@@ -537,8 +618,9 @@ def test_what_selling_at_the_mark_did_is_the_studys_own_figures():
         # Held to the end is the list's own record, the one the page already prints.
         assert t["held"]["avg_pct"] == leaders.TESTED["lists"][key]["avg_pct"]
     assert leaders.target_tested("month") and leaders.target_tested("long")
-    # Not tested that way: nothing is said, and nothing is made up.
-    for key in ("technical", "breakout", "quick", "nonsense"):
+    # Not tested that way: nothing is said, and nothing is made up. The
+    # results list's plan carries a mark, and the replay sold nothing at it.
+    for key in ("results", "technical", "breakout", "quick", "nonsense"):
         assert leaders.target_tested(key) is None
 
 
@@ -551,14 +633,6 @@ def quiet(monkeypatch):
     monkeypatch.setattr(ideas, "_news_index", lambda hours: ({}, []))
     monkeypatch.setattr(ideas, "_filing_for", lambda sym, hours, cats: None)
     monkeypatch.setattr(ideas, "tracker", None)
-
-
-@pytest.fixture
-def stamped(monkeypatch):
-    """The study file as the lab writes it once it has replayed this recipe:
-    stamped with leaders.RECIPE. Today's file holds the November lists'
-    records, which the page must not print beside the new ones."""
-    monkeypatch.setitem(leaders.TESTED, "recipe", leaders.RECIPE)
 
 
 def scan_payload(blocks, sectors=None, extra=None):
@@ -580,7 +654,7 @@ def big_market():
     return market(200, 20)
 
 
-def test_each_list_is_served_in_the_order_the_recipe_ranked_it(quiet, stamped):
+def test_each_list_is_served_in_the_order_the_recipe_ranked_it(quiet):
     cands, sectors, snaps = big_market()
     p = scan_payload(leaders.rank(cands, sectors=sectors, snapshot=snaps))
     for key in PRICE_LISTS:
@@ -679,7 +753,7 @@ def test_an_old_momentum_or_week_link_opens_the_list_that_replaced_it(quiet):
 
 
 @pytest.mark.parametrize("stamp", ["an older recipe", None])
-def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record(quiet, stamped, stamp):
+def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record(quiet, stamp):
     """After a deploy that changes a recipe, the scan on disk still has the old
     ranks until the next scan. It answers, but without the new record."""
     blocks = leaders.rank(universe())
@@ -696,16 +770,15 @@ def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record
     assert fresh["recipe_current"] is True and fresh["tested"]
 
 
-def test_a_study_of_the_lists_that_were_replaced_is_not_printed_beside_the_new_ones(quiet):
+def test_a_study_of_the_lists_that_were_replaced_is_not_printed_beside_the_new_ones(quiet, monkeypatch):
     """
-    The study file is the record of a recipe. Until the lab has replayed the
-    three fundamental lists and stamped the file with their recipe, a
-    current scan's lists show no record rather than the November lists',
-    and say why; the setup lists' records are the engine's own replay and
-    stay.
+    The study file is the record of a recipe. A file the lab has not written
+    for the recipe running now (one from before the three fundamental lists,
+    or a deploy that changes the recipe before its replay is published) shows
+    no record beside a current scan's lists rather than another recipe's, and
+    says why; the setup lists' records are the engine's own replay and stay.
     """
-    if leaders.TESTED.get("recipe") == leaders.RECIPE:
-        pytest.skip("the study file already carries this recipe's replay")
+    monkeypatch.setitem(leaders.TESTED, "recipe", "2026-11 price lists")
     p = scan_payload(leaders.rank(universe()))
     sel = ideas.select(p, horizon="long")
     assert sel["recipe_current"] is True and sel["study_current"] is False
@@ -1053,7 +1126,7 @@ def test_technicals_ride_with_every_ranked_stock_and_move_no_rank():
 
 # --- the Ideas layer, for what is new -------------------------------------------
 
-def test_the_results_list_is_served_with_its_record_and_its_ledger(quiet, stamped):
+def test_the_results_list_is_served_with_its_record_and_its_ledger(quiet):
     cands, results = reporters(n=12)
     blocks = leaders.rank(cands, results=results, snapshot=reported(results))
     sel = ideas.select(scan_payload(blocks), horizon="results", limit=15)
@@ -1128,7 +1201,7 @@ def test_chart_facts_read_like_sentences():
     assert ideas.chart_facts(None) == []
 
 
-def test_the_page_is_told_what_the_test_found_in_a_market_like_todays(quiet, stamped, monkeypatch):
+def test_the_page_is_told_what_the_test_found_in_a_market_like_todays(quiet, monkeypatch):
     """The old page warned that trend setups fail under a weak index. Measured
     on these lists they did not, so the page says what was measured."""
     monkeypatch.setattr(ideas, "market_regime", lambda: {"ok": False, "pct_vs_200dma": -4.0, "label": "x"})
@@ -1273,14 +1346,18 @@ def test_a_young_company_is_never_served_on_the_three_lists(quiet):
 
 
 def test_the_study_measured_the_young_picks_before_they_were_admitted():
-    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
-        study = json.load(f)
-    for key in leaders.YOUNG_LISTS:
-        young = study["lists"][key]["young"]
+    """Companies listed six to twelve months were admitted to this week and
+    momentum because their picks led the average stock in both halves. Both
+    lists are retired, their records kept with that measurement; no list
+    admits them now, and no record served claims young picks."""
+    study = _study_file()
+    assert leaders.YOUNG_LISTS == ()
+    for key in ("week", "momentum"):
+        young = study["retired"][key]["record"]["young"]
         assert young["picks"] > 100
         halves = young["vs_average_stock"]["by_half"]
         assert all(h["excess_pct"] > 0 for h in halves.values()), f"young picks trailed on {key}"
-    for key in set(leaders.LISTS) - set(leaders.YOUNG_LISTS):
+    for key in leaders.LISTS:
         assert "young" not in study["lists"][key]
 
 

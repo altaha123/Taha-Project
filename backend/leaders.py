@@ -27,7 +27,7 @@ each read from the company's own filings as well as its chart
 (fund_snapshot.py builds the figures, the same code for the live scan and
 for the replay):
 
-  Swing / This month       a market leader (leader score in the top 35%), in
+  Swing / This month       a market leader (leader score in the top 30%), in
                 an uptrend and outside the most volatile fifth, in an industry
                 in the top half on money flow, that pulled back over the last
                 month, ranked on the pullback, its closeness to the 52-week
@@ -296,9 +296,10 @@ RECIPE = "2026-12 fundamental lists v3"
 # weight each list reads is here, so research/fundamental_ideas_lab.py can
 # replay the engine itself on each declared version by swapping one of these
 # dictionaries, and write the version its rule chose back as the default.
-# The defaults are the recipe as specified before the run (the lab's M0, R4
-# and L1). Each `mix` sums to 1; `sector_cap` is how many stocks of one NSE
-# industry a list may hold.
+# The defaults are the versions the lab's rule chose (M3, R4 and L1; R4 and
+# L1 are the recipe as specified, M3 the month list with its leader floor and
+# pullback changed). Each `mix` sums to 1; `sector_cap` is how many stocks of
+# one NSE industry a list may hold.
 MONTH = {
     "leader_floor": LEADER_FLOOR,      # leader percentile a pick must reach
     "sector_gate": True,               # its industry must rank on money flow ...
@@ -2649,13 +2650,14 @@ def target_tested(key):
     """
     What the study measured when a pick was SOLD at the mark plan() puts on it.
 
-    The study ran each of the four price lists twice more: held to the end
-    with its exit line, and sold at the first high as far above the entry as
-    that line is below it. Both records are in the file's `exits` table, and
-    this returns the two side by side, so the page can say what selling at
-    the mark did in the study's own numbers and in no others. None for a
-    list the study did not run that way (the results list and the setups),
-    and the page then says only what the mark is.
+    The study ran the month and long-term lists' picks twice more (as it ran
+    the price lists before them): held to the end with the exit line, and
+    sold at the first high as far above the entry as that line is below it.
+    Both records are in the file's `exits` table, and this returns the two
+    side by side, so the page can say what selling at the mark did in the
+    study's own numbers and in no others. None for a list the study did not
+    run that way (the results list and the setups), and the page then says
+    only what the mark is.
     """
     spec = LISTS.get(key)
     if spec is None or spec.get("sell_rule"):

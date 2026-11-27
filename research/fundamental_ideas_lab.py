@@ -4,6 +4,7 @@ The fundamental Ideas lab: the three Ideas tabs, replayed point in time.
     python research/fundamental_ideas_lab.py --prepare   # candidates for every list date (slow, once)
     python research/fundamental_ideas_lab.py --replay    # every declared variant, through the engine itself
     python research/fundamental_ideas_lab.py --report    # the tables, the choice, research/fundamental-ideas-lab.json
+    python research/fundamental_ideas_lab.py --publish   # the chosen versions' records, into the study file
 
 WHAT IT TESTS
 The Ideas page shows three lists (backend/leaders.py): a swing list of healthy
@@ -52,6 +53,17 @@ says:
 The rule: the highest mean return over the average liquid stock after the
 0.49% round trip, among versions with enough picks in the first window and a
 positive mean after costs; within 0.05 points, the one with fewer rules.
+
+PUBLISHING
+--publish turns the chosen versions' picks into the record the Ideas page
+prints beside each list, in the schema research/ideas-study.json uses for
+every other list (research/ideas_study.py's run_list, with_breakdowns,
+vs_average_stock, by_market and vs_pool), with the exit lines
+leaders.target_tested reads, and writes it into both copies of that file.
+Before it writes anything it checks that the engine as it stands ranks what
+the replay picked: the candidates' signals against the cache's stamp, and
+leaders.rank() with today's defaults against the chosen versions' picks on
+a handful of list dates. A recipe changed since the replay stops it there.
 """
 
 import argparse
@@ -94,9 +106,20 @@ LONG_REFERENCE = ("2018-06-01", "2022-10-31")
 MIN_FIRST_PICKS = {"month": 400, "results": 250, "long": 300}
 TIE_PP = 0.05
 
-# The declared versions. Each is a set of overrides of leaders.MONTH,
-# leaders.RESULTS and leaders.LONG; `rules` counts what each adds, for the
-# tie-break. The defaults in backend/leaders.py are M0, R4 and L1.
+# The recipe as specified before the run, which every version below
+# overrides. When the lab ran, backend/leaders.py's defaults were this
+# specification (M0, R4 and L1); the rule then chose M3 for the month list
+# and its two values were written back as the defaults. Pinning the
+# specification here keeps a replay run today on the versions declared,
+# whatever the defaults have become; with the defaults the lab ran on it
+# changes nothing.
+SPEC = {"month": {"leader_floor": 0.65, "pull_mix": {"dip21": 0.5, "dip": 0.5}},
+        "results": {}, "long": {}}
+
+# The declared versions. Each is a set of overrides of SPEC, itself one of
+# leaders.MONTH, leaders.RESULTS and leaders.LONG; `rules` counts what each
+# adds, for the tie-break. The defaults in backend/leaders.py are now the
+# chosen M3, R4 and L1.
 VARIANTS = {
     "month": {
         "M0": ({}, 7),
@@ -249,15 +272,16 @@ def prepare(procs=4):
 # --------------------------------------------------------------------------
 
 def _apply(overrides):
-    """Set leaders.MONTH / RESULTS / LONG to their defaults plus overrides.
-    A key the engine does not have is an error, not a silent default: a typo
-    would otherwise measure the default recipe under a variant's name.
-    Keys starting with "_" belong to the lab (an exit line, say)."""
+    """Set leaders.MONTH / RESULTS / LONG to their defaults, then SPEC, then
+    overrides. A key the engine does not have is an error, not a silent
+    default: a typo would otherwise measure the default recipe under a
+    variant's name. Keys starting with "_" belong to the lab (an exit line,
+    say)."""
     import leaders
     for tab, name in (("month", "MONTH"), ("results", "RESULTS"), ("long", "LONG")):
         base = _G["defaults"][name]
         cfg = dict(base)
-        for k, v in (overrides.get(tab) or {}).items():
+        for k, v in list((SPEC.get(tab) or {}).items()) + list((overrides.get(tab) or {}).items()):
             if k.startswith("_"):
                 continue
             if k not in base:
@@ -266,18 +290,38 @@ def _apply(overrides):
         setattr(leaders, name, cfg)
 
 
-def _replay_one(i):
-    import leaders
-    P, R, sectors, pit = _G["P"], _G["R"], _G["sectors"], _G["pit"]
-    with open(os.path.join(_G["dir"], f"{i}.pkl"), "rb") as f:
-        cands = pickle.load(f)
-    day = P.C.index[i].date()
+def _inputs(R, i):
+    """What had reached the exchange by session i, as the scan hands it to
+    rank(): each company's latest filing time (`results`) and its latest
+    quarter from the last hundred sessions (`fundamentals`, which the setup
+    lists read)."""
     known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
     filed = {r.symbol: {"filed_at": str(r.filed)[:19]} for r in known.itertuples(index=False)}
     growth = {r.symbol: {"pat_yoy_pct": None if pd.isna(r.pat_yoy_pct) else float(r.pat_yoy_pct),
                          "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct),
                          "pat_cr": None if pd.isna(r.pat_cr) else float(r.pat_cr)}
               for r in known[known["i"] >= i - 100].itertuples(index=False)}
+    return filed, growth
+
+
+def _tops(blocks):
+    """Each tab's top LIST_SIZE, in rank order."""
+    import leaders
+    got = {}
+    for tab in TABS:
+        top = sorted((b["lists"][tab]["rank"], s) for s, b in blocks.items()
+                     if b["lists"].get(tab) and (b["lists"][tab]["rank"] or 99) <= leaders.LIST_SIZE)
+        got[tab] = [s for _r, s in top]
+    return got
+
+
+def _replay_one(i):
+    import leaders
+    P, R, sectors, pit = _G["P"], _G["R"], _G["sectors"], _G["pit"]
+    with open(os.path.join(_G["dir"], f"{i}.pkl"), "rb") as f:
+        cands = pickle.load(f)
+    day = P.C.index[i].date()
+    filed, growth = _inputs(R, i)
     syms = [c["symbol"] for c in cands]
     snap = snapshot_at(pit, i, day, syms, sectors, P.RAW)
     out = {}
@@ -285,12 +329,7 @@ def _replay_one(i):
         _apply(overrides)
         blocks = leaders.rank(cands, results=filed, sectors=sectors, fundamentals=growth,
                               benchmark=S.benchmark_at(P, i), snapshot=snap)
-        got = {}
-        for tab in TABS:
-            top = sorted((b["lists"][tab]["rank"], s) for s, b in blocks.items()
-                         if b["lists"].get(tab) and (b["lists"][tab]["rank"] or 99) <= leaders.LIST_SIZE)
-            got[tab] = [s for _r, s in top]
-        out[name] = got
+        out[name] = _tops(blocks)
     return i, out
 
 
@@ -488,11 +527,309 @@ def report():
     return result
 
 
+# --------------------------------------------------------------------------
+# Publishing: the chosen versions' records, into the file the page reads
+# --------------------------------------------------------------------------
+
+STUDY_FILES = (S.OUT, os.path.join(HERE, "..", "backend", "ideas_study.json"))
+# The first half's label, as the page and the tests read it: the results
+# list's filings begin in 2018.
+FIRST_HALF = {"month": "2017-21", "results": "2018-21", "long": "2017-21"}
+CHECK_DATES = 8                  # list dates the engine is re-ranked on before publishing
+
+REPLAY_TEXT = ("The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices "
+               "and filings cut at that session; its top fifteen bought at the next open.")
+NOTES = {
+    "month": {
+        "what": ("Market leaders (leader score in the top 30%) in an uptrend and outside the most volatile "
+                 "fifth, in an industry in the top half on money flow, with no loss and no fall in profit last "
+                 "quarter, no results the market sold in the last month and no more than 10% of the company "
+                 "pledged. Ranked on the month's pullback, closeness to the 52-week high, the last quarter's "
+                 "sales and margin growth, the industry's money flow and a live catalyst; at most four from one "
+                 "industry."),
+        "bias": ("Pledges, deliveries and orders have no history to replay: they were unknown here, which the "
+                 "list counts as neutral, and the live list reads them. Industries are NSE's list as it stands "
+                 "today. Quarterly filings start in 2018 and cover companies listed today; a stock with none is "
+                 "never refused for it, and a revised quarter is seen from the revision's date."),
+    },
+    "results": {
+        "what": ("Liquid companies whose quarterly results were first priced in the last 10 sessions and showed "
+                 "real growth: sales up 8% or more, profit and operating profit up, other income no more than "
+                 "35% and an exceptional gain no more than 30% of profit before tax, and cash from operations "
+                 "positive in the last full year. Not already up 18% on the day, nor more than 15% under the "
+                 "200-day average. Ranked half on that session's move less the average liquid stock's, a "
+                 "quarter on the volume behind it and a quarter on the growth; at most four from one industry. "
+                 "A list is made only when eight or more pass every test."),
+        "bias": ("The results tables hold companies listed today, so one delisted after a bad quarter is "
+                 "missing, and a revised quarter is seen from the revision's date with the revised figures. "
+                 "vs_reporters compares the list with every liquid company whose results were priced in the "
+                 "same ten sessions, which shares that bias."),
+    },
+    "long": {
+        "what": ("Above the 200-day average and outside the most volatile fifth, a profit over the last four "
+                 "quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, "
+                 "cash from operations positive and at least 0.7 times profit, debt no more than equity (a "
+                 "lender: a return on equity of 13% or more), and a P/E under 90 unless its PEG is 1.5 or under "
+                 "on profit growing 35% a year. Ranked on quality, three-year compounding, governance, valuation "
+                 "against its own industry and the year-long trend; at most four from one industry."),
+        "bias": ("Balance sheets are on file from September 2022 and full-year cash flows from 2020-21. Before "
+                 "then the return, debt, F-score and cash checks were skipped as unknown and the list ranked "
+                 "mostly on its trend, which is why its version was chosen on 2022-11 to 2024-04. Pledges and "
+                 "holdings have no history and were unknown throughout. The tables hold companies listed today, "
+                 "and a revised filing is seen from the revision's date."),
+    },
+}
+OVERLAP_TEXT = ("Names two of the three lists share on the same list date, out of 15: mean_shared over the dates "
+                "both made a list, dates_with_any_pct the share of those dates with one or more in common. No "
+                "list gives way to another.")
+
+
+def _clean(x):
+    """NaN and infinity to None, numpy numbers to Python ones, all the way down."""
+    if isinstance(x, dict):
+        return {k: _clean(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_clean(v) for v in x]
+    if isinstance(x, (np.integer,)):
+        return int(x)
+    if isinstance(x, (float, np.floating)):
+        return float(x) if np.isfinite(x) else None
+    return x
+
+
+def chosen_picks(got, lab):
+    """{tab: (version, replay set, [(date, [names])])} for the version the
+    declared rule chose, found as --report found it."""
+    out = {}
+    for tab in TABS:
+        key = (lab.get("chosen") or {}).get(tab)
+        name = next((n for n in got["sets"] if key and key in n.split("/")), None)
+        if not key or name is None:
+            raise SystemExit(f"the lab chose no replayed version of {tab}: nothing to publish")
+        out[tab] = (key, name, (got["picks"].get(name) or {}).get(tab) or [])
+    return out
+
+
+def engine_check(P, R, sectors, chosen, stamp, n=CHECK_DATES):
+    """
+    The engine as it stands must rank what the chosen versions' replay
+    picked, or the record published beside a list is another recipe's.
+    The candidates' signals are checked against the stamp the replay was
+    cached under, and leaders.rank() with today's defaults (no override) is
+    run on n list dates, half of them dates the results list was made, and
+    its top fifteen of each tab held equal to the picks on file.
+    """
+    import leaders
+    if _stamp(P) != stamp:
+        raise SystemExit("signals() has changed since the replay: run --prepare, --replay and --report again")
+    pit = load_pit(P)
+    row = {d: i for i, d in enumerate(P.C.index)}
+
+    def spread(ds, k):
+        return [ds[int(x)] for x in np.linspace(0, len(ds) - 1, k)] if ds and k else []
+    by = {tab: dict(rows) for tab, (_k, _n, rows) in chosen.items()}
+    days = sorted(set(spread(sorted(by["results"]), n // 2) + spread(sorted(by["month"]), n - n // 2)))
+    same = total = 0
+    for d in days:
+        i = row[d]
+        cached = os.path.join(CAND_DIR, stamp, f"{i}.pkl")
+        if os.path.exists(cached):
+            with open(cached, "rb") as f:
+                cands = pickle.load(f)
+        else:
+            # The cache is gone; the stamp above says signals() would give it back.
+            cands = S._engine_candidates(P, i)
+        filed, growth = _inputs(R, i)
+        snap = snapshot_at(pit, i, d.date(), [c["symbol"] for c in cands], sectors, P.RAW)
+        got = _tops(leaders.rank(cands, results=filed, sectors=sectors, fundamentals=growth,
+                                 benchmark=S.benchmark_at(P, i), snapshot=snap))
+        for tab in TABS:
+            want = by[tab].get(d, [])
+            total += 1
+            same += got[tab] == want
+            if got[tab] != want:
+                print(f"  {d.date()} {tab}: the engine ranks {got[tab][:5]}..., the replay picked {want[:5]}...")
+    print(f"engine check: {same} of {total} lists identical on {len(days)} dates")
+    if same != total:
+        raise SystemExit("backend/leaders.py no longer ranks what the chosen versions picked: run --replay and "
+                         "--report again, or write the chosen versions back as the defaults")
+    return same, total
+
+
+def list_record(P, U, tab, key, picks, lab, R=None):
+    """One list's record in the schema of every other list in the study
+    file, from the chosen version's picks, plus what the lab measured (lab)."""
+    import leaders
+    hold, exit_pct = TABS[tab]
+    exit_pct = VARIANTS[tab][key][0].get("_exit_pct", exit_pct)
+    spec = leaders.LISTS[tab]
+    if (hold, exit_pct) != (spec["hold_sessions"], spec["exit_pct"]):
+        raise SystemExit(f"{tab}: the chosen version holds {hold} sessions with a {exit_pct:g}% line and the "
+                         f"engine's plan {spec['hold_sessions']} with {spec['exit_pct']:g}%")
+    first = FIRST_HALF[tab]
+    ran = S.run_list(P, picks, hold, exit_pct)
+    rec = S.with_breakdowns(ran, first=first)
+    rec.update(hold_sessions=hold, exit_pct=exit_pct,
+               avg_after_costs_pct=round(rec["avg_pct"] - S.ROUND_TRIP_COST_PCT, 2),
+               vs_average_stock=S.vs_average_stock(P, U, ran, hold, first=first))
+    if tab == "results":
+        # Against every liquid company whose results were priced in the same
+        # ten sessions: what the list was chosen from.
+        dates = pd.DatetimeIndex([d for d, _n in picks])
+        _p, pools = S.results_picks(P, U, R, dates)
+        rec["vs_reporters"] = S.vs_pool(P, ran, hold, pools)
+    rec["market"] = S.by_market(P, ran)
+    if tab == "results":
+        grid = [P.C.index[i] for i in _dates(P) if i + hold < len(P.C)]
+        rec.update({"from": str(picks[0][0].date()),
+                    "dates_tried": int(sum(d >= picks[0][0] for d in grid)),
+                    "filings": int(len(R)), "companies": int(R["symbol"].nunique()),
+                    "window_sessions": leaders.RESULTS_WINDOW, "min_companies": leaders.RESULTS_MIN_POOL})
+    rec.update(what=NOTES[tab]["what"], bias=NOTES[tab]["bias"], replay=REPLAY_TEXT)
+
+    # The lab's own two windows, measured again from the same picks: the
+    # lab's file and the picks file must be one run.
+    measured = lab["records"][tab][key]
+    (f0, f1), (s0, s1) = WINDOWS[tab]
+    for name, (a, b) in (("first", (f0, f1)), ("second", (s0, s1))):
+        if _clean(window_record(P, U, ran, hold, a, b)) != measured[name]:
+            raise SystemExit(f"{tab} {key}: {OUT} was not written from {PICKS_FILE}; run --report again")
+    last = str(ran["date"].max().date())
+    rec["lab"] = {
+        "variant": key,
+        "overrides": lab["variants"][tab][key]["overrides"],
+        "windows": {"first": [f0, f1], "second": [s0, min(s1, last)]},
+        "first": measured["first"], "second": measured["second"],
+        "before": {k: {"hold_sessions": v["hold_sessions"], "exit_pct": v["exit_pct"],
+                       "first": v["first"], "second": v["second"]}
+                   for k, v in (lab["before"].get(tab) or {}).items()},
+        "rule": lab["rule"]["text"], "min_first_picks": lab["rule"]["min_first_picks"][tab],
+        "file": "research/fundamental-ideas-lab.json", "generated": lab["generated"],
+    }
+    if "reference_2018_22" in measured:
+        rec["lab"]["reference_2018_22"] = measured["reference_2018_22"]
+    return _clean(rec)
+
+
+def list_exits(P, tab, picks, hold, exit_pct):
+    """The same picks on other exit lines, as research/ideas_study.py runs
+    every list: none, half, the list's own, one and a half times; and for
+    the lists whose plan marks a target (leaders.target_tested), sold at a
+    high as far above the entry as the line is below it, and twice as far."""
+    out = {"no exit line": S.describe(S.run_list(P, picks, hold))}
+    for alt in sorted({exit_pct / 2, exit_pct, exit_pct * 1.5}):
+        out[f"close {alt:g}% under"] = S.describe(S.run_list(P, picks, hold, alt))
+    if tab != "results":
+        for mult in (1, 2):
+            out[f"close {exit_pct:g}% under, target {exit_pct * mult:g}% over"] = S.describe(
+                S.run_list(P, picks, hold, exit_pct, target_pct=exit_pct * mult))
+    return _clean(out)
+
+
+def published_overlap(chosen, lab):
+    """The three lists' overlap, as --report measured it, with the distinct
+    names on the dates all three made a list."""
+    by = {tab: rows for tab, (_k, _n, rows) in chosen.items()}
+    ov = overlap(by)
+    if ov != lab["overlap"]:
+        raise SystemExit(f"the overlap in {OUT} is not the chosen versions' picks'; run --report again")
+    sets = {tab: {d: set(n) for d, n in rows} for tab, rows in by.items()}
+    common = sorted(set.intersection(*(set(v) for v in sets.values())))
+    distinct = [len(set().union(*(sets[t][d] for t in sets))) for d in common]
+    return {**ov, "distinct in all three": round(float(np.mean(distinct)), 1) if distinct else None,
+            "dates in all three": len(common), "what": OVERLAP_TEXT}
+
+
+def published(P, U, R=None, check=True):
+    """{"lists", "exits", "overlap"} for the three lists, from the replay on
+    disk and the lab's file. research/ideas_study.py --study calls this too."""
+    import leaders
+    with open(PICKS_FILE, "rb") as f:
+        got = pickle.load(f)
+    with open(OUT, encoding="utf-8") as f:
+        lab = json.load(f)
+    R = S.load_results(P) if R is None else R
+    if R is None:
+        raise SystemExit(f"no results table at {S.RESULTS_CSV}: the replay cannot be checked")
+    chosen = chosen_picks(got, lab)
+    if check:
+        sectors = S.load_sectors() or _sectors_fallback()
+        engine_check(P, R, sectors, chosen, got["stamp"])
+    lists, exits = {}, {}
+    for tab, (key, _name, picks) in chosen.items():
+        rec = list_record(P, U, tab, key, picks, lab, R)
+        lists[tab] = rec
+        exits[tab] = list_exits(P, tab, picks, rec["hold_sessions"], rec["exit_pct"])
+        print(f"\n{tab} ({key}): hold {rec['hold_sessions']}, exit {rec['exit_pct']:g}%")
+        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year", "lab", "what", "bias")}, indent=1))
+    return {"lists": lists, "exits": exits, "overlap": published_overlap(chosen, lab),
+            "recipe": leaders.RECIPE}
+
+
+def merged(study, part):
+    """The study file with the three lists' records in place of the ones it
+    held. The week and momentum records move under `retired`, beside what
+    replaced each; the old overlap block is kept as `overlap_before`; every
+    other key is left exactly as it was. Running it twice changes nothing."""
+    old_lists, old_exits = study.get("lists") or {}, study.get("exits") or {}
+    retired = dict(study.get("retired") or {})
+    for key, (to, note) in S.RETIRED.items():
+        if key in old_lists:
+            retired[key] = {"replaced_by": to, "note": note, "record": old_lists[key],
+                            "exits": old_exits.get(key)}
+    lists = dict(part["lists"])
+    lists.update((k, v) for k, v in old_lists.items() if k not in lists and k not in S.RETIRED)
+    exits = dict(part["exits"])
+    exits.update((k, v) for k, v in old_exits.items() if k not in exits and k not in S.RETIRED)
+    before = study.get("overlap_before")
+    if before is None and "now" in (study.get("overlap") or {}):
+        before = study["overlap"]
+    out = {}
+    for k, v in study.items():
+        if k in ("recipe", "lists_note", "retired", "overlap_before"):
+            continue
+        if k == "lists":
+            out["recipe"] = part["recipe"]
+            out["lists_note"] = S.LISTS_NOTE
+            out["lists"] = lists
+        elif k == "exits":
+            out["exits"] = exits
+            out["retired"] = retired
+        elif k == "overlap":
+            out["overlap"] = part["overlap"]
+            if before is not None:
+                out["overlap_before"] = before
+        else:
+            out[k] = v
+    # A file written before any of these keys existed still gets them.
+    for k, v in (("recipe", part["recipe"]), ("lists_note", S.LISTS_NOTE), ("lists", lists),
+                 ("exits", exits), ("retired", retired), ("overlap", part["overlap"])):
+        out.setdefault(k, v)
+    return out
+
+
+def publish():
+    """Write the chosen versions' records into research/ideas-study.json and
+    its byte-identical copy beside the code that serves it."""
+    P = S.Panel()
+    U = P.universe(10)
+    with open(S.OUT, encoding="utf-8") as f:
+        study = json.load(f)
+    out = merged(study, published(P, U))
+    text = json.dumps(out, indent=1)
+    for path in STUDY_FILES:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+    print("\nwrote", ", ".join(STUDY_FILES))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prepare", action="store_true")
     ap.add_argument("--replay", action="store_true")
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--publish", action="store_true")
     ap.add_argument("--procs", type=int, default=4)
     a = ap.parse_args()
     if a.prepare:
@@ -502,6 +839,8 @@ def main():
     if a.report:
         r = report()
         print(json.dumps({"chosen": r["chosen"], "overlap": r["overlap"]}, indent=1))
+    if a.publish:
+        publish()
 
 
 if __name__ == "__main__":

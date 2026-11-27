@@ -307,12 +307,12 @@
     return '<section class="dr-start dr-rise" style="--i:1" id="dr-start" aria-labelledby="dr-start-h">' +
       '<div class="dr-start-top">' +
         '<div><h2 id="dr-start-h">New here? Start with one of these.</h2>' +
-        '<p>Altaha scores any stock from 0 to 100, and picks stocks to hold for a week, a month or longer.</p></div>' +
+        '<p>Altaha scores any stock from 0 to 100, and ranks stocks on measured figures in lists held for a few weeks to a year.</p></div>' +
         '<button type="button" class="dr-start-x" id="dr-start-x">Hide this</button>' +
       '</div>' +
       '<div class="dr-tasks">' +
         task('data-start="search"', 'search', 'Check a stock', 'Its score, and why.') +
-        task('data-goto="research/ideas"', 'converge', 'Get stock picks', 'For a week, a month or longer.') +
+        task('data-goto="research/ideas"', 'converge', 'Get stock picks', 'For a few weeks, a few months or a year.') +
         task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'A clear call on each holding.') +
       '</div>' +
       '<p class="dr-start-try"><span>Try one:</span>' +
@@ -988,10 +988,10 @@
 
     return '<div class="dr dr-ideas">' +
       head('Ideas', 'What should I look at?') +
-      /* The door answers its own question first: four pick lists, one per
-         holding period (picks.js). It used to open on a picture of a planet
-         and a button, and a reader had to open a tool and scroll past the
-         planet again before seeing a single stock. */
+      /* The door answers its own question first: the pick lists, three by
+         holding time and five by chart setup (picks.js). It used to open on
+         a picture of a planet and a button, and a reader had to open a tool
+         and scroll past the planet again before seeing a single stock. */
       '<section class="pk-panel dr-rise" id="dri-picks" style="--i:1" aria-label="Stock picks"></section>' +
       '<button type="button" class="dr-universe dr-rise" style="--i:2" data-goto="research/ideas">' +
         '<span class="dr-orbits" aria-hidden="true">' +

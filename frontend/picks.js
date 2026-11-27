@@ -2,13 +2,17 @@
    Altaha — Stock picks
 
    WHAT THIS IS
-   The lists the Ideas door leads with: this week, this month, after results,
-   momentum, long term. One tab each. Under the tabs, one line saying what
-   the list is and one line saying how it did when tested, then the picks.
+   The lists the Ideas door leads with. Three by how long a pick is held,
+   each ranked on the company's filings as well as its chart (December
+   2026): Swing / This month, After results and Long term. Five more by what
+   the chart or the money is doing. One tab each. Under the tabs, one line
+   saying what the list is and one saying how it did when tested, then the
+   picks.
 
    "After results" is ranked on a filing, not on price alone: companies whose
-   stock moved most the day their quarterly results were priced. It is empty
-   between results seasons and says so.
+   stock moved most the day their quarterly results were priced, among those
+   whose results were real growth. It is empty between results seasons and
+   says when the next one starts (the server's `empty_text`).
 
    It is drawn in two places from one set of functions, so the two can never
    describe the same pick differently:
@@ -17,10 +21,23 @@
      · the Stock picks tab (index.html) all fifteen, each with its ledger
 
    WHERE THE NUMBERS COME FROM
-   /ideas?horizon=week|month|momentum|long. The order is the server's. The
-   tested record (`tested`) is read from the study file the API ships
-   (backend/ideas_study.json); nothing here computes or rounds a return it
-   was not given.
+   /ideas?horizon=month|results|long, or a setup list's key. The order is the
+   server's. The tested record (`tested`) is read from the study file the API
+   ships (backend/ideas_study.json); nothing here computes or rounds a return
+   it was not given.
+
+   A LIST NOT MEASURED YET
+   The three lists by holding time were rebuilt in December 2026. Until the
+   study has replayed the new recipes (`study_current` false) the server sends
+   no record for them, and this says plainly that the record is being
+   measured. It prints no record of the lists they replaced beside them, and
+   no tally of live calls those lists made.
+
+   OLD NAMES
+   This week and Momentum were folded into Swing / This month and Long term.
+   A choice remembered on this browser, or an address, that names one of
+   them (or the older trade, position, medium, invest) opens the list that
+   took its place, as the server does (leaders.ALIASES).
 
    A SCAN FROM BEFORE THE LISTS
    Until the first scan with leader ranks finishes, the API answers with the
@@ -30,16 +47,19 @@
 
    WORDS
    A reader told us the site had too much writing. Each pick gets at most
-   four facts of four words. Everything longer is behind "Details".
+   four facts of a few words, each a measurement, never advice. Everything
+   longer is behind "Details": the company's figures and the ledger of how
+   its score was made.
 
    HOW THE PANEL READS
    Top to bottom it is three questions, in the order a newcomer asks them.
-   Which list? Ten of them, in two labelled rows (by holding time, by chart
-   setup), each chip saying how long it is held. Is it any good? Three
-   figures from the test, each with a label that is a whole phrase. Which
-   stocks? Five, each with its price, a target and the price to leave at.
-   It replaced two unlabelled bars of five tabs and a box of three numbers
-   captioned in two words each, which a reader found confusing.
+   Which list? Eight of them, in two labelled rows (by holding time, by chart
+   setup), each chip saying how long it is held; the three by holding time
+   share their row equally. Is it any good? Three figures from the test, each
+   with a label that is a whole phrase. Which stocks? Five, each with its
+   price, a target and the price to leave at. It replaced two unlabelled bars
+   of five tabs and a box of three numbers captioned in two words each, which
+   a reader found confusing.
 
    THE TARGET
    A pick shows a target because a reader asked where a good result would
@@ -55,11 +75,12 @@
   if (typeof window !== 'undefined' && window.AltahaPicks) return;
 
   var LISTS = [
-    { key: 'week',     label: 'This week',     lead: 'This ',  short: 'week',    hold: 'about a week' },
-    { key: 'month',    label: 'This month',    lead: 'This ',  short: 'month',   hold: 'about a month' },
-    { key: 'results',  label: 'After results', lead: 'After ', short: 'results', hold: 'about a month' },
-    { key: 'momentum', label: 'Momentum',      hold: 'about 3 months' },
-    { key: 'long',     label: 'Long term',     hold: 'about a year' },
+    /* By holding time: the three lists that read the company's filings. The
+       chip says how long a pick is held; `hold` is the plan's own words, for
+       an answer that does not say. A phone drops the name's `tail`. */
+    { key: 'month',   label: 'Swing / This month', short: 'Swing', tail: ' / This month', chip: '~ 2\u20134 weeks', hold: 'about a month' },
+    { key: 'results', label: 'After results', chip: '~ 1\u20133 months', hold: 'about a month' },
+    { key: 'long',    label: 'Long term',     chip: '~ 1 year',     hold: 'about a year' },
     /* The setup lists: picked on what the chart or the tape is doing now. */
     /* Rebuilt December 2026 (research/setups_lab.py --v2): held long enough
        for the large winners, so the holds below are the tested ones. */
@@ -70,6 +91,9 @@
     { key: 'emerging',  label: 'Emerging',     group: 'setup', hold: 'about 4 months' }
   ];
   var KEYS = LISTS.map(function (l) { return l.key; });
+  /* Lists folded into others, and older names still in links: each opens
+     the list that took its place (the server's leaders.ALIASES). */
+  var ALIASES = { week: 'month', trade: 'month', momentum: 'long', position: 'long', medium: 'long', invest: 'long' };
   var STORE = 'altaha-pick-list';
   var DEFAULT = 'month';
   var FRESH_MS = 120000;
@@ -100,12 +124,54 @@
   }
   function valid(key) { return KEYS.indexOf(key) !== -1; }
 
-  /* The chosen list is a convenience, never state the page depends on. */
+  /* The list a name opens: its own, the one that replaced it, or null. */
+  function resolve(name) {
+    var k = String(name == null ? '' : name).trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(ALIASES, k)) k = ALIASES[k];
+    return valid(k) ? k : null;
+  }
+
+  /* The chosen list is a convenience, never state the page depends on. A
+     choice made before the lists changed ("week") is read as the list that
+     replaced it, and kept that way. Storage that throws, or is not there,
+     leaves the first list. */
   function chosen() {
-    try { var k = localStorage.getItem(STORE); if (valid(k)) return k; } catch (e) {}
-    return DEFAULT;
+    var raw = null;
+    try { raw = localStorage.getItem(STORE); } catch (e) { raw = null; }
+    var k = resolve(raw);
+    if (k && k !== raw) remember(k);
+    return k || DEFAULT;
   }
   function remember(key) { try { localStorage.setItem(STORE, key); } catch (e) {} }
+
+  /* A list named in an address: #research/ideas/long, or #ideas/week from
+     before the lists changed. The list it opens, or null when it names none. */
+  function fromAddress(hash) {
+    var p = String(hash == null ? '' : hash).replace(/^#/, '').split('/');
+    var name = p[0] === 'ideas' ? p[1] : (p[0] === 'research' && p[1] === 'ideas' ? p[2] : null);
+    if (!name) return null;
+    try { name = decodeURIComponent(name); } catch (e) { return null; }
+    return resolve(name);
+  }
+
+  /* The parts the three lists by holding time are scored on, in the
+     page's own words: each says what was measured, never what to do. A part
+     the page does not know keeps the server's label. */
+  var FACTORS = {
+    pull: 'How far it pulled back', high: 'Closeness to its 52-week high',
+    fundmom: 'Sales and margin growth last quarter', secflow: 'Money flow into its industry',
+    catalyst: 'A live catalyst: deliveries or an order',
+    reaction: 'Move on the day its results were priced', volume: 'Volume on that day',
+    growth: 'Growth in the quarter it reported',
+    quality: 'Returns on capital, backed by cash', compounding: 'Growth over three years',
+    governance: 'Pledges and changes in holdings', valuation: 'Price against its own industry',
+    trendq: 'The year-long trend'
+  };
+  function factorLabel(e) {
+    var key = e && e.key;
+    if (key && Object.prototype.hasOwnProperty.call(FACTORS, key)) return FACTORS[key];
+    return e && e.factor != null ? String(e.factor) : String(key || '');
+  }
 
   /* ── What a pick says ──────────────────────────────────────────────────── */
 
@@ -166,14 +232,16 @@
     if (!(d.rows || []).some(function (r) { return r.plan && finite(r.plan.aim); })) return '';
     var pct = Number(d.exit_pct).toFixed(0), t = d.target_test;
     var one = function (v) { return Number(v).toFixed(1).replace(/\.0$/, ''); };
-    var tested = t && t.sold && t.held && finite(t.sold.up_pct) && finite(t.held.up_pct) &&
-                 finite(t.sold.avg_pct) && finite(t.held.avg_pct)
+    /* A list not measured yet says nothing about what its test found. */
+    var tested = d.study_current === false ? ''
+      : t && t.sold && t.held && finite(t.sold.up_pct) && finite(t.held.up_pct) &&
+        finite(t.sold.avg_pct) && finite(t.held.avg_pct)
       ? 'In the test, selling at the target: <b>' + one(t.sold.up_pct) + '</b> of 100 picks ended up, average <b>' +
         signed(t.sold.avg_pct, 2) + '</b> a pick. Holding to the end: <b>' + one(t.held.up_pct) + '</b> of 100, average <b>' +
         signed(t.held.avg_pct, 2) + '</b>.'
       : 'This list was tested held to the end. Selling at a target was not tested for it.';
     return '<p class="pk-aimnote"><b>Target</b> is ' + pct + '% above the price, as far as the exit line is below it. ' +
-      'It marks a good result; it is not an order to sell. ' + tested + '</p>';
+      'It marks a good result; it is not an order to sell.' + (tested ? ' ' + tested : '') + '</p>';
   }
 
   /* ── Facts beside a pick: its results, an order, the chart ────────────── */
@@ -223,6 +291,65 @@
     }).join('') + '</dl>' + (note ? '<p>' + esc(note) + '</p>' : '') + '</div>';
   }
 
+  /* What the company's filings say, in Details beside a pick
+     (`leader.fundamentals`, carried by every ranked stock that has filings):
+     the figures the three lists by holding time are ranked on, each only
+     where the company filed it, in the server's numbers. A lender is shown
+     its return on equity; cash flow and debt describe a lender's lending,
+     not the business, so they are left out. Facts, not reasons: the ledger
+     below says what each counted for on this list. */
+  var GROWTH_TEXT_MAX = 1000;   // growth past this is a near-zero base, not news (leaders.PROFIT_TEXT_MAX)
+  function fundamentalsHTML(s) {
+    var f = s && s.leader && s.leader.fundamentals;
+    if (!f || typeof f !== 'object') return '';
+    var fin = f.is_financial === true;
+    function n(v) { return finite(v) ? Number(v) : null; }
+    /* Whole numbers from ten up and one decimal under it, as the server
+       writes its facts; a minus is a minus sign. */
+    function size(v) { var a = Math.abs(v); return a >= 10 ? a.toFixed(0) : a.toFixed(1).replace(/\.0$/, ''); }
+    function pc(v) { return (v < 0 ? '−' : '') + size(v) + '%'; }
+    function grew(v) { return (v > 0 ? '+' : '') + pc(v); }
+    function two(v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2).replace(/0$/, '').replace(/\.0$/, ''); }
+    function times(v) { return two(v) + '×'; }
+    var rows = [];
+    function add(k, parts) {
+      parts = parts.filter(Boolean);
+      if (parts.length) rows.push([k, parts.join(', ')]);
+    }
+    var rev = n(f.revenue_yoy_pct), opm = n(f.opm_yoy_chg), pat = n(f.pat_yoy_pct);
+    var quarter = [rev !== null && Math.abs(rev) < GROWTH_TEXT_MAX && 'sales ' + grew(rev),
+                   opm !== null && 'operating margin ' + (Math.round(opm * 10) > 0 ? '+' : Math.round(opm * 10) < 0 ? '−' : '') +
+                     Math.abs(opm).toFixed(1) + ' pts',
+                   pat !== null && Math.abs(pat) < GROWTH_TEXT_MAX && 'profit ' + grew(pat)].filter(Boolean);
+    if (quarter.length) {
+      quarter[0] = quarter[0].charAt(0).toUpperCase() + quarter[0].slice(1);
+      rows.push(['Last quarter' + (f.quarter ? ' (' + f.quarter + ')' : ''), quarter.join(', ') + ' on a year ago']);
+    }
+    if (f.earnings_quality_ok === true || f.earnings_quality_ok === false) {
+      rows.push(['Profit', f.earnings_quality_ok ? 'Made by the business itself'
+        : 'A loss, or much of it from other income or a one-off gain']);
+    }
+    var roce = n(f.roce_pct), roe = n(f.roe_pct);
+    add('Returns', fin ? [roe !== null && 'Return on equity ' + pc(roe) + ' (a lender)']
+                       : [roce !== null && 'ROCE ' + pc(roce), roe !== null && 'ROE ' + pc(roe)]);
+    if (!fin) {
+      var c2p = n(f.cfo_to_pat), fcf = n(f.fcf_pos_years_3y), de = n(f.debt_equity_x);
+      add('Cash', [c2p !== null && 'From operations ' + times(c2p) + ' profit',
+                   fcf !== null && 'free cash flow in ' + fcf.toFixed(0) + ' of the last 3 years']);
+      add('Debt', [de !== null && times(de) + ' equity']);
+    }
+    var pe = n(f.pe), peg = n(f.peg);
+    add('Valuation', [pe !== null && pe > 0 && 'P/E ' + pe.toFixed(0), peg !== null && peg > 0 && 'PEG ' + two(peg)]);
+    if (n(f.f_score) !== null) rows.push(['F-score', Number(f.f_score).toFixed(0) + ' of 9']);
+    var pledge = n(f.pledge_pct);
+    if (pledge !== null) rows.push(['Pledged', pledge === 0 ? 'No shares pledged' : pc(pledge) + ' of the company, by its promoters']);
+    if (f.sector_mf_quadrant) rows.push(['Industry on Money Flow', String(f.sector_mf_quadrant)]);
+    if (!rows.length) return '';
+    return '<div class="pk-funds"><h6>Fundamentals</h6><dl>' + rows.map(function (r) {
+      return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>';
+    }).join('') + '</dl></div>';
+  }
+
   /* What the test found in a market like today's. Shown only when the index
      is under its 200-day average, which is when a reader wonders. */
   function marketHTML(d) {
@@ -242,27 +369,29 @@
        says that year, not the study's. */
     var from = t.from || st.from;
     var years = (from && st.to) ? String(from).slice(0, 4) + '-' + String(st.to).slice(0, 4) : '';
+    /* The rebuilt setup lists are held for the few large winners, so their
+       record says how many there were. A list held a month or a year to its
+       exit line is not, and three figures keep a phone's first screen for
+       the picks. */
+    var big = d.kind === 'setup' && finite(t.big_winner_pct);
     var h = t.by_half || {};
     var halves = Object.keys(h).map(function (k) {
       var x = h[k] || {};
       return '<li><b>' + esc(k) + '</b> ' + Math.round(x.up_pct) + ' in 100 rose · ' +
         signed(x.avg_pct) + ' · market ' + signed(x.index_avg_pct) +
-        (finite(x.big_winner_pct) ? ' · ' + Number(x.big_winner_pct).toFixed(0) + '% made 25% or more' : '') + '</li>';
+        (big && finite(x.big_winner_pct) ? ' · ' + Number(x.big_winner_pct).toFixed(0) + '% made 25% or more' : '') + '</li>';
     }).join('');
     var up = Math.max(0, Math.min(100, Math.round(t.up_pct)));
     return '<div class="pk-record">' +
       '<p class="pk-record-h">How this list did when tested</p>' +
-      '<div class="pk-record-n' + (finite(t.big_winner_pct) ? ' four' : '') + '">' +
+      '<div class="pk-record-n' + (big ? ' four' : '') + '">' +
         '<span><b>' + Math.round(t.up_pct) + '</b><small>of every 100 picks went up</small>' +
           /* The same figure as a bar: the part that went up, and the rest. */
           '<i class="pk-meter" aria-hidden="true"><i style="width:' + up + '%"></i></i></span>' +
         '<span><b class="' + (t.avg_pct >= 0 ? 'up' : 'dn') + '">' + signed(t.avg_pct) + '</b><small>average ' +
           (t.avg_pct >= 0 ? 'gain' : 'loss') + ' per pick' + (d.hold_text ? ', held ' + esc(d.hold_text) : '') + '</small></span>' +
         '<span><b>' + signed(t.index_avg_pct) + '</b><small>the market over the same time</small></span>' +
-        /* The rebuilt setup lists are held for the few large winners; this
-           is how many there were. Shown only where the study measured it. */
-        (finite(t.big_winner_pct)
-          ? '<span><b>' + Number(t.big_winner_pct).toFixed(0) + '%</b><small>of picks made 25% or more</small></span>' : '') +
+        (big ? '<span><b>' + Number(t.big_winner_pct).toFixed(0) + '%</b><small>of picks made 25% or more</small></span>' : '') +
       '</div>' +
       '<details class="pk-how"><summary>Tested on NSE prices' + (years ? ', ' + esc(years) : '') + '</summary>' +
         '<ul>' +
@@ -359,31 +488,52 @@
       : '';
   }
 
+  /* A list rebuilt since the study last ran (`study_current` false). Its
+     record in the study file is the record of the recipe it replaced, so the
+     server sends none; this says so, plainly, in its place. A scan ranked
+     with an earlier recipe already says why it has none (recipeHTML). */
+  function studyHTML(d) {
+    return d && d.study_current === false && d.recipe_current !== false
+      ? '<p class="pk-quiet pk-measuring">Rebuilt in December 2026 to read company filings as well as prices. ' +
+        'Its tested record is being measured, so none is shown yet.</p>'
+      : '';
+  }
+
   /* What the list's own calls have done since it went live. Shown only once
-     there is something to show: five closed calls. */
+     there is something to show: five closed calls. Not on a list that is
+     being measured again: those calls were made by the list it replaced. */
   function liveHTML(d) {
     var l = d && d.live;
-    if (!l || !finite(l.closed) || l.closed < 5) return '';
+    if (!l || d.study_current === false || !finite(l.closed) || l.closed < 5) return '';
     return '<p class="pk-live">Live since ' + esc(l.since || '') + ': ' + l.closed_up + ' of ' + l.closed +
       ' closed calls rose' + (finite(l.closed_avg_pct) ? ', average ' + signed(l.closed_avg_pct) : '') + '.</p>';
   }
 
   function tabsHTML(active, cls) {
+    var pre = cls ? cls + ' ' : '';
     return '<div class="pk-chooser">' +
-      tabRow(active, cls, false, 'Holding period', 'By holding time') +
-      tabRow(active, (cls || '') + ' setups', true, 'Setup', 'By chart setup') + '</div>';
+      tabRow(active, pre + 'hold', false, 'Holding period', 'By holding time') +
+      tabRow(active, pre + 'setups', true, 'Setup', 'By chart setup') + '</div>';
   }
-  /* "about a week" as the chip says it: "~ a week". */
-  function holdShort(l) { return String(l.hold || '').replace(/^about /, '~ '); }
+  /* How long a list is held, as its chip says it: the list's own `chip`, or
+     its hold shortened ("about 3 months" as "~ 3 months"). */
+  function holdShort(l) { return l.chip || String(l.hold || '').replace(/^about /, '~ '); }
+  /* A tab's name. On a phone the setup row drops a two-word name's first
+     word ("Money flow" reads "flow"), where five full names do not fit; the
+     holding row has room for its three and drops only the tail of the
+     longest ("Swing / This month" reads "Swing"). */
+  function tabText(l) {
+    if (!l.short) return esc(l.label);
+    return (l.lead ? '<i>' + esc(l.lead) + '</i>' : '') + esc(l.short) +
+      (l.tail ? '<i class="pk-tail">' + esc(l.tail) + '</i>' : '');
+  }
   function tabRow(active, cls, setups, label, heading) {
     return '<div class="pk-group"><span class="pk-group-h" aria-hidden="true">' + heading + '</span>' +
       '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="' + label + '">' +
       LISTS.filter(function (l) { return (l.group === 'setup') === setups; }).map(function (l) {
         var on = l.key === active;
-        /* The first word drops out on a phone, where five full labels do not fit. */
-        var text = l.short ? '<i>' + esc(l.lead) + '</i>' + esc(l.short) : esc(l.label);
         return '<button type="button" role="tab" class="pk-tab' + (on ? ' on' : '') + '" data-pick="' + l.key +
-          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '"><span>' + text + '</span>' +
+          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '"><span>' + tabText(l) + '</span>' +
           '<small>' + esc(holdShort(l)) + '</small></button>';
       }).join('') + '</div></div>';
   }
@@ -445,11 +595,11 @@
     }
     if (!d.available) return '<p class="pk-quiet">No scan has run yet, so there are no picks to show.</p>';
     var rows = d.rows || [];
-    var meta = LISTS[KEYS.indexOf(key)];
+    var meta = LISTS[KEYS.indexOf(key)] || {};
     var out = '';
     if (isTested(d)) {
-      out += '<p class="pk-idea">' + esc(d.idea || '') + ' <span>Hold ' + esc(d.hold_text || meta.hold) + '.</span></p>' +
-        recordHTML(d) + recipeHTML(d) + liveHTML(d) + marketHTML(d);
+      out += '<p class="pk-idea">' + esc(d.idea || '') + ' <span>Hold ' + esc(d.hold_text || meta.hold || '') + '.</span></p>' +
+        recordHTML(d) + studyHTML(d) + recipeHTML(d) + liveHTML(d) + marketHTML(d);
     } else {
       out += '<p class="pk-quiet">These are from the last scan, made the old way. The tested lists appear after the next scan.</p>';
     }
@@ -504,10 +654,12 @@
   }
 
   var api = {
-    LISTS: LISTS, valid: valid, chosen: chosen, remember: remember,
-    isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
+    LISTS: LISTS, ALIASES: ALIASES, DEFAULT: DEFAULT, valid: valid, resolve: resolve, chosen: chosen,
+    remember: remember, fromAddress: fromAddress, factorLabel: factorLabel,
+    isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML, studyHTML: studyHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
     resultsHTML: resultsHTML, orderHTML: orderHTML, flowHTML: flowHTML, chartHTML: chartHTML, marketHTML: marketHTML,
+    fundamentalsHTML: fundamentalsHTML,
     sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML, patternHTML: patternHTML,
     catalystHTML: catalystHTML, catalystBadge: catalystBadge
   };

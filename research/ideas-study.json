@@ -10,812 +10,879 @@
  "rules": "Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500.",
  "engine_parity": "810/810",
  "round_trip_cost_pct": 0.49,
+ "recipe": "2026-12 fundamental lists v3",
+ "lists_note": "month, results and long are the three fundamental lists of December 2026, recipe '2026-12 fundamental lists v3': the site's own engine replayed point in time on prices and filings by research/fundamental_ideas_lab.py, each the version a rule declared before the run chose (see each list's lab). The setup lists are the engine's own replay too (ideas_study.py --setups). This week and momentum, which they replaced, are under retired as last measured.",
  "lists": {
-  "week": {
-   "list_dates": 483,
-   "picks": 7243,
-   "up_pct": 52.3,
-   "beat_index_pct": 49.0,
-   "avg_pct": 0.43,
-   "median_pct": 0.26,
-   "index_avg_pct": 0.27,
-   "worst_5pct": -8.2,
-   "best_5pct": 9.1,
-   "exit_hit_pct": 9.1,
-   "lists_ahead_of_index_pct": 52.6,
-   "by_half": {
-    "2017-21": {
-     "list_dates": 244,
-     "picks": 3658,
-     "up_pct": 53.6,
-     "beat_index_pct": 49.0,
-     "avg_pct": 0.56,
-     "median_pct": 0.38,
-     "index_avg_pct": 0.33,
-     "worst_5pct": -7.8,
-     "best_5pct": 8.8,
-     "exit_hit_pct": 7.5,
-     "lists_ahead_of_index_pct": 52.0
-    },
-    "2022-26": {
-     "list_dates": 239,
-     "picks": 3585,
-     "up_pct": 51.1,
-     "beat_index_pct": 49.1,
-     "avg_pct": 0.3,
-     "median_pct": 0.09,
-     "index_avg_pct": 0.2,
-     "worst_5pct": -8.6,
-     "best_5pct": 9.6,
-     "exit_hit_pct": 10.8,
-     "lists_ahead_of_index_pct": 53.1
-    }
-   },
-   "by_year": {
-    "2017": {
-     "avg_pct": 0.74,
-     "index_avg_pct": 0.57,
-     "up_pct": 58.0,
-     "picks": 705
-    },
-    "2018": {
-     "avg_pct": 0.04,
-     "index_avg_pct": -0.09,
-     "up_pct": 48.6,
-     "picks": 735
-    },
-    "2019": {
-     "avg_pct": 0.45,
-     "index_avg_pct": 0.18,
-     "up_pct": 53.5,
-     "picks": 735
-    },
-    "2020": {
-     "avg_pct": 1.02,
-     "index_avg_pct": 0.46,
-     "up_pct": 56.4,
-     "picks": 748
-    },
-    "2021": {
-     "avg_pct": 0.54,
-     "index_avg_pct": 0.55,
-     "up_pct": 51.4,
-     "picks": 735
-    },
-    "2022": {
-     "avg_pct": -0.43,
-     "index_avg_pct": 0.05,
-     "up_pct": 46.4,
-     "picks": 750
-    },
-    "2023": {
-     "avg_pct": 0.8,
-     "index_avg_pct": 0.48,
-     "up_pct": 55.6,
-     "picks": 735
-    },
-    "2024": {
-     "avg_pct": 0.56,
-     "index_avg_pct": 0.36,
-     "up_pct": 50.3,
-     "picks": 735
-    },
-    "2025": {
-     "avg_pct": 0.0,
-     "index_avg_pct": 0.12,
-     "up_pct": 50.1,
-     "picks": 750
-    },
-    "2026": {
-     "avg_pct": 0.64,
-     "index_avg_pct": -0.02,
-     "up_pct": 53.5,
-     "picks": 615
-    }
-   },
-   "hold_sessions": 5,
-   "exit_pct": 7.0,
-   "avg_after_costs_pct": -0.06,
-   "vs_average_stock": {
-    "excess_pct": 0.32,
-    "t": 4.06,
-    "lists_ahead_pct": 58.6,
-    "by_half": {
-     "2017-21": {
-      "excess_pct": 0.42,
-      "t": 3.61,
-      "lists_ahead_pct": 59.8
-     },
-     "2022-26": {
-      "excess_pct": 0.22,
-      "t": 2.09,
-      "lists_ahead_pct": 57.3
-     }
-    }
-   },
-   "market": {
-    "above_200d": {
-     "list_dates": 365,
-     "picks": 5474,
-     "up_pct": 52.0,
-     "avg_pct": 0.37,
-     "index_avg_pct": 0.24
-    },
-    "below_200d": {
-     "list_dates": 118,
-     "picks": 1769,
-     "up_pct": 53.5,
-     "avg_pct": 0.61,
-     "index_avg_pct": 0.36
-    }
-   },
-   "young": {
-    "what": "Companies listed six to twelve months, their 6-month return standing in for the 12-month one, placed against the established universe.",
-    "picks": 123,
-    "list_dates": 102,
-    "up_pct": 52.8,
-    "avg_pct": 1.01,
-    "median_pct": 0.32,
-    "index_avg_pct": 0.18,
-    "worst_5pct": -7.2,
-    "vs_average_stock": {
-     "excess_pct": 1.08,
-     "t": 2.05,
-     "lists_ahead_pct": 54.9,
-     "by_half": {
-      "2017-21": {
-       "excess_pct": 1.05,
-       "t": 1.33,
-       "lists_ahead_pct": 55.8
-      },
-      "2022-26": {
-       "excess_pct": 1.09,
-       "t": 1.54,
-       "lists_ahead_pct": 54.2
-      }
-     }
-    },
-    "list_without_them": {
-     "picks": 7243,
-     "up_pct": 52.3,
-     "avg_pct": 0.42,
-     "vs_average_stock": {
-      "excess_pct": 0.32,
-      "t": 4.03,
-      "lists_ahead_pct": 57.6,
-      "by_half": {
-       "2017-21": {
-        "excess_pct": 0.41,
-        "t": 3.51,
-        "lists_ahead_pct": 58.6
-       },
-       "2022-26": {
-        "excess_pct": 0.22,
-        "t": 2.13,
-        "lists_ahead_pct": 56.5
-       }
-      }
-     }
-    }
-   }
-  },
   "month": {
-   "list_dates": 479,
-   "picks": 7177,
-   "up_pct": 54.1,
-   "beat_index_pct": 48.9,
-   "avg_pct": 1.74,
-   "median_pct": 0.91,
-   "index_avg_pct": 1.08,
-   "worst_5pct": -13.3,
-   "best_5pct": 18.9,
-   "exit_hit_pct": 10.9,
-   "lists_ahead_of_index_pct": 58.9,
+   "list_dates": 482,
+   "picks": 6984,
+   "up_pct": 54.0,
+   "beat_index_pct": 48.7,
+   "avg_pct": 1.81,
+   "median_pct": 0.93,
+   "index_avg_pct": 1.13,
+   "big_winner_pct": 2.7,
+   "worst_5pct": -13.5,
+   "best_5pct": 19.7,
+   "exit_hit_pct": 11.9,
+   "lists_ahead_of_index_pct": 58.5,
    "by_half": {
     "2017-21": {
      "list_dates": 244,
-     "picks": 3653,
-     "up_pct": 56.7,
-     "beat_index_pct": 49.9,
-     "avg_pct": 2.45,
-     "median_pct": 1.56,
+     "picks": 3418,
+     "up_pct": 57.2,
+     "beat_index_pct": 49.8,
+     "avg_pct": 2.43,
+     "median_pct": 1.66,
      "index_avg_pct": 1.46,
-     "worst_5pct": -13.1,
-     "best_5pct": 19.8,
-     "exit_hit_pct": 9.1,
-     "lists_ahead_of_index_pct": 60.7
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.0,
+     "best_5pct": 19.9,
+     "exit_hit_pct": 9.4,
+     "lists_ahead_of_index_pct": 60.2
     },
     "2022-26": {
-     "list_dates": 235,
-     "picks": 3524,
-     "up_pct": 51.4,
-     "beat_index_pct": 47.8,
-     "avg_pct": 1.02,
-     "median_pct": 0.33,
-     "index_avg_pct": 0.69,
-     "worst_5pct": -13.4,
-     "best_5pct": 18.1,
-     "exit_hit_pct": 12.8,
-     "lists_ahead_of_index_pct": 57.0
+     "list_dates": 238,
+     "picks": 3566,
+     "up_pct": 50.9,
+     "beat_index_pct": 47.6,
+     "avg_pct": 1.22,
+     "median_pct": 0.2,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.6,
+     "worst_5pct": -14.0,
+     "best_5pct": 19.5,
+     "exit_hit_pct": 14.3,
+     "lists_ahead_of_index_pct": 56.7
     }
    },
    "by_year": {
     "2017": {
-     "avg_pct": 2.34,
+     "avg_pct": 2.04,
      "index_avg_pct": 2.35,
-     "up_pct": 60.2,
-     "picks": 704
+     "up_pct": 61.1,
+     "picks": 648
     },
     "2018": {
-     "avg_pct": -0.03,
+     "avg_pct": 0.46,
      "index_avg_pct": -0.51,
-     "up_pct": 49.4,
-     "picks": 735
+     "up_pct": 51.1,
+     "picks": 696
     },
     "2019": {
-     "avg_pct": 1.39,
+     "avg_pct": 1.22,
      "index_avg_pct": 1.03,
-     "up_pct": 55.0,
-     "picks": 735
+     "up_pct": 53.9,
+     "picks": 686
     },
     "2020": {
-     "avg_pct": 4.64,
+     "avg_pct": 3.63,
      "index_avg_pct": 2.1,
-     "up_pct": 60.8,
-     "picks": 744
+     "up_pct": 61.1,
+     "picks": 660
     },
     "2021": {
-     "avg_pct": 3.86,
+     "avg_pct": 4.74,
      "index_avg_pct": 2.37,
-     "up_pct": 58.4,
-     "picks": 735
+     "up_pct": 59.2,
+     "picks": 728
     },
     "2022": {
-     "avg_pct": 0.36,
+     "avg_pct": 1.19,
      "index_avg_pct": 0.06,
-     "up_pct": 47.7,
+     "up_pct": 49.2,
      "picks": 750
     },
     "2023": {
-     "avg_pct": 2.91,
+     "avg_pct": 3.12,
      "index_avg_pct": 2.19,
-     "up_pct": 59.9,
-     "picks": 734
+     "up_pct": 60.8,
+     "picks": 732
     },
     "2024": {
-     "avg_pct": 0.99,
+     "avg_pct": 1.6,
      "index_avg_pct": 1.08,
-     "up_pct": 51.8,
+     "up_pct": 53.2,
      "picks": 735
     },
     "2025": {
-     "avg_pct": 0.06,
+     "avg_pct": -0.39,
      "index_avg_pct": 0.54,
-     "up_pct": 48.4,
-     "picks": 750
-    },
-    "2026": {
-     "avg_pct": 0.73,
-     "index_avg_pct": -0.79,
-     "up_pct": 48.6,
-     "picks": 555
-    }
-   },
-   "hold_sessions": 21,
-   "exit_pct": 12.0,
-   "avg_after_costs_pct": 1.25,
-   "vs_average_stock": {
-    "excess_pct": 0.69,
-    "t": 2.44,
-    "lists_ahead_pct": 56.6,
-    "by_half": {
-     "2017-21": {
-      "excess_pct": 1.25,
-      "t": 2.65,
-      "lists_ahead_pct": 60.2
-     },
-     "2022-26": {
-      "excess_pct": 0.11,
-      "t": 0.4,
-      "lists_ahead_pct": 52.8
-     }
-    }
-   },
-   "market": {
-    "above_200d": {
-     "list_dates": 365,
-     "picks": 5469,
-     "up_pct": 52.3,
-     "avg_pct": 1.48,
-     "index_avg_pct": 0.65
-    },
-    "below_200d": {
-     "list_dates": 114,
-     "picks": 1708,
-     "up_pct": 59.8,
-     "avg_pct": 2.58,
-     "index_avg_pct": 2.48
-    }
-   }
-  },
-  "momentum": {
-   "list_dates": 468,
-   "picks": 7011,
-   "up_pct": 55.5,
-   "beat_index_pct": 49.3,
-   "avg_pct": 5.61,
-   "median_pct": 2.7,
-   "index_avg_pct": 3.2,
-   "worst_5pct": -18.0,
-   "best_5pct": 43.0,
-   "exit_hit_pct": 23.8,
-   "lists_ahead_of_index_pct": 63.7,
-   "by_half": {
-    "2017-21": {
-     "list_dates": 241,
-     "picks": 3609,
-     "up_pct": 58.2,
-     "beat_index_pct": 51.5,
-     "avg_pct": 6.61,
-     "median_pct": 4.08,
-     "index_avg_pct": 3.72,
-     "worst_5pct": -17.8,
-     "best_5pct": 43.2,
-     "exit_hit_pct": 21.1,
-     "lists_ahead_of_index_pct": 68.0
-    },
-    "2022-26": {
-     "list_dates": 227,
-     "picks": 3402,
-     "up_pct": 52.7,
-     "beat_index_pct": 47.0,
-     "avg_pct": 4.55,
-     "median_pct": 1.48,
-     "index_avg_pct": 2.66,
-     "worst_5pct": -18.1,
-     "best_5pct": 42.6,
-     "exit_hit_pct": 26.6,
-     "lists_ahead_of_index_pct": 59.0
-    }
-   },
-   "by_year": {
-    "2017": {
-     "avg_pct": 5.58,
-     "index_avg_pct": 5.15,
-     "up_pct": 60.1,
-     "picks": 702
-    },
-    "2018": {
-     "avg_pct": 0.03,
-     "index_avg_pct": -0.3,
-     "up_pct": 49.1,
-     "picks": 735
-    },
-    "2019": {
-     "avg_pct": 3.48,
-     "index_avg_pct": 0.21,
-     "up_pct": 56.9,
-     "picks": 735
-    },
-    "2020": {
-     "avg_pct": 12.56,
-     "index_avg_pct": 8.38,
-     "up_pct": 63.1,
-     "picks": 702
-    },
-    "2021": {
-     "avg_pct": 11.62,
-     "index_avg_pct": 5.4,
-     "up_pct": 62.0,
-     "picks": 735
-    },
-    "2022": {
-     "avg_pct": -0.27,
-     "index_avg_pct": 0.43,
-     "up_pct": 42.7,
-     "picks": 750
-    },
-    "2023": {
-     "avg_pct": 13.68,
-     "index_avg_pct": 7.91,
-     "up_pct": 70.2,
-     "picks": 735
-    },
-    "2024": {
-     "avg_pct": 2.29,
-     "index_avg_pct": 1.88,
-     "up_pct": 50.3,
-     "picks": 735
-    },
-    "2025": {
-     "avg_pct": 1.98,
-     "index_avg_pct": 1.91,
-     "up_pct": 48.9,
+     "up_pct": 43.4,
      "picks": 749
     },
     "2026": {
-     "avg_pct": 5.67,
-     "index_avg_pct": 0.22,
-     "up_pct": 50.8,
-     "picks": 433
-    }
-   },
-   "hold_sessions": 63,
-   "exit_pct": 15.0,
-   "avg_after_costs_pct": 5.12,
-   "vs_average_stock": {
-    "excess_pct": 2.15,
-    "t": 3.41,
-    "lists_ahead_pct": 60.7,
-    "by_half": {
-     "2017-21": {
-      "excess_pct": 3.69,
-      "t": 4.71,
-      "lists_ahead_pct": 69.3
-     },
-     "2022-26": {
-      "excess_pct": 0.51,
-      "t": 0.64,
-      "lists_ahead_pct": 51.5
-     }
-    }
-   },
-   "market": {
-    "above_200d": {
-     "list_dates": 360,
-     "picks": 5392,
-     "up_pct": 52.8,
-     "avg_pct": 4.46,
-     "index_avg_pct": 2.04
-    },
-    "below_200d": {
-     "list_dates": 108,
-     "picks": 1619,
-     "up_pct": 64.5,
-     "avg_pct": 9.43,
-     "index_avg_pct": 7.07
-    }
-   },
-   "young": {
-    "what": "Companies listed six to twelve months, their 6-month return standing in for the 12-month one, placed against the established universe.",
-    "picks": 177,
-    "list_dates": 130,
-    "up_pct": 57.1,
-    "avg_pct": 6.24,
-    "median_pct": 2.86,
-    "index_avg_pct": 0.38,
-    "worst_5pct": -18.3,
-    "vs_average_stock": {
-     "excess_pct": 5.29,
-     "t": 1.29,
-     "lists_ahead_pct": 54.6,
-     "by_half": {
-      "2017-21": {
-       "excess_pct": 7.39,
-       "t": 1.05,
-       "lists_ahead_pct": 52.3
-      },
-      "2022-26": {
-       "excess_pct": 3.2,
-       "t": 0.92,
-       "lists_ahead_pct": 56.9
-      }
-     }
-    },
-    "list_without_them": {
-     "picks": 7007,
-     "up_pct": 55.2,
-     "avg_pct": 5.5,
-     "vs_average_stock": {
-      "excess_pct": 2.03,
-      "t": 3.33,
-      "lists_ahead_pct": 61.8,
-      "by_half": {
-       "2017-21": {
-        "excess_pct": 3.64,
-        "t": 4.88,
-        "lists_ahead_pct": 71.0
-       },
-       "2022-26": {
-        "excess_pct": 0.33,
-        "t": 0.43,
-        "lists_ahead_pct": 52.0
-       }
-      }
-     }
-    }
-   }
-  },
-  "long": {
-   "list_dates": 433,
-   "picks": 6434,
-   "up_pct": 58.2,
-   "beat_index_pct": 46.5,
-   "avg_pct": 23.73,
-   "median_pct": 8.1,
-   "index_avg_pct": 13.79,
-   "worst_5pct": -32.9,
-   "best_5pct": 132.3,
-   "exit_hit_pct": 23.2,
-   "lists_ahead_of_index_pct": 53.3,
-   "by_half": {
-    "2017-21": {
-     "list_dates": 244,
-     "picks": 3629,
-     "up_pct": 56.7,
-     "beat_index_pct": 44.1,
-     "avg_pct": 22.32,
-     "median_pct": 6.24,
-     "index_avg_pct": 14.19,
-     "worst_5pct": -33.3,
-     "best_5pct": 136.4,
-     "exit_hit_pct": 25.1,
-     "lists_ahead_of_index_pct": 49.2
-    },
-    "2022-26": {
-     "list_dates": 189,
-     "picks": 2805,
-     "up_pct": 60.0,
-     "beat_index_pct": 49.5,
-     "avg_pct": 25.55,
-     "median_pct": 11.32,
-     "index_avg_pct": 13.29,
-     "worst_5pct": -32.1,
-     "best_5pct": 128.9,
-     "exit_hit_pct": 20.7,
-     "lists_ahead_of_index_pct": 58.7
-    }
-   },
-   "by_year": {
-    "2017": {
-     "avg_pct": 3.92,
-     "index_avg_pct": 9.52,
-     "up_pct": 51.3,
-     "picks": 694
-    },
-    "2018": {
-     "avg_pct": -2.29,
-     "index_avg_pct": 1.67,
-     "up_pct": 48.3,
-     "picks": 731
-    },
-    "2019": {
-     "avg_pct": 0.15,
-     "index_avg_pct": -1.72,
-     "up_pct": 45.6,
-     "picks": 733
-    },
-    "2020": {
-     "avg_pct": 86.64,
-     "index_avg_pct": 51.36,
-     "up_pct": 79.6,
-     "picks": 740
-    },
-    "2021": {
-     "avg_pct": 21.5,
-     "index_avg_pct": 9.16,
-     "up_pct": 58.3,
-     "picks": 731
-    },
-    "2022": {
-     "avg_pct": 16.37,
-     "index_avg_pct": 10.92,
-     "up_pct": 59.4,
-     "picks": 744
-    },
-    "2023": {
-     "avg_pct": 68.24,
-     "index_avg_pct": 34.84,
-     "up_pct": 90.7,
-     "picks": 724
-    },
-    "2024": {
-     "avg_pct": 0.57,
-     "index_avg_pct": 3.56,
-     "up_pct": 42.0,
-     "picks": 735
-    },
-    "2025": {
-     "avg_pct": 16.05,
-     "index_avg_pct": 2.04,
-     "up_pct": 45.8,
-     "picks": 602
-    }
-   },
-   "hold_sessions": 252,
-   "exit_pct": 30.0,
-   "avg_after_costs_pct": 23.24,
-   "vs_average_stock": {
-    "excess_pct": 7.6,
-    "t": 2.16,
-    "lists_ahead_pct": 65.1,
-    "by_half": {
-     "2017-21": {
-      "excess_pct": 9.75,
-      "t": 1.73,
-      "lists_ahead_pct": 71.3
-     },
-     "2022-26": {
-      "excess_pct": 4.83,
-      "t": 2.01,
-      "lists_ahead_pct": 57.1
-     }
-    }
-   },
-   "market": {
-    "above_200d": {
-     "list_dates": 338,
-     "picks": 5021,
-     "up_pct": 55.4,
-     "avg_pct": 22.32,
-     "index_avg_pct": 11.44
-    },
-    "below_200d": {
-     "list_dates": 95,
-     "picks": 1413,
-     "up_pct": 67.8,
-     "avg_pct": 28.71,
-     "index_avg_pct": 22.16
-    }
-   }
-  },
-  "results": {
-   "list_dates": 244,
-   "picks": 3518,
-   "up_pct": 53.9,
-   "beat_index_pct": 48.5,
-   "avg_pct": 1.76,
-   "median_pct": 0.99,
-   "index_avg_pct": 1.0,
-   "worst_5pct": -13.9,
-   "best_5pct": 22.3,
-   "exit_hit_pct": 16.4,
-   "lists_ahead_of_index_pct": 57.4,
-   "by_half": {
-    "2018-21": {
-     "list_dates": 112,
-     "picks": 1614,
-     "up_pct": 53.8,
-     "beat_index_pct": 46.7,
-     "avg_pct": 1.84,
-     "median_pct": 0.94,
-     "index_avg_pct": 1.35,
-     "worst_5pct": -13.9,
-     "best_5pct": 22.3,
-     "exit_hit_pct": 16.4,
-     "lists_ahead_of_index_pct": 53.6
-    },
-    "2022-26": {
-     "list_dates": 132,
-     "picks": 1904,
-     "up_pct": 53.9,
-     "beat_index_pct": 50.0,
-     "avg_pct": 1.69,
-     "median_pct": 1.03,
-     "index_avg_pct": 0.7,
-     "worst_5pct": -13.9,
-     "best_5pct": 21.9,
-     "exit_hit_pct": 16.4,
-     "lists_ahead_of_index_pct": 60.6
-    }
-   },
-   "by_year": {
-    "2018": {
-     "avg_pct": -0.58,
-     "index_avg_pct": 0.11,
-     "up_pct": 46.9,
-     "picks": 224
-    },
-    "2019": {
-     "avg_pct": 0.14,
-     "index_avg_pct": 1.22,
-     "up_pct": 50.0,
-     "picks": 408
-    },
-    "2020": {
-     "avg_pct": 2.51,
-     "index_avg_pct": 1.11,
-     "up_pct": 55.7,
-     "picks": 544
-    },
-    "2021": {
-     "avg_pct": 3.81,
-     "index_avg_pct": 2.4,
-     "up_pct": 58.7,
-     "picks": 438
-    },
-    "2022": {
-     "avg_pct": -1.34,
-     "index_avg_pct": -0.43,
-     "up_pct": 43.3,
-     "picks": 372
-    },
-    "2023": {
-     "avg_pct": 5.05,
-     "index_avg_pct": 2.4,
-     "up_pct": 68.8,
-     "picks": 381
-    },
-    "2024": {
-     "avg_pct": 2.71,
-     "index_avg_pct": 2.3,
-     "up_pct": 56.6,
-     "picks": 396
-    },
-    "2025": {
-     "avg_pct": 1.55,
-     "index_avg_pct": 0.52,
-     "up_pct": 54.1,
-     "picks": 444
-    },
-    "2026": {
-     "avg_pct": 0.11,
-     "index_avg_pct": -1.78,
-     "up_pct": 44.7,
-     "picks": 311
+     "avg_pct": 0.49,
+     "index_avg_pct": -0.02,
+     "up_pct": 47.3,
+     "picks": 600
     }
    },
    "hold_sessions": 21,
    "exit_pct": 12.0,
-   "avg_after_costs_pct": 1.27,
+   "avg_after_costs_pct": 1.32,
    "vs_average_stock": {
-    "excess_pct": 0.71,
-    "t": 2.35,
-    "lists_ahead_pct": 60.2,
+    "excess_pct": 0.79,
+    "t": 2.61,
+    "lists_ahead_pct": 57.9,
     "by_half": {
-     "2018-21": {
-      "excess_pct": 0.61,
-      "t": 1.06,
-      "lists_ahead_pct": 55.4
+     "2017-21": {
+      "excess_pct": 1.26,
+      "t": 2.58,
+      "lists_ahead_pct": 61.1
      },
      "2022-26": {
-      "excess_pct": 0.8,
-      "t": 2.97,
-      "lists_ahead_pct": 64.4
+      "excess_pct": 0.3,
+      "t": 0.91,
+      "lists_ahead_pct": 54.6
+     }
+    }
+   },
+   "market": {
+    "above_200d": {
+     "list_dates": 365,
+     "picks": 5330,
+     "up_pct": 52.8,
+     "avg_pct": 1.65,
+     "index_avg_pct": 0.65
+    },
+    "below_200d": {
+     "list_dates": 117,
+     "picks": 1654,
+     "up_pct": 57.9,
+     "avg_pct": 2.34,
+     "index_avg_pct": 2.66
+    }
+   },
+   "what": "Market leaders (leader score in the top 30%) in an uptrend and outside the most volatile fifth, in an industry in the top half on money flow, with no loss and no fall in profit last quarter, no results the market sold in the last month and no more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, the last quarter's sales and margin growth, the industry's money flow and a live catalyst; at most four from one industry.",
+   "bias": "Pledges, deliveries and orders have no history to replay: they were unknown here, which the list counts as neutral, and the live list reads them. Industries are NSE's list as it stands today. Quarterly filings start in 2018 and cover companies listed today; a stock with none is never refused for it, and a revised quarter is seen from the revision's date.",
+   "replay": "The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
+   "lab": {
+    "variant": "M3",
+    "overrides": {
+     "leader_floor": 0.7,
+     "pull_mix": {
+      "dip21": 1.0
+     }
+    },
+    "windows": {
+     "first": [
+      "2018-06-01",
+      "2021-12-31"
+     ],
+     "second": [
+      "2022-01-01",
+      "2026-10-23"
+     ]
+    },
+    "first": {
+     "list_dates": 177,
+     "picks": 2474,
+     "up_pct": 56.7,
+     "beat_index_pct": 49.8,
+     "avg_pct": 2.72,
+     "median_pct": 1.53,
+     "index_avg_pct": 1.48,
+     "big_winner_pct": 3.7,
+     "worst_5pct": -13.1,
+     "best_5pct": 21.6,
+     "exit_hit_pct": 9.9,
+     "lists_ahead_of_index_pct": 62.7,
+     "avg_net_pct": 2.23,
+     "vs_index_pct": 1.24,
+     "vs_avg_stock_pct": 1.55,
+     "vs_avg_stock_net_pct": 1.06,
+     "vs_avg_stock_t": 2.58,
+     "lists_ahead_of_avg_stock_pct": 66.7
+    },
+    "second": {
+     "list_dates": 238,
+     "picks": 3566,
+     "up_pct": 50.9,
+     "beat_index_pct": 47.6,
+     "avg_pct": 1.22,
+     "median_pct": 0.2,
+     "index_avg_pct": 0.8,
+     "big_winner_pct": 2.6,
+     "worst_5pct": -14.0,
+     "best_5pct": 19.5,
+     "exit_hit_pct": 14.3,
+     "lists_ahead_of_index_pct": 56.7,
+     "avg_net_pct": 0.73,
+     "vs_index_pct": 0.42,
+     "vs_avg_stock_pct": 0.3,
+     "vs_avg_stock_net_pct": -0.19,
+     "vs_avg_stock_t": 0.91,
+     "lists_ahead_of_avg_stock_pct": 54.6
+    },
+    "before": {
+     "week": {
+      "hold_sessions": 5,
+      "exit_pct": 7.0,
+      "first": {
+       "list_dates": 177,
+       "picks": 2653,
+       "up_pct": 52.7,
+       "beat_index_pct": 48.7,
+       "avg_pct": 0.53,
+       "median_pct": 0.27,
+       "index_avg_pct": 0.32,
+       "big_winner_pct": 0.3,
+       "worst_5pct": -8.0,
+       "best_5pct": 8.9,
+       "exit_hit_pct": 8.2,
+       "lists_ahead_of_index_pct": 52.5,
+       "avg_net_pct": 0.04,
+       "vs_index_pct": 0.21,
+       "vs_avg_stock_pct": 0.41,
+       "vs_avg_stock_net_pct": -0.08,
+       "vs_avg_stock_t": 2.89,
+       "lists_ahead_of_avg_stock_pct": 58.2
+      },
+      "second": {
+       "list_dates": 241,
+       "picks": 3615,
+       "up_pct": 51.1,
+       "beat_index_pct": 49.1,
+       "avg_pct": 0.29,
+       "median_pct": 0.09,
+       "index_avg_pct": 0.21,
+       "big_winner_pct": 0.2,
+       "worst_5pct": -8.6,
+       "best_5pct": 9.5,
+       "exit_hit_pct": 10.7,
+       "lists_ahead_of_index_pct": 53.5,
+       "avg_net_pct": -0.2,
+       "vs_index_pct": 0.08,
+       "vs_avg_stock_pct": 0.22,
+       "vs_avg_stock_net_pct": -0.27,
+       "vs_avg_stock_t": 2.09,
+       "lists_ahead_of_avg_stock_pct": 56.4
+      }
+     },
+     "month": {
+      "hold_sessions": 21,
+      "exit_pct": 12.0,
+      "first": {
+       "list_dates": 177,
+       "picks": 2649,
+       "up_pct": 56.5,
+       "beat_index_pct": 49.6,
+       "avg_pct": 2.67,
+       "median_pct": 1.6,
+       "index_avg_pct": 1.48,
+       "big_winner_pct": 3.1,
+       "worst_5pct": -13.3,
+       "best_5pct": 21.1,
+       "exit_hit_pct": 9.9,
+       "lists_ahead_of_index_pct": 63.3,
+       "avg_net_pct": 2.18,
+       "vs_index_pct": 1.19,
+       "vs_avg_stock_pct": 1.45,
+       "vs_avg_stock_net_pct": 0.96,
+       "vs_avg_stock_t": 2.46,
+       "lists_ahead_of_avg_stock_pct": 62.7
+      },
+      "second": {
+       "list_dates": 238,
+       "picks": 3569,
+       "up_pct": 51.5,
+       "beat_index_pct": 47.6,
+       "avg_pct": 1.05,
+       "median_pct": 0.35,
+       "index_avg_pct": 0.8,
+       "big_winner_pct": 1.8,
+       "worst_5pct": -13.5,
+       "best_5pct": 18.3,
+       "exit_hit_pct": 12.8,
+       "lists_ahead_of_index_pct": 56.3,
+       "avg_net_pct": 0.56,
+       "vs_index_pct": 0.25,
+       "vs_avg_stock_pct": 0.13,
+       "vs_avg_stock_net_pct": -0.36,
+       "vs_avg_stock_t": 0.46,
+       "lists_ahead_of_avg_stock_pct": 52.9
+      }
+     }
+    },
+    "rule": "Highest first-window mean lead over the average liquid stock, among versions with enough picks and a positive mean after a 0.49% round trip; within 0.05 points the one with fewer rules. The second window is printed whatever it shows.",
+    "min_first_picks": 400,
+    "file": "research/fundamental-ideas-lab.json",
+    "generated": "2026-11-27"
+   }
+  },
+  "results": {
+   "list_dates": 205,
+   "picks": 2915,
+   "up_pct": 55.0,
+   "beat_index_pct": 49.4,
+   "avg_pct": 1.89,
+   "median_pct": 1.17,
+   "index_avg_pct": 1.01,
+   "big_winner_pct": 3.1,
+   "worst_5pct": -13.7,
+   "best_5pct": 21.5,
+   "exit_hit_pct": 13.6,
+   "lists_ahead_of_index_pct": 57.1,
+   "by_half": {
+    "2018-21": {
+     "list_dates": 87,
+     "picks": 1196,
+     "up_pct": 55.0,
+     "beat_index_pct": 48.1,
+     "avg_pct": 2.06,
+     "median_pct": 1.19,
+     "index_avg_pct": 1.25,
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.5,
+     "best_5pct": 20.1,
+     "exit_hit_pct": 11.5,
+     "lists_ahead_of_index_pct": 56.3
+    },
+    "2022-26": {
+     "list_dates": 118,
+     "picks": 1719,
+     "up_pct": 55.0,
+     "beat_index_pct": 50.4,
+     "avg_pct": 1.78,
+     "median_pct": 1.13,
+     "index_avg_pct": 0.84,
+     "big_winner_pct": 3.1,
+     "worst_5pct": -13.8,
+     "best_5pct": 21.9,
+     "exit_hit_pct": 15.1,
+     "lists_ahead_of_index_pct": 57.6
+    }
+   },
+   "by_year": {
+    "2018": {
+     "avg_pct": -0.79,
+     "index_avg_pct": -0.28,
+     "up_pct": 49.3,
+     "picks": 217
+    },
+    "2019": {
+     "avg_pct": 1.34,
+     "index_avg_pct": 1.66,
+     "up_pct": 53.9,
+     "picks": 297
+    },
+    "2020": {
+     "avg_pct": 1.44,
+     "index_avg_pct": 0.73,
+     "up_pct": 54.0,
+     "picks": 300
+    },
+    "2021": {
+     "avg_pct": 4.73,
+     "index_avg_pct": 2.19,
+     "up_pct": 59.9,
+     "picks": 382
+    },
+    "2022": {
+     "avg_pct": -1.24,
+     "index_avg_pct": -0.93,
+     "up_pct": 42.9,
+     "picks": 324
+    },
+    "2023": {
+     "avg_pct": 4.78,
+     "index_avg_pct": 2.44,
+     "up_pct": 70.5,
+     "picks": 359
+    },
+    "2024": {
+     "avg_pct": 3.62,
+     "index_avg_pct": 2.67,
+     "up_pct": 59.7,
+     "picks": 357
+    },
+    "2025": {
+     "avg_pct": 0.29,
+     "index_avg_pct": 0.44,
+     "up_pct": 52.2,
+     "picks": 356
+    },
+    "2026": {
+     "avg_pct": 1.1,
+     "index_avg_pct": -0.78,
+     "up_pct": 48.0,
+     "picks": 323
+    }
+   },
+   "hold_sessions": 21,
+   "exit_pct": 12.0,
+   "avg_after_costs_pct": 1.4,
+   "vs_average_stock": {
+    "excess_pct": 0.99,
+    "t": 2.96,
+    "lists_ahead_pct": 59.0,
+    "by_half": {
+     "2018-21": {
+      "excess_pct": 1.16,
+      "t": 1.64,
+      "lists_ahead_pct": 54.0
+     },
+     "2022-26": {
+      "excess_pct": 0.86,
+      "t": 3.39,
+      "lists_ahead_pct": 62.7
      }
     }
    },
    "vs_reporters": {
-    "excess_pct": 0.87,
-    "t": 2.95,
-    "lists_ahead_pct": 57.4,
+    "excess_pct": 0.91,
+    "t": 3.13,
+    "lists_ahead_pct": 61.0,
     "by_half": {
      "2018-21": {
-      "excess_pct": 0.94,
-      "t": 1.64,
-      "lists_ahead_pct": 49.1
+      "excess_pct": 1.07,
+      "t": 1.76,
+      "lists_ahead_pct": 56.3
      },
      "2022-26": {
-      "excess_pct": 0.81,
-      "t": 3.27,
+      "excess_pct": 0.79,
+      "t": 3.38,
       "lists_ahead_pct": 64.4
      }
     }
    },
    "market": {
     "above_200d": {
-     "list_dates": 179,
-     "picks": 2581,
-     "up_pct": 53.7,
-     "avg_pct": 1.88,
-     "index_avg_pct": 0.76
+     "list_dates": 152,
+     "picks": 2196,
+     "up_pct": 55.1,
+     "avg_pct": 2.15,
+     "index_avg_pct": 0.69
     },
     "below_200d": {
-     "list_dates": 65,
-     "picks": 937,
-     "up_pct": 54.2,
-     "avg_pct": 1.43,
-     "index_avg_pct": 1.67
+     "list_dates": 53,
+     "picks": 719,
+     "up_pct": 54.8,
+     "avg_pct": 1.12,
+     "index_avg_pct": 1.94
     }
    },
-   "from": "2018-06-08",
-   "dates_tried": 411,
-   "filings": 47115,
-   "companies": 2211,
+   "from": "2018-06-01",
+   "dates_tried": 415,
+   "filings": 48227,
+   "companies": 2247,
    "window_sessions": 10,
    "min_companies": 8,
-   "what": "Liquid companies whose quarterly results were first priced in the last 10 sessions, ordered by that session's move less the average liquid stock's. A list is made only when eight or more qualify.",
-   "bias": "The results table holds companies listed today. vs_reporters compares the list with every company it was chosen from, which shares that bias."
+   "what": "Liquid companies whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more, profit and operating profit up, other income no more than 35% and an exceptional gain no more than 30% of profit before tax, and cash from operations positive in the last full year. Not already up 18% on the day, nor more than 15% under the 200-day average. Ranked half on that session's move less the average liquid stock's, a quarter on the volume behind it and a quarter on the growth; at most four from one industry. A list is made only when eight or more pass every test.",
+   "bias": "The results tables hold companies listed today, so one delisted after a bad quarter is missing, and a revised quarter is seen from the revision's date with the revised figures. vs_reporters compares the list with every liquid company whose results were priced in the same ten sessions, which shares that bias.",
+   "replay": "The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
+   "lab": {
+    "variant": "R4",
+    "overrides": {},
+    "windows": {
+     "first": [
+      "2018-06-01",
+      "2021-12-31"
+     ],
+     "second": [
+      "2022-01-01",
+      "2026-10-23"
+     ]
+    },
+    "first": {
+     "list_dates": 87,
+     "picks": 1196,
+     "up_pct": 55.0,
+     "beat_index_pct": 48.1,
+     "avg_pct": 2.06,
+     "median_pct": 1.19,
+     "index_avg_pct": 1.25,
+     "big_winner_pct": 2.9,
+     "worst_5pct": -13.5,
+     "best_5pct": 20.1,
+     "exit_hit_pct": 11.5,
+     "lists_ahead_of_index_pct": 56.3,
+     "avg_net_pct": 1.57,
+     "vs_index_pct": 0.81,
+     "vs_avg_stock_pct": 1.16,
+     "vs_avg_stock_net_pct": 0.67,
+     "vs_avg_stock_t": 1.64,
+     "lists_ahead_of_avg_stock_pct": 54.0
+    },
+    "second": {
+     "list_dates": 118,
+     "picks": 1719,
+     "up_pct": 55.0,
+     "beat_index_pct": 50.4,
+     "avg_pct": 1.78,
+     "median_pct": 1.13,
+     "index_avg_pct": 0.84,
+     "big_winner_pct": 3.1,
+     "worst_5pct": -13.8,
+     "best_5pct": 21.9,
+     "exit_hit_pct": 15.1,
+     "lists_ahead_of_index_pct": 57.6,
+     "avg_net_pct": 1.29,
+     "vs_index_pct": 0.94,
+     "vs_avg_stock_pct": 0.86,
+     "vs_avg_stock_net_pct": 0.37,
+     "vs_avg_stock_t": 3.39,
+     "lists_ahead_of_avg_stock_pct": 62.7
+    },
+    "before": {
+     "results": {
+      "hold_sessions": 21,
+      "exit_pct": 12.0,
+      "first": {
+       "list_dates": 113,
+       "picks": 1629,
+       "up_pct": 53.6,
+       "beat_index_pct": 46.5,
+       "avg_pct": 1.78,
+       "median_pct": 0.86,
+       "index_avg_pct": 1.32,
+       "big_winner_pct": 3.5,
+       "worst_5pct": -13.9,
+       "best_5pct": 22.2,
+       "exit_hit_pct": 16.5,
+       "lists_ahead_of_index_pct": 53.1,
+       "avg_net_pct": 1.29,
+       "vs_index_pct": 0.46,
+       "vs_avg_stock_pct": 0.62,
+       "vs_avg_stock_net_pct": 0.13,
+       "vs_avg_stock_t": 1.07,
+       "lists_ahead_of_avg_stock_pct": 55.8
+      },
+      "second": {
+       "list_dates": 134,
+       "picks": 1935,
+       "up_pct": 54.1,
+       "beat_index_pct": 49.7,
+       "avg_pct": 1.73,
+       "median_pct": 1.05,
+       "index_avg_pct": 0.84,
+       "big_winner_pct": 3.6,
+       "worst_5pct": -13.9,
+       "best_5pct": 21.8,
+       "exit_hit_pct": 16.3,
+       "lists_ahead_of_index_pct": 59.7,
+       "avg_net_pct": 1.24,
+       "vs_index_pct": 0.89,
+       "vs_avg_stock_pct": 0.79,
+       "vs_avg_stock_net_pct": 0.3,
+       "vs_avg_stock_t": 2.98,
+       "lists_ahead_of_avg_stock_pct": 64.2
+      }
+     }
+    },
+    "rule": "Highest first-window mean lead over the average liquid stock, among versions with enough picks and a positive mean after a 0.49% round trip; within 0.05 points the one with fewer rules. The second window is printed whatever it shows.",
+    "min_first_picks": 250,
+    "file": "research/fundamental-ideas-lab.json",
+    "generated": "2026-11-27"
+   }
+  },
+  "long": {
+   "list_dates": 436,
+   "picks": 6514,
+   "up_pct": 57.7,
+   "beat_index_pct": 46.4,
+   "avg_pct": 20.15,
+   "median_pct": 8.48,
+   "index_avg_pct": 13.7,
+   "big_winner_pct": 35.5,
+   "worst_5pct": -32.8,
+   "best_5pct": 113.3,
+   "exit_hit_pct": 23.6,
+   "lists_ahead_of_index_pct": 53.2,
+   "by_half": {
+    "2017-21": {
+     "list_dates": 244,
+     "picks": 3634,
+     "up_pct": 54.2,
+     "beat_index_pct": 42.0,
+     "avg_pct": 16.88,
+     "median_pct": 5.03,
+     "index_avg_pct": 14.19,
+     "big_winner_pct": 29.9,
+     "worst_5pct": -33.4,
+     "best_5pct": 110.2,
+     "exit_hit_pct": 26.5,
+     "lists_ahead_of_index_pct": 40.2
+    },
+    "2022-26": {
+     "list_dates": 192,
+     "picks": 2880,
+     "up_pct": 62.1,
+     "beat_index_pct": 52.0,
+     "avg_pct": 24.28,
+     "median_pct": 15.4,
+     "index_avg_pct": 13.08,
+     "big_winner_pct": 42.6,
+     "worst_5pct": -32.0,
+     "best_5pct": 115.5,
+     "exit_hit_pct": 20.0,
+     "lists_ahead_of_index_pct": 69.8
+    }
+   },
+   "by_year": {
+    "2017": {
+     "avg_pct": 3.42,
+     "index_avg_pct": 9.52,
+     "up_pct": 49.8,
+     "picks": 691
+    },
+    "2018": {
+     "avg_pct": -2.09,
+     "index_avg_pct": 1.67,
+     "up_pct": 48.0,
+     "picks": 731
+    },
+    "2019": {
+     "avg_pct": 1.57,
+     "index_avg_pct": -1.72,
+     "up_pct": 48.2,
+     "picks": 735
+    },
+    "2020": {
+     "avg_pct": 74.43,
+     "index_avg_pct": 51.36,
+     "up_pct": 75.5,
+     "picks": 742
+    },
+    "2021": {
+     "avg_pct": 5.63,
+     "index_avg_pct": 9.16,
+     "up_pct": 49.3,
+     "picks": 735
+    },
+    "2022": {
+     "avg_pct": 19.11,
+     "index_avg_pct": 10.92,
+     "up_pct": 59.9,
+     "picks": 750
+    },
+    "2023": {
+     "avg_pct": 64.91,
+     "index_avg_pct": 34.84,
+     "up_pct": 89.0,
+     "picks": 735
+    },
+    "2024": {
+     "avg_pct": 2.36,
+     "index_avg_pct": 3.56,
+     "up_pct": 46.7,
+     "picks": 735
+    },
+    "2025": {
+     "avg_pct": 9.31,
+     "index_avg_pct": 1.92,
+     "up_pct": 51.8,
+     "picks": 660
+    }
+   },
+   "hold_sessions": 252,
+   "exit_pct": 30.0,
+   "avg_after_costs_pct": 19.66,
+   "vs_average_stock": {
+    "excess_pct": 4.05,
+    "t": 2.07,
+    "lists_ahead_pct": 59.9,
+    "by_half": {
+     "2017-21": {
+      "excess_pct": 4.28,
+      "t": 1.32,
+      "lists_ahead_pct": 58.6
+     },
+     "2022-26": {
+      "excess_pct": 3.74,
+      "t": 2.83,
+      "lists_ahead_pct": 61.5
+     }
+    }
+   },
+   "market": {
+    "above_200d": {
+     "list_dates": 341,
+     "picks": 5098,
+     "up_pct": 54.8,
+     "avg_pct": 17.09,
+     "index_avg_pct": 11.34
+    },
+    "below_200d": {
+     "list_dates": 95,
+     "picks": 1416,
+     "up_pct": 68.1,
+     "avg_pct": 31.19,
+     "index_avg_pct": 22.16
+    }
+   },
+   "what": "Above the 200-day average and outside the most volatile fifth, a profit over the last four quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, cash from operations positive and at least 0.7 times profit, debt no more than equity (a lender: a return on equity of 13% or more), and a P/E under 90 unless its PEG is 1.5 or under on profit growing 35% a year. Ranked on quality, three-year compounding, governance, valuation against its own industry and the year-long trend; at most four from one industry.",
+   "bias": "Balance sheets are on file from September 2022 and full-year cash flows from 2020-21. Before then the return, debt, F-score and cash checks were skipped as unknown and the list ranked mostly on its trend, which is why its version was chosen on 2022-11 to 2024-04. Pledges and holdings have no history and were unknown throughout. The tables hold companies listed today, and a revised filing is seen from the revision's date.",
+   "replay": "The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
+   "lab": {
+    "variant": "L1",
+    "overrides": {},
+    "windows": {
+     "first": [
+      "2022-11-01",
+      "2024-04-30"
+     ],
+     "second": [
+      "2024-05-01",
+      "2025-11-17"
+     ]
+    },
+    "first": {
+     "list_dates": 74,
+     "picks": 1110,
+     "up_pct": 79.9,
+     "beat_index_pct": 59.1,
+     "avg_pct": 48.94,
+     "median_pct": 37.77,
+     "index_avg_pct": 26.38,
+     "big_winner_pct": 60.6,
+     "worst_5pct": -30.7,
+     "best_5pct": 166.7,
+     "exit_hit_pct": 7.3,
+     "lists_ahead_of_index_pct": 82.4,
+     "avg_net_pct": 48.45,
+     "vs_index_pct": 22.56,
+     "vs_avg_stock_pct": 4.15,
+     "vs_avg_stock_net_pct": 3.66,
+     "vs_avg_stock_t": 1.41,
+     "lists_ahead_of_avg_stock_pct": 55.4
+    },
+    "second": {
+     "list_dates": 77,
+     "picks": 1155,
+     "up_pct": 48.7,
+     "beat_index_pct": 46.3,
+     "avg_pct": 6.06,
+     "median_pct": -0.99,
+     "index_avg_pct": 2.24,
+     "big_winner_pct": 29.4,
+     "worst_5pct": -32.5,
+     "best_5pct": 72.1,
+     "exit_hit_pct": 29.6,
+     "lists_ahead_of_index_pct": 63.6,
+     "avg_net_pct": 5.57,
+     "vs_index_pct": 3.82,
+     "vs_avg_stock_pct": 4.65,
+     "vs_avg_stock_net_pct": 4.16,
+     "vs_avg_stock_t": 3.62,
+     "lists_ahead_of_avg_stock_pct": 71.4
+    },
+    "before": {
+     "long": {
+      "hold_sessions": 252,
+      "exit_pct": 30.0,
+      "first": {
+       "list_dates": 74,
+       "picks": 1099,
+       "up_pct": 79.9,
+       "beat_index_pct": 58.6,
+       "avg_pct": 50.24,
+       "median_pct": 35.84,
+       "index_avg_pct": 26.38,
+       "big_winner_pct": 57.8,
+       "worst_5pct": -30.5,
+       "best_5pct": 181.5,
+       "exit_hit_pct": 7.0,
+       "lists_ahead_of_index_pct": 79.7,
+       "avg_net_pct": 49.75,
+       "vs_index_pct": 23.86,
+       "vs_avg_stock_pct": 5.54,
+       "vs_avg_stock_net_pct": 5.05,
+       "vs_avg_stock_t": 3.42,
+       "lists_ahead_of_avg_stock_pct": 64.9
+      },
+      "second": {
+       "list_dates": 77,
+       "picks": 1142,
+       "up_pct": 44.2,
+       "beat_index_pct": 41.9,
+       "avg_pct": 10.11,
+       "median_pct": -4.96,
+       "index_avg_pct": 2.24,
+       "big_winner_pct": 23.3,
+       "worst_5pct": -32.2,
+       "best_5pct": 78.5,
+       "exit_hit_pct": 28.8,
+       "lists_ahead_of_index_pct": 44.2,
+       "avg_net_pct": 9.62,
+       "vs_index_pct": 7.87,
+       "vs_avg_stock_pct": 8.78,
+       "vs_avg_stock_net_pct": 8.29,
+       "vs_avg_stock_t": 1.43,
+       "lists_ahead_of_avg_stock_pct": 57.1
+      }
+     },
+     "momentum": {
+      "hold_sessions": 63,
+      "exit_pct": 15.0,
+      "first": {
+       "list_dates": 74,
+       "picks": 1110,
+       "up_pct": 62.9,
+       "beat_index_pct": 50.0,
+       "avg_pct": 9.65,
+       "median_pct": 6.09,
+       "index_avg_pct": 6.3,
+       "big_winner_pct": 20.2,
+       "worst_5pct": -17.2,
+       "best_5pct": 52.1,
+       "exit_hit_pct": 19.4,
+       "lists_ahead_of_index_pct": 59.5,
+       "avg_net_pct": 9.16,
+       "vs_index_pct": 3.35,
+       "vs_avg_stock_pct": -0.54,
+       "vs_avg_stock_net_pct": -1.03,
+       "vs_avg_stock_t": -0.52,
+       "lists_ahead_of_avg_stock_pct": 36.5
+      },
+      "second": {
+       "list_dates": 115,
+       "picks": 1719,
+       "up_pct": 46.5,
+       "beat_index_pct": 45.2,
+       "avg_pct": 1.84,
+       "median_pct": -1.43,
+       "index_avg_pct": 0.56,
+       "big_winner_pct": 10.6,
+       "worst_5pct": -18.2,
+       "best_5pct": 35.2,
+       "exit_hit_pct": 29.8,
+       "lists_ahead_of_index_pct": 60.9,
+       "avg_net_pct": 1.35,
+       "vs_index_pct": 1.28,
+       "vs_avg_stock_pct": 0.74,
+       "vs_avg_stock_net_pct": 0.25,
+       "vs_avg_stock_t": 0.57,
+       "lists_ahead_of_avg_stock_pct": 59.1
+      }
+     }
+    },
+    "rule": "Highest first-window mean lead over the average liquid stock, among versions with enough picks and a positive mean after a 0.49% round trip; within 0.05 points the one with fewer rules. The second window is printed whatever it shows.",
+    "min_first_picks": 300,
+    "file": "research/fundamental-ideas-lab.json",
+    "generated": "2026-11-27",
+    "reference_2018_22": {
+     "list_dates": 218,
+     "picks": 3258,
+     "up_pct": 56.8,
+     "beat_index_pct": 45.1,
+     "avg_pct": 21.4,
+     "median_pct": 7.35,
+     "index_avg_pct": 15.54,
+     "big_winner_pct": 33.9,
+     "worst_5pct": -33.5,
+     "best_5pct": 119.5,
+     "exit_hit_pct": 26.0,
+     "lists_ahead_of_index_pct": 51.8,
+     "avg_net_pct": 20.91,
+     "vs_index_pct": 5.86,
+     "vs_avg_stock_pct": 3.67,
+     "vs_avg_stock_net_pct": 3.18,
+     "vs_avg_stock_t": 1.02,
+     "lists_ahead_of_avg_stock_pct": 53.2
+    }
+   }
   },
   "short": {
    "list_dates": 344,
@@ -1712,378 +1779,234 @@
   }
  },
  "exits": {
-  "week": {
-   "no exit line": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 52.7,
-    "beat_index_pct": 49.4,
-    "avg_pct": 0.49,
-    "median_pct": 0.28,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -7.8,
-    "best_5pct": 9.2,
-    "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 54.0
-   },
-   "close 3.5% under": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 49.8,
-    "beat_index_pct": 47.0,
-    "avg_pct": 0.39,
-    "median_pct": -0.03,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -6.1,
-    "best_5pct": 9.1,
-    "exit_hit_pct": 27.7,
-    "lists_ahead_of_index_pct": 54.0
-   },
-   "close 7% under": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 52.3,
-    "beat_index_pct": 49.0,
-    "avg_pct": 0.43,
-    "median_pct": 0.26,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -8.2,
-    "best_5pct": 9.1,
-    "exit_hit_pct": 9.1,
-    "lists_ahead_of_index_pct": 52.6
-   },
-   "close 10.5% under": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 52.6,
-    "beat_index_pct": 49.4,
-    "avg_pct": 0.47,
-    "median_pct": 0.28,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -8.3,
-    "best_5pct": 9.2,
-    "exit_hit_pct": 3.1,
-    "lists_ahead_of_index_pct": 54.0
-   },
-   "close 7% under, target 7% over": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 53.5,
-    "beat_index_pct": 49.9,
-    "avg_pct": 0.42,
-    "median_pct": 0.39,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -8.1,
-    "best_5pct": 7.0,
-    "exit_hit_pct": 28.5,
-    "lists_ahead_of_index_pct": 53.6
-   },
-   "close 7% under, target 14% over": {
-    "list_dates": 483,
-    "picks": 7243,
-    "up_pct": 52.4,
-    "beat_index_pct": 49.1,
-    "avg_pct": 0.43,
-    "median_pct": 0.26,
-    "index_avg_pct": 0.27,
-    "worst_5pct": -8.2,
-    "best_5pct": 10.1,
-    "exit_hit_pct": 12.8,
-    "lists_ahead_of_index_pct": 53.6
-   }
-  },
   "month": {
    "no exit line": {
-    "list_dates": 479,
-    "picks": 7177,
+    "list_dates": 482,
+    "picks": 6984,
     "up_pct": 54.5,
-    "beat_index_pct": 49.1,
-    "avg_pct": 1.77,
-    "median_pct": 1.0,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -13.1,
-    "best_5pct": 18.9,
+    "beat_index_pct": 49.2,
+    "avg_pct": 1.92,
+    "median_pct": 1.05,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 2.7,
+    "worst_5pct": -13.5,
+    "best_5pct": 19.8,
     "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 59.1
+    "lists_ahead_of_index_pct": 59.3
    },
    "close 6% under": {
-    "list_dates": 479,
-    "picks": 7177,
-    "up_pct": 49.4,
-    "beat_index_pct": 45.7,
-    "avg_pct": 1.47,
-    "median_pct": -0.15,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -8.6,
-    "best_5pct": 18.5,
-    "exit_hit_pct": 34.1,
-    "lists_ahead_of_index_pct": 51.8
+    "list_dates": 482,
+    "picks": 6984,
+    "up_pct": 49.0,
+    "beat_index_pct": 45.4,
+    "avg_pct": 1.49,
+    "median_pct": -0.3,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 2.5,
+    "worst_5pct": -9.0,
+    "best_5pct": 19.1,
+    "exit_hit_pct": 36.1,
+    "lists_ahead_of_index_pct": 52.9
    },
    "close 12% under": {
-    "list_dates": 479,
-    "picks": 7177,
-    "up_pct": 54.1,
-    "beat_index_pct": 48.9,
-    "avg_pct": 1.74,
-    "median_pct": 0.91,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -13.3,
-    "best_5pct": 18.9,
-    "exit_hit_pct": 10.9,
-    "lists_ahead_of_index_pct": 58.9
+    "list_dates": 482,
+    "picks": 6984,
+    "up_pct": 54.0,
+    "beat_index_pct": 48.7,
+    "avg_pct": 1.81,
+    "median_pct": 0.93,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 2.7,
+    "worst_5pct": -13.5,
+    "best_5pct": 19.7,
+    "exit_hit_pct": 11.9,
+    "lists_ahead_of_index_pct": 58.5
    },
    "close 18% under": {
-    "list_dates": 479,
-    "picks": 7177,
-    "up_pct": 54.4,
+    "list_dates": 482,
+    "picks": 6984,
+    "up_pct": 54.5,
     "beat_index_pct": 49.2,
-    "avg_pct": 1.8,
-    "median_pct": 0.98,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -13.8,
-    "best_5pct": 18.9,
-    "exit_hit_pct": 3.4,
-    "lists_ahead_of_index_pct": 58.7
+    "avg_pct": 1.92,
+    "median_pct": 1.04,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 2.7,
+    "worst_5pct": -15.0,
+    "best_5pct": 19.8,
+    "exit_hit_pct": 3.9,
+    "lists_ahead_of_index_pct": 59.1
    },
    "close 12% under, target 12% over": {
-    "list_dates": 479,
-    "picks": 7179,
+    "list_dates": 482,
+    "picks": 6984,
     "up_pct": 55.5,
-    "beat_index_pct": 51.0,
-    "avg_pct": 1.41,
-    "median_pct": 1.32,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -13.3,
+    "beat_index_pct": 50.8,
+    "avg_pct": 1.42,
+    "median_pct": 1.38,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 0.0,
+    "worst_5pct": -13.5,
     "best_5pct": 12.0,
-    "exit_hit_pct": 35.9,
-    "lists_ahead_of_index_pct": 53.9
+    "exit_hit_pct": 38.5,
+    "lists_ahead_of_index_pct": 55.6
    },
    "close 12% under, target 24% over": {
-    "list_dates": 479,
-    "picks": 7177,
-    "up_pct": 54.2,
-    "beat_index_pct": 48.9,
-    "avg_pct": 1.7,
+    "list_dates": 482,
+    "picks": 6984,
+    "up_pct": 54.0,
+    "beat_index_pct": 48.7,
+    "avg_pct": 1.71,
     "median_pct": 0.94,
-    "index_avg_pct": 1.08,
-    "worst_5pct": -13.3,
+    "index_avg_pct": 1.13,
+    "big_winner_pct": 0.3,
+    "worst_5pct": -13.5,
     "best_5pct": 24.0,
-    "exit_hit_pct": 16.7,
-    "lists_ahead_of_index_pct": 58.0
-   }
-  },
-  "momentum": {
-   "no exit line": {
-    "list_dates": 468,
-    "picks": 7011,
-    "up_pct": 58.1,
-    "beat_index_pct": 51.8,
-    "avg_pct": 6.31,
-    "median_pct": 3.61,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -22.5,
-    "best_5pct": 43.4,
-    "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 69.0
-   },
-   "close 7.5% under": {
-    "list_dates": 468,
-    "picks": 7012,
-    "up_pct": 43.8,
-    "beat_index_pct": 41.9,
-    "avg_pct": 4.29,
-    "median_pct": -7.51,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -11.4,
-    "best_5pct": 40.6,
-    "exit_hit_pct": 50.3,
-    "lists_ahead_of_index_pct": 56.8
-   },
-   "close 15% under": {
-    "list_dates": 468,
-    "picks": 7011,
-    "up_pct": 55.5,
-    "beat_index_pct": 49.3,
-    "avg_pct": 5.61,
-    "median_pct": 2.7,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -18.0,
-    "best_5pct": 43.0,
-    "exit_hit_pct": 23.8,
-    "lists_ahead_of_index_pct": 63.7
-   },
-   "close 22.5% under": {
-    "list_dates": 468,
-    "picks": 7011,
-    "up_pct": 57.7,
-    "beat_index_pct": 51.1,
-    "avg_pct": 5.99,
-    "median_pct": 3.43,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -23.9,
-    "best_5pct": 43.3,
-    "exit_hit_pct": 10.7,
-    "lists_ahead_of_index_pct": 68.4
-   },
-   "close 15% under, target 15% over": {
-    "list_dates": 468,
-    "picks": 7013,
-    "up_pct": 61.7,
-    "beat_index_pct": 54.9,
-    "avg_pct": 3.47,
-    "median_pct": 10.35,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -17.7,
-    "best_5pct": 15.0,
-    "exit_hit_pct": 70.4,
-    "lists_ahead_of_index_pct": 52.8
-   },
-   "close 15% under, target 30% over": {
-    "list_dates": 468,
-    "picks": 7011,
-    "up_pct": 56.2,
-    "beat_index_pct": 50.6,
-    "avg_pct": 4.69,
-    "median_pct": 3.14,
-    "index_avg_pct": 3.2,
-    "worst_5pct": -17.9,
-    "best_5pct": 30.0,
-    "exit_hit_pct": 43.1,
-    "lists_ahead_of_index_pct": 62.6
-   }
-  },
-  "long": {
-   "no exit line": {
-    "list_dates": 433,
-    "picks": 6429,
-    "up_pct": 61.8,
-    "beat_index_pct": 49.2,
-    "avg_pct": 25.74,
-    "median_pct": 10.1,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -41.4,
-    "best_5pct": 133.5,
-    "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 60.5
-   },
-   "close 15% under": {
-    "list_dates": 433,
-    "picks": 6444,
-    "up_pct": 45.9,
-    "beat_index_pct": 38.3,
-    "avg_pct": 20.41,
-    "median_pct": -10.98,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -19.5,
-    "best_5pct": 128.1,
-    "exit_hit_pct": 49.5,
-    "lists_ahead_of_index_pct": 48.5
-   },
-   "close 30% under": {
-    "list_dates": 433,
-    "picks": 6434,
-    "up_pct": 58.2,
-    "beat_index_pct": 46.5,
-    "avg_pct": 23.73,
-    "median_pct": 8.1,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -32.9,
-    "best_5pct": 132.3,
-    "exit_hit_pct": 23.2,
-    "lists_ahead_of_index_pct": 53.3
-   },
-   "close 45% under": {
-    "list_dates": 433,
-    "picks": 6429,
-    "up_pct": 61.2,
-    "beat_index_pct": 49.0,
-    "avg_pct": 25.31,
-    "median_pct": 9.93,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -45.9,
-    "best_5pct": 133.4,
-    "exit_hit_pct": 8.2,
-    "lists_ahead_of_index_pct": 57.5
-   },
-   "close 30% under, target 30% over": {
-    "list_dates": 433,
-    "picks": 6449,
-    "up_pct": 64.9,
-    "beat_index_pct": 44.7,
-    "avg_pct": 8.81,
-    "median_pct": 30.0,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -32.6,
-    "best_5pct": 30.0,
-    "exit_hit_pct": 72.9,
-    "lists_ahead_of_index_pct": 37.4
-   },
-   "close 30% under, target 60% over": {
-    "list_dates": 433,
-    "picks": 6437,
-    "up_pct": 59.4,
-    "beat_index_pct": 47.3,
-    "avg_pct": 13.77,
-    "median_pct": 9.79,
-    "index_avg_pct": 13.79,
-    "worst_5pct": -32.8,
-    "best_5pct": 60.0,
-    "exit_hit_pct": 49.9,
-    "lists_ahead_of_index_pct": 51.0
+    "exit_hit_pct": 18.0,
+    "lists_ahead_of_index_pct": 58.3
    }
   },
   "results": {
    "no exit line": {
-    "list_dates": 244,
-    "picks": 3518,
-    "up_pct": 55.1,
-    "beat_index_pct": 48.7,
-    "avg_pct": 1.73,
-    "median_pct": 1.2,
-    "index_avg_pct": 1.0,
-    "worst_5pct": -16.6,
-    "best_5pct": 22.4,
+    "list_dates": 205,
+    "picks": 2915,
+    "up_pct": 55.8,
+    "beat_index_pct": 49.9,
+    "avg_pct": 1.86,
+    "median_pct": 1.28,
+    "index_avg_pct": 1.01,
+    "big_winner_pct": 3.1,
+    "worst_5pct": -15.3,
+    "best_5pct": 21.5,
     "exit_hit_pct": 0.0,
-    "lists_ahead_of_index_pct": 55.7
+    "lists_ahead_of_index_pct": 59.0
    },
    "close 6% under": {
-    "list_dates": 244,
-    "picks": 3518,
-    "up_pct": 47.3,
-    "beat_index_pct": 44.3,
-    "avg_pct": 1.44,
-    "median_pct": -0.8,
-    "index_avg_pct": 1.0,
-    "worst_5pct": -9.3,
-    "best_5pct": 20.9,
-    "exit_hit_pct": 40.4,
-    "lists_ahead_of_index_pct": 50.4
+    "list_dates": 205,
+    "picks": 2915,
+    "up_pct": 49.3,
+    "beat_index_pct": 46.3,
+    "avg_pct": 1.65,
+    "median_pct": -0.21,
+    "index_avg_pct": 1.01,
+    "big_winner_pct": 2.8,
+    "worst_5pct": -8.9,
+    "best_5pct": 20.2,
+    "exit_hit_pct": 37.0,
+    "lists_ahead_of_index_pct": 57.6
    },
    "close 12% under": {
-    "list_dates": 244,
-    "picks": 3518,
-    "up_pct": 53.9,
-    "beat_index_pct": 48.5,
-    "avg_pct": 1.76,
-    "median_pct": 0.99,
-    "index_avg_pct": 1.0,
-    "worst_5pct": -13.9,
-    "best_5pct": 22.3,
-    "exit_hit_pct": 16.4,
-    "lists_ahead_of_index_pct": 57.4
+    "list_dates": 205,
+    "picks": 2915,
+    "up_pct": 55.0,
+    "beat_index_pct": 49.4,
+    "avg_pct": 1.89,
+    "median_pct": 1.17,
+    "index_avg_pct": 1.01,
+    "big_winner_pct": 3.1,
+    "worst_5pct": -13.7,
+    "best_5pct": 21.5,
+    "exit_hit_pct": 13.6,
+    "lists_ahead_of_index_pct": 57.1
    },
    "close 18% under": {
-    "list_dates": 244,
-    "picks": 3518,
-    "up_pct": 54.9,
+    "list_dates": 205,
+    "picks": 2915,
+    "up_pct": 55.7,
+    "beat_index_pct": 50.5,
+    "avg_pct": 1.92,
+    "median_pct": 1.27,
+    "index_avg_pct": 1.01,
+    "big_winner_pct": 3.1,
+    "worst_5pct": -18.0,
+    "best_5pct": 21.5,
+    "exit_hit_pct": 5.1,
+    "lists_ahead_of_index_pct": 59.0
+   }
+  },
+  "long": {
+   "no exit line": {
+    "list_dates": 436,
+    "picks": 6509,
+    "up_pct": 61.4,
+    "beat_index_pct": 49.4,
+    "avg_pct": 22.61,
+    "median_pct": 10.93,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 36.9,
+    "worst_5pct": -39.0,
+    "best_5pct": 114.2,
+    "exit_hit_pct": 0.0,
+    "lists_ahead_of_index_pct": 62.8
+   },
+   "close 15% under": {
+    "list_dates": 436,
+    "picks": 6518,
+    "up_pct": 44.6,
+    "beat_index_pct": 36.7,
+    "avg_pct": 16.87,
+    "median_pct": -15.02,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 29.6,
+    "worst_5pct": -19.6,
+    "best_5pct": 110.6,
+    "exit_hit_pct": 50.5,
+    "lists_ahead_of_index_pct": 45.6
+   },
+   "close 30% under": {
+    "list_dates": 436,
+    "picks": 6514,
+    "up_pct": 57.7,
+    "beat_index_pct": 46.4,
+    "avg_pct": 20.15,
+    "median_pct": 8.48,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 35.5,
+    "worst_5pct": -32.8,
+    "best_5pct": 113.3,
+    "exit_hit_pct": 23.6,
+    "lists_ahead_of_index_pct": 53.2
+   },
+   "close 45% under": {
+    "list_dates": 436,
+    "picks": 6509,
+    "up_pct": 61.2,
     "beat_index_pct": 49.3,
-    "avg_pct": 1.81,
-    "median_pct": 1.16,
-    "index_avg_pct": 1.0,
-    "worst_5pct": -18.6,
-    "best_5pct": 22.4,
-    "exit_hit_pct": 6.2,
-    "lists_ahead_of_index_pct": 56.6
+    "avg_pct": 22.32,
+    "median_pct": 10.7,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 36.9,
+    "worst_5pct": -45.5,
+    "best_5pct": 114.2,
+    "exit_hit_pct": 7.2,
+    "lists_ahead_of_index_pct": 60.8
+   },
+   "close 30% under, target 30% over": {
+    "list_dates": 436,
+    "picks": 6514,
+    "up_pct": 65.0,
+    "beat_index_pct": 45.1,
+    "avg_pct": 8.95,
+    "median_pct": 30.0,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 53.5,
+    "worst_5pct": -32.6,
+    "best_5pct": 30.0,
+    "exit_hit_pct": 74.3,
+    "lists_ahead_of_index_pct": 40.6
+   },
+   "close 30% under, target 60% over": {
+    "list_dates": 436,
+    "picks": 6514,
+    "up_pct": 59.3,
+    "beat_index_pct": 47.9,
+    "avg_pct": 13.83,
+    "median_pct": 10.44,
+    "index_avg_pct": 13.7,
+    "big_winner_pct": 38.8,
+    "worst_5pct": -32.7,
+    "best_5pct": 60.0,
+    "exit_hit_pct": 50.2,
+    "lists_ahead_of_index_pct": 52.8
    }
   },
   "short": {
@@ -2267,6 +2190,552 @@
    }
   }
  },
+ "retired": {
+  "week": {
+   "replaced_by": "month",
+   "note": "Replaced by Swing / This month in December 2026; kept as measured, a list every five sessions from 2017 held 5 sessions with a close 7% under as the exit.",
+   "record": {
+    "list_dates": 483,
+    "picks": 7243,
+    "up_pct": 52.3,
+    "beat_index_pct": 49.0,
+    "avg_pct": 0.43,
+    "median_pct": 0.26,
+    "index_avg_pct": 0.27,
+    "worst_5pct": -8.2,
+    "best_5pct": 9.1,
+    "exit_hit_pct": 9.1,
+    "lists_ahead_of_index_pct": 52.6,
+    "by_half": {
+     "2017-21": {
+      "list_dates": 244,
+      "picks": 3658,
+      "up_pct": 53.6,
+      "beat_index_pct": 49.0,
+      "avg_pct": 0.56,
+      "median_pct": 0.38,
+      "index_avg_pct": 0.33,
+      "worst_5pct": -7.8,
+      "best_5pct": 8.8,
+      "exit_hit_pct": 7.5,
+      "lists_ahead_of_index_pct": 52.0
+     },
+     "2022-26": {
+      "list_dates": 239,
+      "picks": 3585,
+      "up_pct": 51.1,
+      "beat_index_pct": 49.1,
+      "avg_pct": 0.3,
+      "median_pct": 0.09,
+      "index_avg_pct": 0.2,
+      "worst_5pct": -8.6,
+      "best_5pct": 9.6,
+      "exit_hit_pct": 10.8,
+      "lists_ahead_of_index_pct": 53.1
+     }
+    },
+    "by_year": {
+     "2017": {
+      "avg_pct": 0.74,
+      "index_avg_pct": 0.57,
+      "up_pct": 58.0,
+      "picks": 705
+     },
+     "2018": {
+      "avg_pct": 0.04,
+      "index_avg_pct": -0.09,
+      "up_pct": 48.6,
+      "picks": 735
+     },
+     "2019": {
+      "avg_pct": 0.45,
+      "index_avg_pct": 0.18,
+      "up_pct": 53.5,
+      "picks": 735
+     },
+     "2020": {
+      "avg_pct": 1.02,
+      "index_avg_pct": 0.46,
+      "up_pct": 56.4,
+      "picks": 748
+     },
+     "2021": {
+      "avg_pct": 0.54,
+      "index_avg_pct": 0.55,
+      "up_pct": 51.4,
+      "picks": 735
+     },
+     "2022": {
+      "avg_pct": -0.43,
+      "index_avg_pct": 0.05,
+      "up_pct": 46.4,
+      "picks": 750
+     },
+     "2023": {
+      "avg_pct": 0.8,
+      "index_avg_pct": 0.48,
+      "up_pct": 55.6,
+      "picks": 735
+     },
+     "2024": {
+      "avg_pct": 0.56,
+      "index_avg_pct": 0.36,
+      "up_pct": 50.3,
+      "picks": 735
+     },
+     "2025": {
+      "avg_pct": 0.0,
+      "index_avg_pct": 0.12,
+      "up_pct": 50.1,
+      "picks": 750
+     },
+     "2026": {
+      "avg_pct": 0.64,
+      "index_avg_pct": -0.02,
+      "up_pct": 53.5,
+      "picks": 615
+     }
+    },
+    "hold_sessions": 5,
+    "exit_pct": 7.0,
+    "avg_after_costs_pct": -0.06,
+    "vs_average_stock": {
+     "excess_pct": 0.32,
+     "t": 4.06,
+     "lists_ahead_pct": 58.6,
+     "by_half": {
+      "2017-21": {
+       "excess_pct": 0.42,
+       "t": 3.61,
+       "lists_ahead_pct": 59.8
+      },
+      "2022-26": {
+       "excess_pct": 0.22,
+       "t": 2.09,
+       "lists_ahead_pct": 57.3
+      }
+     }
+    },
+    "market": {
+     "above_200d": {
+      "list_dates": 365,
+      "picks": 5474,
+      "up_pct": 52.0,
+      "avg_pct": 0.37,
+      "index_avg_pct": 0.24
+     },
+     "below_200d": {
+      "list_dates": 118,
+      "picks": 1769,
+      "up_pct": 53.5,
+      "avg_pct": 0.61,
+      "index_avg_pct": 0.36
+     }
+    },
+    "young": {
+     "what": "Companies listed six to twelve months, their 6-month return standing in for the 12-month one, placed against the established universe.",
+     "picks": 123,
+     "list_dates": 102,
+     "up_pct": 52.8,
+     "avg_pct": 1.01,
+     "median_pct": 0.32,
+     "index_avg_pct": 0.18,
+     "worst_5pct": -7.2,
+     "vs_average_stock": {
+      "excess_pct": 1.08,
+      "t": 2.05,
+      "lists_ahead_pct": 54.9,
+      "by_half": {
+       "2017-21": {
+        "excess_pct": 1.05,
+        "t": 1.33,
+        "lists_ahead_pct": 55.8
+       },
+       "2022-26": {
+        "excess_pct": 1.09,
+        "t": 1.54,
+        "lists_ahead_pct": 54.2
+       }
+      }
+     },
+     "list_without_them": {
+      "picks": 7243,
+      "up_pct": 52.3,
+      "avg_pct": 0.42,
+      "vs_average_stock": {
+       "excess_pct": 0.32,
+       "t": 4.03,
+       "lists_ahead_pct": 57.6,
+       "by_half": {
+        "2017-21": {
+         "excess_pct": 0.41,
+         "t": 3.51,
+         "lists_ahead_pct": 58.6
+        },
+        "2022-26": {
+         "excess_pct": 0.22,
+         "t": 2.13,
+         "lists_ahead_pct": 56.5
+        }
+       }
+      }
+     }
+    }
+   },
+   "exits": {
+    "no exit line": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 52.7,
+     "beat_index_pct": 49.4,
+     "avg_pct": 0.49,
+     "median_pct": 0.28,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -7.8,
+     "best_5pct": 9.2,
+     "exit_hit_pct": 0.0,
+     "lists_ahead_of_index_pct": 54.0
+    },
+    "close 3.5% under": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 49.8,
+     "beat_index_pct": 47.0,
+     "avg_pct": 0.39,
+     "median_pct": -0.03,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -6.1,
+     "best_5pct": 9.1,
+     "exit_hit_pct": 27.7,
+     "lists_ahead_of_index_pct": 54.0
+    },
+    "close 7% under": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 52.3,
+     "beat_index_pct": 49.0,
+     "avg_pct": 0.43,
+     "median_pct": 0.26,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "best_5pct": 9.1,
+     "exit_hit_pct": 9.1,
+     "lists_ahead_of_index_pct": 52.6
+    },
+    "close 10.5% under": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 52.6,
+     "beat_index_pct": 49.4,
+     "avg_pct": 0.47,
+     "median_pct": 0.28,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.3,
+     "best_5pct": 9.2,
+     "exit_hit_pct": 3.1,
+     "lists_ahead_of_index_pct": 54.0
+    },
+    "close 7% under, target 7% over": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 53.5,
+     "beat_index_pct": 49.9,
+     "avg_pct": 0.42,
+     "median_pct": 0.39,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.1,
+     "best_5pct": 7.0,
+     "exit_hit_pct": 28.5,
+     "lists_ahead_of_index_pct": 53.6
+    },
+    "close 7% under, target 14% over": {
+     "list_dates": 483,
+     "picks": 7243,
+     "up_pct": 52.4,
+     "beat_index_pct": 49.1,
+     "avg_pct": 0.43,
+     "median_pct": 0.26,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "best_5pct": 10.1,
+     "exit_hit_pct": 12.8,
+     "lists_ahead_of_index_pct": 53.6
+    }
+   }
+  },
+  "momentum": {
+   "replaced_by": "long",
+   "note": "Replaced by Long-term compounders in December 2026; kept as measured, a list every five sessions from 2017 held 63 sessions with a close 15% under as the exit.",
+   "record": {
+    "list_dates": 468,
+    "picks": 7011,
+    "up_pct": 55.5,
+    "beat_index_pct": 49.3,
+    "avg_pct": 5.61,
+    "median_pct": 2.7,
+    "index_avg_pct": 3.2,
+    "worst_5pct": -18.0,
+    "best_5pct": 43.0,
+    "exit_hit_pct": 23.8,
+    "lists_ahead_of_index_pct": 63.7,
+    "by_half": {
+     "2017-21": {
+      "list_dates": 241,
+      "picks": 3609,
+      "up_pct": 58.2,
+      "beat_index_pct": 51.5,
+      "avg_pct": 6.61,
+      "median_pct": 4.08,
+      "index_avg_pct": 3.72,
+      "worst_5pct": -17.8,
+      "best_5pct": 43.2,
+      "exit_hit_pct": 21.1,
+      "lists_ahead_of_index_pct": 68.0
+     },
+     "2022-26": {
+      "list_dates": 227,
+      "picks": 3402,
+      "up_pct": 52.7,
+      "beat_index_pct": 47.0,
+      "avg_pct": 4.55,
+      "median_pct": 1.48,
+      "index_avg_pct": 2.66,
+      "worst_5pct": -18.1,
+      "best_5pct": 42.6,
+      "exit_hit_pct": 26.6,
+      "lists_ahead_of_index_pct": 59.0
+     }
+    },
+    "by_year": {
+     "2017": {
+      "avg_pct": 5.58,
+      "index_avg_pct": 5.15,
+      "up_pct": 60.1,
+      "picks": 702
+     },
+     "2018": {
+      "avg_pct": 0.03,
+      "index_avg_pct": -0.3,
+      "up_pct": 49.1,
+      "picks": 735
+     },
+     "2019": {
+      "avg_pct": 3.48,
+      "index_avg_pct": 0.21,
+      "up_pct": 56.9,
+      "picks": 735
+     },
+     "2020": {
+      "avg_pct": 12.56,
+      "index_avg_pct": 8.38,
+      "up_pct": 63.1,
+      "picks": 702
+     },
+     "2021": {
+      "avg_pct": 11.62,
+      "index_avg_pct": 5.4,
+      "up_pct": 62.0,
+      "picks": 735
+     },
+     "2022": {
+      "avg_pct": -0.27,
+      "index_avg_pct": 0.43,
+      "up_pct": 42.7,
+      "picks": 750
+     },
+     "2023": {
+      "avg_pct": 13.68,
+      "index_avg_pct": 7.91,
+      "up_pct": 70.2,
+      "picks": 735
+     },
+     "2024": {
+      "avg_pct": 2.29,
+      "index_avg_pct": 1.88,
+      "up_pct": 50.3,
+      "picks": 735
+     },
+     "2025": {
+      "avg_pct": 1.98,
+      "index_avg_pct": 1.91,
+      "up_pct": 48.9,
+      "picks": 749
+     },
+     "2026": {
+      "avg_pct": 5.67,
+      "index_avg_pct": 0.22,
+      "up_pct": 50.8,
+      "picks": 433
+     }
+    },
+    "hold_sessions": 63,
+    "exit_pct": 15.0,
+    "avg_after_costs_pct": 5.12,
+    "vs_average_stock": {
+     "excess_pct": 2.15,
+     "t": 3.41,
+     "lists_ahead_pct": 60.7,
+     "by_half": {
+      "2017-21": {
+       "excess_pct": 3.69,
+       "t": 4.71,
+       "lists_ahead_pct": 69.3
+      },
+      "2022-26": {
+       "excess_pct": 0.51,
+       "t": 0.64,
+       "lists_ahead_pct": 51.5
+      }
+     }
+    },
+    "market": {
+     "above_200d": {
+      "list_dates": 360,
+      "picks": 5392,
+      "up_pct": 52.8,
+      "avg_pct": 4.46,
+      "index_avg_pct": 2.04
+     },
+     "below_200d": {
+      "list_dates": 108,
+      "picks": 1619,
+      "up_pct": 64.5,
+      "avg_pct": 9.43,
+      "index_avg_pct": 7.07
+     }
+    },
+    "young": {
+     "what": "Companies listed six to twelve months, their 6-month return standing in for the 12-month one, placed against the established universe.",
+     "picks": 177,
+     "list_dates": 130,
+     "up_pct": 57.1,
+     "avg_pct": 6.24,
+     "median_pct": 2.86,
+     "index_avg_pct": 0.38,
+     "worst_5pct": -18.3,
+     "vs_average_stock": {
+      "excess_pct": 5.29,
+      "t": 1.29,
+      "lists_ahead_pct": 54.6,
+      "by_half": {
+       "2017-21": {
+        "excess_pct": 7.39,
+        "t": 1.05,
+        "lists_ahead_pct": 52.3
+       },
+       "2022-26": {
+        "excess_pct": 3.2,
+        "t": 0.92,
+        "lists_ahead_pct": 56.9
+       }
+      }
+     },
+     "list_without_them": {
+      "picks": 7007,
+      "up_pct": 55.2,
+      "avg_pct": 5.5,
+      "vs_average_stock": {
+       "excess_pct": 2.03,
+       "t": 3.33,
+       "lists_ahead_pct": 61.8,
+       "by_half": {
+        "2017-21": {
+         "excess_pct": 3.64,
+         "t": 4.88,
+         "lists_ahead_pct": 71.0
+        },
+        "2022-26": {
+         "excess_pct": 0.33,
+         "t": 0.43,
+         "lists_ahead_pct": 52.0
+        }
+       }
+      }
+     }
+    }
+   },
+   "exits": {
+    "no exit line": {
+     "list_dates": 468,
+     "picks": 7011,
+     "up_pct": 58.1,
+     "beat_index_pct": 51.8,
+     "avg_pct": 6.31,
+     "median_pct": 3.61,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -22.5,
+     "best_5pct": 43.4,
+     "exit_hit_pct": 0.0,
+     "lists_ahead_of_index_pct": 69.0
+    },
+    "close 7.5% under": {
+     "list_dates": 468,
+     "picks": 7012,
+     "up_pct": 43.8,
+     "beat_index_pct": 41.9,
+     "avg_pct": 4.29,
+     "median_pct": -7.51,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -11.4,
+     "best_5pct": 40.6,
+     "exit_hit_pct": 50.3,
+     "lists_ahead_of_index_pct": 56.8
+    },
+    "close 15% under": {
+     "list_dates": 468,
+     "picks": 7011,
+     "up_pct": 55.5,
+     "beat_index_pct": 49.3,
+     "avg_pct": 5.61,
+     "median_pct": 2.7,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -18.0,
+     "best_5pct": 43.0,
+     "exit_hit_pct": 23.8,
+     "lists_ahead_of_index_pct": 63.7
+    },
+    "close 22.5% under": {
+     "list_dates": 468,
+     "picks": 7011,
+     "up_pct": 57.7,
+     "beat_index_pct": 51.1,
+     "avg_pct": 5.99,
+     "median_pct": 3.43,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -23.9,
+     "best_5pct": 43.3,
+     "exit_hit_pct": 10.7,
+     "lists_ahead_of_index_pct": 68.4
+    },
+    "close 15% under, target 15% over": {
+     "list_dates": 468,
+     "picks": 7013,
+     "up_pct": 61.7,
+     "beat_index_pct": 54.9,
+     "avg_pct": 3.47,
+     "median_pct": 10.35,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -17.7,
+     "best_5pct": 15.0,
+     "exit_hit_pct": 70.4,
+     "lists_ahead_of_index_pct": 52.8
+    },
+    "close 15% under, target 30% over": {
+     "list_dates": 468,
+     "picks": 7011,
+     "up_pct": 56.2,
+     "beat_index_pct": 50.6,
+     "avg_pct": 4.69,
+     "median_pct": 3.14,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -17.9,
+     "best_5pct": 30.0,
+     "exit_hit_pct": 43.1,
+     "lists_ahead_of_index_pct": 62.6
+    }
+   }
+  }
+ },
  "before": {
   "what": "The 150 highest technical scores on the exchange, momentum and accumulation setups, Rs 2 crore a day, ordered by the old trade score. Its targets cannot be replayed from prices, so it is shown WITHOUT them, which flatters it.",
   "list_dates": 241,
@@ -2403,6 +2872,26 @@
   }
  },
  "overlap": {
+  "month / results": {
+   "dates": 209,
+   "mean_shared": 0.99,
+   "dates_with_any_pct": 50.7
+  },
+  "month / long": {
+   "dates": 486,
+   "mean_shared": 2.66,
+   "dates_with_any_pct": 90.5
+  },
+  "results / long": {
+   "dates": 209,
+   "mean_shared": 1.2,
+   "dates_with_any_pct": 71.8
+  },
+  "distinct in all three": 39.5,
+  "dates in all three": 209,
+  "what": "Names two of the three lists share on the same list date, out of 15: mean_shared over the dates both made a list, dates_with_any_pct the share of those dates with one or more in common. No list gives way to another."
+ },
+ "overlap_before": {
   "now": {
    "week / month": 3.6,
    "week / momentum": 3.6,
