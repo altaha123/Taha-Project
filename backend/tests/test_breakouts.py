@@ -925,7 +925,13 @@ def test_the_select_lane_does_not_change_a_classic_call(monkeypatch):
     monkeypatch.setattr(bo, "LANES", ("classic", "select"))
     monkeypatch.setattr(bo, "_mem", {"feed": None, "day": None})
     both = run()
-    assert classic_only and [a for a in both if a["engine"] == "classic"] == classic_only
+    # The call is Classic's own to the last figure; Select only notes, for
+    # the owner, what held it back on the same pass.
+    classic = [a for a in both if a["engine"] == "classic"]
+    assert classic_only and [{k: v for k, v in a.items() if k != "select_wait"} for a in classic] == classic_only
+    assert [a.get("select_wait") for a in classic] == [
+        {"code": "extended", "why": "extended 2.1% above VWAP, limit 1.5%"}]
+    assert "select_wait" not in classic_only[0]
 
 
 def test_every_classic_call_carries_what_selects_filters_would_say():
@@ -1057,3 +1063,316 @@ def test_a_rebuild_without_the_scan_still_knows_each_stocks_sector(monkeypatch):
     reads["ABB"] = reads.pop("Q0")
     feed = bo.ingest(reads, now=at(17, 5))
     assert feed["levels"]["ABB"]["sector"] == "Capital Goods"
+
+
+# ---------------------------------------------------------------------------
+# Found in review of the two lanes, and pinned
+# ---------------------------------------------------------------------------
+
+def _two_stock_vwap_day():
+    """_vwap_day() for VW1, with NEAR quoted beside it all morning at an
+    ordinary price, so both are watched when the review's pass comes."""
+    _arm_many({"VW1": _lv(atr=2.5, **FAR), "NEAR": _lv(sector="Power")})
+    kw = dict(pc=111.0, opn=111.0, vwap=113.2, hi=114.5, lo=111.0)
+    bo.check_live({"VW1": quote(111.0, 5_000, pc=111.0, opn=111.0), "NEAR": quote(108.0, 5_000)},
+                  now=at(9, 16))
+    bo.check_live({"VW1": quote(114.5, 300_000, **kw), "NEAR": quote(108.5, 300_000)}, now=at(9, 40))
+    t, vol, k = at(9, 40, 20), 301_000, 0
+    while t < at(10, 45):
+        m = (t - at(9, 0)).total_seconds() / 60.0 - 60
+        px = (114.0 + 0.4 * (k % 2) if m < 10 else
+              114.0 - (m - 10) / 20 * 0.75 if m < 30 else 113.3 + (m - 30) / 15 * 0.65)
+        assert bo.check_live({"VW1": quote(round(px, 2), vol, **kw), "NEAR": quote(108.5, vol)},
+                             now=t, index_pct=0.5) == []
+        t += STEP
+        vol += 1_000
+        k += 1
+    return t, vol, kw
+
+
+def test_a_vwap_reclaim_on_a_quote_without_vwap_waits_and_the_pass_goes_on(monkeypatch):
+    monkeypatch.setattr(bo, "LANES", ("classic", "select"))
+    t, vol, kw = _two_stock_vwap_day()
+    log = []
+    log += bo.check_live({"VW1": quote(114.1, vol + 60_000, **kw), "NEAR": quote(108.5, vol + 1_000)},
+                         now=t, index_pct=0.5, log=log)
+    assert log == []                                       # the reclaim is armed: 1 of 2
+    # Dhan sends VW1's quote without an average price, on the very pass NEAR
+    # breaks out: Classic's NEAR call is still made, VW1 says what it waits for.
+    snap = {"VW1": quote(114.15, vol + 70_000, **dict(kw, vwap=None)),
+            "NEAR": quote(111.3, vol + 61_000, vwap=109.0)}
+    fired = bo.check_live(snap, now=t + STEP, index_pct=0.5, log=log)
+    assert [(a["symbol"], a["engine"], a["kind"]) for a in fired] == [("NEAR", "classic", "BO_BASE")]
+    log += fired
+    st = bo.status(now=t + STEP)
+    w = [r for r in st["waiting"] if r["symbol"] == "VW1"]
+    assert [(r["lane"], r["code"], r["why"]) for r in w] == [("select", "novwap", "no VWAP on this quote")]
+    assert st["errors"]["count"] == 0
+    # VWAP is back on the next quote: the break held all along, so it is a call.
+    fired = bo.check_live({"VW1": quote(114.2, vol + 80_000, **kw), "NEAR": quote(111.4, vol + 70_000, vwap=109.0)},
+                          now=t + 2 * STEP, index_pct=0.5, log=log)
+    assert [(a["symbol"], a["engine"], a["kind"]) for a in fired] == [("VW1", "select", "BO_VWAP")]
+    assert fired[0]["stop"] == pytest.approx(113.2 * (1 - bo.VWAP_STOP / 100), abs=0.01)
+
+
+def test_one_stock_whose_check_fails_costs_that_check_and_nothing_else(monkeypatch):
+    monkeypatch.setattr(bo, "LANES", ("classic", "select"))
+    names = ["BAD", "ODD", "NEAR"]
+    _arm_many({s: _lv() for s in names})
+    t, vol = play(names, at(9, 55), 5)
+    bo._mem["feed"]["levels"]["BAD"]["v"] = None           # a level row the engine cannot read
+    real = bo._side
+
+    def side(c, L, d, lv, f, sign, *rest):
+        if f["sym"] == "ODD":
+            raise RuntimeError("a check that trips up")
+        return real(c, L, d, lv, f, sign, *rest)
+    monkeypatch.setattr(bo, "_side", side)
+    snap = {s: quote(111.3, vol + 60_000, vwap=109.0) for s in names}
+    fired = bo.check_live(snap, now=t)
+    assert [(a["symbol"], a["engine"]) for a in fired] == [("NEAR", "classic")]
+    err = bo.status(now=t)["errors"]
+    # BAD once (its numbers), ODD once per side per lane; the pass itself went on.
+    assert err["count"] == 5 and err["at"] == "10:00:00"
+    assert err["last"].startswith("ODD DOWN select: RuntimeError")
+    assert bo._mem["day"]["last"] == "10:00:00" and "NEAR" in bo._mem["day"]["seen"]
+
+
+def _read(asof, pdh, hi20=113.0):
+    """What read_daily() hands ingest() for NEAR."""
+    return {"asof": asof, "close": 108.0, "pdh": pdh, "pdl": 105.0, "hi20": hi20, "lo20": 99.0,
+            "atr_pct": 2.0, "vol_med50": 1_000_000, "turnover_cr": 100.0,
+            "base": None, "high52": None, "low52": None}
+
+
+def _behind_then_through():
+    """Tuesday on Friday's levels (Monday's scan failed): NEAR crosses
+    Monday's high of 111 at 09:45 and sits at 111.30 until 10:40."""
+    bo.ingest({"NEAR": _read("2026-11-13", 113.0)}, now=at(8, 40), send=False, force=True)
+    bo.check_live(q(108.0, 5_000), now=at(9, 16))
+    t, vol = at(9, 20), 300_000
+    while t < at(10, 40):
+        px = 108.5 if t < at(9, 45) else 111.3
+        assert bo.check_live(q(px, vol, vwap=110.0), now=t) == []
+        t += STEP
+        vol += 1_000
+    return t, vol
+
+
+def test_levels_rebuilt_mid_session_are_old_news_where_the_price_already_is():
+    t, vol = _behind_then_through()
+    # 10:40: the rebuild lands with Monday's levels. Yesterday's high (111)
+    # was crossed 55 minutes ago: no call, as before the day was carried.
+    bo.ingest({"NEAR": _read("2026-11-16", 111.0, hi20=112.5)}, now=at(10, 40), send=False, force=True)
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=110.0), now=t) == []
+    assert ("NEAR", "UP", 111.0) in bo._mem["day"]["lanes"]["classic"]["dead"]
+    # A new level the price has not reached yet trades as any other.
+    t, vol = t + STEP, vol + 61_000
+    for _ in range(9):
+        assert bo.check_live(q(111.4, vol, vwap=110.0), now=t) == []
+        t += STEP
+        vol += 1_000
+    fired = bo.check_live(q(112.7, vol + 60_000, vwap=110.5), now=t)
+    assert [(a["kind"], a["level"]) for a in fired] == [("BO_HIGH20", 112.5)]
+
+
+def test_a_restart_onto_rebuilt_levels_knows_which_are_new(monkeypatch):
+    monkeypatch.setattr(bo, "CHECKPOINT_SEC", 60)
+    t, vol = _behind_then_through()
+    assert bo._load_day("2026-11-17")["ladders"]["NEAR"] == [[113.0], [99.0, 105.0]]
+    bo.ingest({"NEAR": _read("2026-11-16", 111.0)}, now=at(10, 40), send=False, force=True)
+    bo._mem["day"] = None                                  # and the process restarts
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=110.0), now=t) == []
+    assert bo.status(now=t)["checkpoint"]["restored"]
+
+
+def test_an_opening_range_backfilled_after_the_price_left_it_is_old_news():
+    # Up at 09:50 with no checkpoint: NEAR has been over its 09:15-09:30 high
+    # of 108.90 since before anyone watched. The backfill must not make that
+    # a fresh opening-range breakout.
+    _arm_many({"NEAR": _lv(up=[{"l": 112.0, "k": "PDH", "s": 2, "also": []}])})
+    t, vol = at(9, 50), 300_000
+    while t < at(9, 53):
+        assert bo.check_live(q(109.3, vol, vwap=108.8, hi=109.4, lo=107.0), now=t) == []
+        t += STEP
+        vol += 1_000
+    assert bo.orb_missing(now=t)
+    assert bo.set_orb("2026-11-17", {"NEAR": (108.9, 107.0)}, now=t) == 1
+    assert bo.check_live(q(109.35, vol + 60_000, vwap=108.8, hi=109.4, lo=107.0), now=t) == []
+    dead = bo._mem["day"]["lanes"]["classic"]["dead"]
+    assert ("NEAR", "UP", 108.9) in dead and ("NEAR", "DOWN", 107.0) not in dead
+
+
+def _hod_day(log, first_call):
+    """HOD1: a 115.00 high at 09:50 and a 45-minute pause above VWAP. At 10:35
+    it breaks out, on a burst (`first_call`) or on ordinary volume, then
+    climbs to a new high of 116.00 by 11:30 and pauses again under it, above
+    VWAP, until 12:45."""
+    _arm_many({"HOD1": _lv(**FAR)})
+    kw = dict(pc=112.0, opn=112.0)
+
+    def run(snap, t):
+        out = bo.check_live(snap, now=t, log=log)
+        log.extend(out)                                    # intraday logs every call it is handed
+        return out
+    run({"HOD1": quote(112.0, 5_000, **kw)}, at(9, 16))
+    run({"HOD1": quote(115.0, 300_000, vwap=113.5, hi=115.0, lo=111.5, **kw)}, at(9, 50))
+    t, vol, k = at(9, 50, 20), 301_000, 0
+    while t < at(10, 35):
+        assert run({"HOD1": quote(114.2 + 0.7 * (k % 2), vol, vwap=113.9, hi=115.0, lo=111.5, **kw)}, t) == []
+        t, vol, k = t + STEP, vol + 1_000, k + 1
+    calls = []
+    if first_call:
+        calls += run({"HOD1": quote(115.3, vol + 60_000, vwap=113.9, hi=115.3, lo=111.5, **kw)}, t)
+        calls += run({"HOD1": quote(115.4, vol + 70_000, vwap=113.9, hi=115.4, lo=111.5, **kw)}, t + STEP)
+        t, vol = t + 2 * STEP, vol + 71_000
+    while t < at(11, 30):
+        px = round(min(116.0, 115.3 + (t - at(10, 35)).total_seconds() / 3300 * 0.7), 2)
+        calls += run({"HOD1": quote(px, vol, vwap=114.6, hi=max(px, 115.4), lo=111.5, **kw)}, t)
+        t, vol = t + STEP, vol + 1_000
+    k = 0
+    while t < at(12, 45):
+        calls += run({"HOD1": quote(115.6 + 0.3 * (k % 2), vol, vwap=115.0, hi=116.0, lo=111.5, **kw)}, t)
+        t, vol, k = t + STEP, vol + 1_000, k + 1
+    return t, vol, kw, run, calls
+
+
+def _break_116(t, vol, kw, run):
+    out = []
+    for n in range(3):                                     # 12:45: over 116.00 on a burst, three passes
+        px = 116.3 + 0.05 * n
+        out += run({"HOD1": quote(px, vol + 60_000 + 10_000 * n, vwap=115.0, hi=px, lo=111.5, **kw)}, t)
+        t += STEP
+    return out
+
+
+def test_a_fresh_day_high_that_ran_without_volume_does_not_block_the_next(select_only):
+    log = []
+    t, vol, kw, run, calls = _hod_day(log, first_call=False)
+    assert calls == []
+    assert 115.0 in bo._mem["day"]["lanes"]["select"]["late"][("HOD1", "UP")]   # the 10:35 break went late
+    out = _break_116(t, vol, kw, run)
+    assert [(a["time"], a["kind"], a["level"], a.get("reentry")) for a in out] == \
+        [("12:45", "BO_HOD", 116.0, None)]
+
+
+def test_a_second_select_call_comes_from_a_new_day_high_after_the_first_was_called(select_only):
+    log = []
+    t, vol, kw, run, calls = _hod_day(log, first_call=True)
+    assert [(a["time"], a["kind"], a["level"], a["window"]) for a in calls] == [("10:35", "BO_HOD", 115.0, "mid")]
+    out = _break_116(t, vol, kw, run)
+    assert [(a["time"], a["kind"], a["level"], a["window"], a.get("reentry")) for a in out] == \
+        [("12:45", "BO_HOD", 116.0, "pm", True)]
+
+
+def test_a_called_setup_is_never_called_again_on_re_entry(select_only):
+    # A fresh day high called at 12:25, late in the mid-morning session. Five
+    # minutes on the afternoon's re-entry opens with the price still over that
+    # same 115.00 and the volume still running: re-entry is for a setup the
+    # day makes later, and this one has been called.
+    _arm_many({"HOD1": _lv(**FAR)})
+    kw = dict(pc=112.0, opn=112.0)
+    log = []
+
+    def run(snap, t):
+        out = bo.check_live(snap, now=t, index_pct=0.5, log=log)
+        log.extend(out)
+        return out
+    run({"HOD1": quote(112.0, 5_000, **kw)}, at(9, 16))
+    run({"HOD1": quote(115.0, 300_000, vwap=113.5, hi=115.0, lo=111.5, **kw)}, at(11, 40))
+    t, vol, k = at(11, 40, 20), 301_000, 0
+    while t < at(12, 25):
+        assert run({"HOD1": quote(114.2 + 0.7 * (k % 2), vol, vwap=113.9, hi=115.0, lo=111.5, **kw)}, t) == []
+        t, vol, k = t + STEP, vol + 1_000, k + 1
+    vol += 60_000                                          # 12:25: the burst
+    calls, n = [], 0
+    while t < at(12, 31):
+        px = round(115.3 + 0.01 * n, 2)
+        calls += run({"HOD1": quote(px, vol, vwap=113.9, hi=px, lo=111.5, **kw)}, t)
+        t, vol, n = t + STEP, vol + 5_000, n + 1
+    assert [(a["time"], a["kind"], a["level"], a["window"]) for a in calls] == [("12:25", "BO_HOD", 115.0, "mid")]
+
+
+def _late_vwap_reclaim(second_pullback):
+    """The reclaim of _vwap_day() breaks out at 10:45 on ordinary volume and
+    goes late at 10:57. Then either the price keeps creeping up with no new
+    pullback, or VWAP catches up and the price comes back to it."""
+    t, vol, _kw = _vwap_day()
+    start = t
+    # Creeping on to 114.52 also lifts the day's high, so no fresh-day-high
+    # setup stands ready for the jump: only a VWAP reclaim could call it.
+    while t < at(10, 58 if second_pullback else 59):
+        px = round(114.1 + (t - start).total_seconds() / 780 * (0.3 if second_pullback else 0.4), 2)
+        assert bo.check_live({"VW1": quote(px, vol, pc=111.0, opn=111.0, vwap=113.7, hi=max(114.5, px),
+                                           lo=111.0)}, now=t, index_pct=0.5) == []
+        t += STEP
+        vol += 1_000
+    late = bo._mem["day"]["lanes"]["select"]["late"].get(("VW1", "UP")) or set()
+    assert 113.94 in late
+    vw = 113.7
+    if second_pullback:
+        vw = 114.05
+        while t < at(11, 15):                             # eases back to VWAP, holds it, builds a high
+            m = (t - at(10, 58)).total_seconds() / 60.0
+            px = round(114.4 - min(m, 6) / 6 * 0.28 if m < 10 else 114.12 + (m - 10) / 7 * 0.18, 2)
+            assert bo.check_live({"VW1": quote(px, vol, pc=111.0, opn=111.0, vwap=vw, hi=114.5, lo=111.0)},
+                                 now=t, index_pct=0.5) == []
+            t += STEP
+            vol += 1_000
+    out = []
+    for n in range(3):                                     # a jump over the 15-minute high, on a burst
+        px = (114.48 if second_pullback else 114.65) + 0.02 * n
+        out += bo.check_live({"VW1": quote(px, vol + 60_000 + 10_000 * n, pc=111.0, opn=111.0, vwap=vw,
+                                           hi=max(114.5, px), lo=111.0)}, now=t, index_pct=0.5)
+        t += STEP
+    return out
+
+
+def test_after_a_late_vwap_reclaim_the_next_needs_a_pullback_of_its_own(select_only):
+    assert _late_vwap_reclaim(second_pullback=False) == []      # a run with no new pullback is a chase
+    _arm()
+    assert [a["kind"] for a in _late_vwap_reclaim(second_pullback=True)] == ["BO_VWAP"]
+
+
+def test_a_pass_seconds_after_the_last_does_not_confirm_a_break(select_only, monkeypatch):
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(brk(111.3, vol + 60_000), now=t) == []                       # 1 of 2
+    # "Scan once now", or a cron tick, a second after the loop's pass.
+    assert bo.check_live(brk(111.31, vol + 60_500), now=t + dt.timedelta(seconds=1)) == []
+    assert "(1/2 passes)" in bo.status(now=t)["waiting"][0]["why"]
+    fired = bo.check_live(brk(111.4, vol + 70_000), now=t + STEP)                      # the loop's next pass
+    assert [(a["kind"], a["confirm_passes"]) for a in fired] == [("BO_BASE", 2)]
+    # BOS_CONFIRM_MIN_GAP_SEC sets the gap.
+    monkeypatch.setitem(bo.SELECT, "CONFIRM_MIN_GAP_SEC", 0.0)
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(brk(111.3, vol + 60_000), now=t) == []
+    assert len(bo.check_live(brk(111.31, vol + 60_500), now=t + dt.timedelta(seconds=1))) == 1
+
+
+def test_an_extra_pass_neither_confirms_nor_breaks_a_tight_range_run(select_only, monkeypatch):
+    monkeypatch.setitem(bo.SELECT, "HOD", False)            # the range itself, not a fresh day high
+    monkeypatch.setitem(bo.SELECT, "VWAP", False)           # nor a reclaim of its 15-minute high
+    _arm()
+    bo.check_live(q(108.0, 5_000, pc=107.0), now=at(9, 16))
+    t, vol = at(11, 0), 400_000
+    for k in range(35):                                    # 35 minutes inside 0.3%
+        assert bo.check_live(q(108.0 + 0.3 * (k % 2), vol, pc=107.0, vwap=107.8, lo=107.0), now=t) == []
+        t += dt.timedelta(minutes=1)
+        vol += 2_000
+    brk_ = lambda px, v: q(px, v, pc=107.0, vwap=107.8, lo=107.0)
+    assert bo.check_live(brk_(108.5, vol + 40_000), now=t) == []                       # 1 of 2
+    assert bo.check_live(brk_(108.52, vol + 41_000), now=t + dt.timedelta(seconds=1)) == []
+    fired = bo.check_live(brk_(108.55, vol + 45_000), now=t + STEP)
+    assert [(a["kind"], a["confirm_passes"]) for a in fired] == [("BO_RANGE", 2)]
+
+
+def test_a_checkpoint_from_before_the_gap_was_kept_still_loads():
+    L = bo._lane_from({"armed": [["NEAR", "UP", 111.0, 1000.0, 1, None]],
+                       "rconf": [["NEAR", "UP", 108.3, 1, 7]]})
+    assert L["armed"][("NEAR", "UP")][111.0] == {"t": 1000.0, "n": 1, "trig": None, "c": 1000.0}
+    assert L["rconf"][("NEAR", "UP")]["c"] == 0.0
+    L["armed"][("NEAR", "UP")][111.0]["c"] = 1020.0
+    back = bo._lane_from(bo._lane_blob(L))
+    assert back["armed"][("NEAR", "UP")][111.0]["c"] == 1020.0 and back["rconf"] == L["rconf"]

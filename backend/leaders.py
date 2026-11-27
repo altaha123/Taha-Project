@@ -1735,6 +1735,28 @@ def _pc(x):
     return f"{x:.0f}" if abs(x) >= 10 else _num(x, 1)
 
 
+def _two(x):
+    """A ratio to two decimals at most: 0.7, 1.25."""
+    return _num(x, 2)
+
+
+def _whole(x):
+    """A whole number: a P/E of 95."""
+    return f"{x:.0f}"
+
+
+def _vs(x, limit, fmt=_pc):
+    """A figure printed beside the limit it missed, with as many decimals as
+    it takes to differ from it: 13.6% against a floor of 14% is "13.6", not
+    "14", which would read as passing."""
+    text = fmt(x)
+    for dp in (1, 2):
+        if text != fmt(limit) or x == limit:
+            break
+        text = _num(x, dp)
+    return text
+
+
 def _mean(xs):
     xs = [x for x in xs if x is not None]
     return sum(xs) / len(xs) if xs else None
@@ -1834,12 +1856,14 @@ def _breakdown(mix, values, details):
 
 
 def _sold_text(ev):
+    """A result the market sold, in the words the setup lists already use."""
     return (f"Its results were sold: {ev['move'] * 100:+.1f}% the day they were priced, against "
             f"{ev['market_move'] * 100:+.1f}% for the average stock.")
 
 
 def _sales_margin(snap, margin="margin"):
-    """"Sales +28%, margin +3.4 pts", from what the quarter has."""
+    """The last quarter's growth in words, from what it filed: "Sales +28%,
+    margin +3.4 pts", or either half alone, or None."""
     rev, opm = _fig(snap, "revenue_yoy_pct"), _fig(snap, "opm_yoy_chg")
     out = []
     if rev is not None and abs(rev) < PROFIT_TEXT_MAX:
@@ -1850,6 +1874,7 @@ def _sales_margin(snap, margin="margin"):
 
 
 def _high_text(g):
+    """Where the price stands against its 52-week high, in words, or None."""
     nh = _finite(g.get("near_high"))
     if nh is None:
         return None
@@ -1881,7 +1906,7 @@ def _month(sym, g, part, is_calm, snap, ctx):
     pct = ctx["snap_pct"]
     pull_mix = {k: w for k, w in (cfg.get("pull_mix") or {}).items() if (_finite(w) or 0) > 0}
     weight = sum(pull_mix.values())
-    pull = sum(part[k] * w for k, w in pull_mix.items()) / weight if weight else NEUTRAL
+    pull = sum(part.get(k, NEUTRAL) * w for k, w in pull_mix.items()) / weight if weight else NEUTRAL
     fund = _mean([pct["revenue_yoy_pct"].get(sym), pct["opm_yoy_chg"].get(sym)])
     catalyst = _catalyst(snap, cfg)
     values = {"pull": pull, "high": part["high"], "fundmom": fund,
@@ -1924,7 +1949,7 @@ def _month(sym, g, part, is_calm, snap, ctx):
     elif cfg["result_guard"] and ev and ev["reaction"] < cfg["bad_reaction"]:
         why = _sold_text(ev)
     elif pledge is not None and pledge > cfg["pledge_max"]:
-        why = f"Promoters have pledged {_pc(pledge)}% of the company."
+        why = f"Promoters have pledged {_vs(pledge, cfg['pledge_max'])}% of the company."
     elif score < cfg["min_score"] * 100.0:
         why = BELOW_FLOOR_TEXT
 
@@ -1972,7 +1997,7 @@ def _result_quality(q, cfg):
     if rev is not None and rev < cfg["rev_min"]:
         if rev < 0:
             return f"Sales fell {_pc(abs(rev))}% on a year ago; the list needs {_pc(cfg['rev_min'])}% growth."
-        return f"Sales grew {_pc(rev)}% on a year ago; the list needs {_pc(cfg['rev_min'])}%."
+        return f"Sales grew {_vs(rev, cfg['rev_min'])}% on a year ago; the list needs {_pc(cfg['rev_min'])}%."
     pat = _fig(q, "pat_cr")
     if pat is None:
         return "The figures it reported are not in the fundamentals tables yet."
@@ -1987,10 +2012,12 @@ def _result_quality(q, cfg):
             return "Operating profit did not grow."
         oi = _fig(q, "other_income_share_pct")
         if oi is not None and oi > cfg["other_income_max"]:
-            return f"Other income was {_pc(oi)}% of profit before tax: not the business's own earnings."
+            return (f"Other income was {_vs(oi, cfg['other_income_max'])}% of profit before tax: not the "
+                    "business's own earnings.")
     exc, pbt = _fig(q, "exceptional_cr"), _fig(q, "pbt_cr")
     if exc is not None and pbt and pbt > 0 and exc > cfg["exceptional_max"] * pbt:
-        return f"An exceptional gain made up {_pc(exc / pbt * 100)}% of profit before tax."
+        return (f"An exceptional gain made up {_vs(exc / pbt * 100, cfg['exceptional_max'] * 100)}% of profit "
+                "before tax.")
     cfo = _fig(q, "cfo_cr")
     if not fin and cfo is not None and cfo <= 0:
         return "Its last full year's operations used cash."
@@ -2034,7 +2061,8 @@ def _results_list(events, reaction, snapshot):
         breakdown, score = _breakdown(cfg["mix"], values, details)
         why = _result_quality(q, cfg) if cfg["quality_gate"] else None
         if why is None and ev["move"] > cfg["chase_max"]:
-            why = f"Already rose {ev['move'] * 100:.0f}% the day results were priced: the list does not chase."
+            why = (f"Already rose {_vs(ev['move'] * 100, cfg['chase_max'] * 100)}% the day results were priced: "
+                   "the list does not chase.")
         if why is None and cfg["floor"] == "sma200_85":
             ratio = _finite(ev.get("sma200_ratio"))
             if ratio is not None and ratio < RESULTS_SMA200_FLOOR:
@@ -2047,7 +2075,7 @@ def _results_list(events, reaction, snapshot):
         facts = [f"Results on {filed_day}: {'rose' if move >= 0 else 'fell'} {abs(move):.0f}% "
                  + ("that day" if filed_day == day else f"on {day}")]
         if vol_x is not None:
-            facts.append(f"Volume {vol_x:.1f}× usual")
+            facts.append(f"Volume {vol_x:.1f}\u00d7 usual")
         ebitda_yoy = _fig(q, "ebitda_yoy_pct")
         line = _said([(rev is not None and abs(rev or 0) < PROFIT_TEXT_MAX, f"Sales {rev or 0:+.0f}%"),
                       (ebitda_yoy is not None, "operating profit " + ("up" if (ebitda_yoy or 0) > 0 else "down"))])
@@ -2074,19 +2102,19 @@ def _long_floor(snap, fin, cfg):
     if fin:
         roe = _fig(snap, "roe_pct")
         if roe is not None and roe < cfg["roe_min_fin"]:
-            return f"Return on equity {_pc(roe)}%: a lender needs {_pc(cfg['roe_min_fin'])}%."
+            return f"Return on equity {_vs(roe, cfg['roe_min_fin'])}%: a lender needs {_pc(cfg['roe_min_fin'])}%."
         return None
     roce, cfo = _fig(snap, "roce_pct"), _fig(snap, "cfo_cr")
     c2p, de = _fig(snap, "cfo_to_pat"), _fig(snap, "debt_equity_x")
     if roce is not None and roce < cfg["roce_min"]:
-        return f"Return on capital {_pc(roce)}%: the list needs {_pc(cfg['roce_min'])}%."
+        return f"Return on capital {_vs(roce, cfg['roce_min'])}%: the list needs {_pc(cfg['roce_min'])}%."
     if cfo is not None and cfo <= 0:
         return "Operations used cash last year."
     if c2p is not None and c2p < cfg["cfo_to_pat_min"]:
-        return (f"Cash from operations was {_num(c2p, 2)}× profit: the list needs "
-                f"{_num(cfg['cfo_to_pat_min'], 2)}×.")
+        return (f"Cash from operations was {_vs(c2p, cfg['cfo_to_pat_min'], _two)}\u00d7 profit: the list "
+                f"needs {_two(cfg['cfo_to_pat_min'])}\u00d7.")
     if de is not None and de > cfg["de_max"]:
-        return f"Debt is {_num(de)}× equity: the list allows {_num(cfg['de_max'])}×."
+        return f"Debt is {_vs(de, cfg['de_max'], _num)}\u00d7 equity: the list allows {_num(cfg['de_max'])}\u00d7."
     return None
 
 
@@ -2124,9 +2152,9 @@ def _long(sym, g, part, is_calm, snap, ctx):
 
     q_line = (_said([(roe is not None, f"return on equity {_pc(roe or 0)}%")]) if fin else
               _said([(roce is not None, f"return on capital {_pc(roce or 0)}%"),
-                     (c2p is not None, f"cash from operations {_num(c2p or 0)}× profit"),
+                     (c2p is not None, f"cash from operations {_num(c2p or 0)}\u00d7 profit"),
                      (fpos is not None, f"free cash flow in {fpos or 0:.0f} of the last {FCF_YEARS} years"),
-                     (de is not None, f"debt {_num(de or 0)}× equity")]))
+                     (de is not None, f"debt {_num(de or 0)}\u00d7 equity")]))
     c_line = _said([(rev3 is not None, f"sales {rev3 or 0:+.0f}% a year"),
                     (pat3 is not None, f"profit {pat3 or 0:+.0f}% a year over three years")])
     g_line = _said([(pledge is not None, "no shares pledged" if pledge == 0 else f"{_pc(pledge or 0)}% pledged"),
@@ -2162,11 +2190,11 @@ def _long(sym, g, part, is_calm, snap, ctx):
     elif f is not None and f < cfg["f_score_min"]:
         why = f"F-score {f:.0f} of {F_SCORE_TOP}: the list needs {cfg['f_score_min']:.0f}."
     elif pledge is not None and pledge > cfg["pledge_max"]:
-        why = f"Promoters have pledged {_pc(pledge)}% of the company."
+        why = f"Promoters have pledged {_vs(pledge, cfg['pledge_max'])}% of the company."
     elif floor_why:
         why = floor_why
     elif priced_out:
-        why = f"P/E of {pe:.0f}: priced past the list's ceiling of {cfg['pe_max']:.0f}."
+        why = f"P/E of {_vs(pe, cfg['pe_max'], _whole)}: priced past the list's ceiling of {cfg['pe_max']:.0f}."
     elif score < cfg["min_score"] * 100.0:
         why = BELOW_FLOOR_TEXT
 
@@ -2175,7 +2203,7 @@ def _long(sym, g, part, is_calm, snap, ctx):
         facts.append(f"ROE {_pc(roe)}%")
     elif not fin and (roce is not None or c2p is not None):
         facts.append(_cap(_said([(roce is not None, f"ROCE {_pc(roce or 0)}%"),
-                                 (c2p is not None, f"cash flow {_num(c2p or 0)}× profit")])))
+                                 (c2p is not None, f"cash flow {_num(c2p or 0)}\u00d7 profit")])))
     if rev3 is not None:
         facts.append(f"Sales {rev3:+.0f}% a year for 3 years")
     if pledge is not None:

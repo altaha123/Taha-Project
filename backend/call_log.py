@@ -89,13 +89,20 @@ except Exception:
 DB_PATH = os.environ.get("ALTAHA_CALL_DB", "").strip() or os.path.join(DATA_DIR, "call_log.db")
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
-# The four tested lists (leaders.py), then the two lists they replaced. The
-# old keys stay valid so the calls already in the log keep their labels.
-PICK_HORIZONS = ("week", "month", "momentum", "long")
+# The tested lists whose calls are logged (leaders.py), then the lists they
+# replaced. The old keys stay valid so the calls already in the log keep
+# their labels: this week and momentum were folded into the month and
+# long-term lists in December 2026, and short and medium before them.
+PICK_HORIZONS = ("month", "long")
+RETIRED_HORIZONS = ("week", "momentum")
 LEGACY_HORIZONS = ("short", "medium")
-HORIZONS = PICK_HORIZONS + LEGACY_HORIZONS
-HORIZON_LABEL = {"week": "This week", "month": "This month", "momentum": "Momentum",
-                 "long": "Long term", "short": "Short term", "medium": "Medium term"}
+HORIZONS = PICK_HORIZONS + RETIRED_HORIZONS + LEGACY_HORIZONS
+HORIZON_LABEL = {"month": "Swing / This month", "long": "Long-term compounders",
+                 "week": "This week", "momentum": "Momentum",
+                 "short": "Short term", "medium": "Medium term"}
+# Why an open call on a retired list was closed: the list that took its place.
+RETIRED_NOTE = {"week": "List replaced by Swing / This month.",
+                "momentum": "List replaced by Long-term compounders."}
 
 
 def _anchored(setup_key):
@@ -617,13 +624,23 @@ def open_index(horizon: str, prices: dict | None = None) -> dict:
     return out
 
 
+def retire_replaced(scanned_at: str, prices: dict | None = None) -> int:
+    """
+    Close the open calls of this week and momentum, the two lists folded into
+    the month and long-term lists in December 2026, each with the name of the
+    list that took its place. Idempotent: once closed, nothing is open there
+    to close again.
+    """
+    return sum(retire((h,), scanned_at, prices, RETIRED_NOTE[h]) for h in RETIRED_HORIZONS)
+
+
 def retire(horizons, scanned_at: str, prices: dict | None = None, note: str = "") -> int:
     """
     Close every open call of the given horizons as dropped. Idempotent.
 
-    Used once, when the short- and medium-term lists were replaced: their open
-    calls would otherwise stay open for ever, because no scan would list or
-    drop them again.
+    Used when a list is replaced: its open calls would otherwise stay open for
+    ever, because no scan would list or drop them again (the short- and
+    medium-term lists, then this week and momentum: retire_replaced).
     """
     prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
     at = _iso(scan_time(scanned_at) or dt.datetime.now(dt.timezone.utc))

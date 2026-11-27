@@ -1140,9 +1140,21 @@ def _scan_pass():
         follow = _track_live(snap)
     except Exception:
         follow = []
-    for a_, event in follow:
-        _send_update(a_, event)
+    try:
+        return _new_calls(snap, syms, regime_pct)
+    finally:
+        # Their follow-ups go out last, after this pass has looked for new
+        # calls and sent their cards. Each send can wait out Telegram's rate
+        # limit (up to half a minute a try): that wait must never stand
+        # between a quote and the detection run on it. The tg_* flags were
+        # saved before this, so a restart still never sends one twice.
+        for a_, event in follow:
+            _send_update(a_, event)
 
+
+def _new_calls(snap, syms, regime_pct):
+    """The rest of a pass, on the quote just taken: new calls, legacy and
+    breakout, capped, joined with filings, logged and sent."""
     # Opening range: capture live between 09:30-09:40, else backfill once.
     mso = minutes_since_open()
     today_str = _today()
@@ -2294,6 +2306,9 @@ def status():
         "error": _state["error"],
         "pacing": _pacing(today, now),
         "clock": now.strftime("%H:%M"),
+        # The server's own time, to the second: the page judges whether a
+        # call's live_at is still fresh by it, not by the reader's clock.
+        "now": now.isoformat(timespec="seconds"),
         "lanes": {"classic": sum(1 for a in today if _engine(a) != "select"),
                   "select": sum(1 for a in today if _engine(a) == "select")},
         "updates_tg": _updates_mode(),

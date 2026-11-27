@@ -210,7 +210,7 @@
 <link rel="stylesheet" href="filings-views.css?v=20261121-type">
 </template>
 <template id="later-6">
-<link rel="stylesheet" href="alerts.css?v=20261127-lanes">
+<link rel="stylesheet" href="alerts.css?v=20261127-review">
 </template>
 <template id="later-7">
 <link rel="stylesheet" href="universe-scan.css?v=20261121-type">
@@ -228,7 +228,7 @@
 <script src="universe-scan.js?v=20261121-type"></script>
 </template>
 <template id="later-9">
-<script src="alerts-logic.js?v=20261127-lanes" defer></script>
+<script src="alerts-logic.js?v=20261127-review" defer></script>
 <script src="charts.js" defer></script>
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio-story.js" defer></script>
@@ -2623,10 +2623,37 @@ const boLink = s => `<a href="stock.html?ticker=${encodeURIComponent(s)}">${esc(
 const boPct = p => (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p).toFixed(1) + "%";
 
 /* The decisions. alerts-logic.js comes with the other later files (WHAT
-   LOADS FIRST, above) and nav.js opens this page only once they are in;
-   should it still be on its way, the page says Connecting and asks again
-   in two seconds. */
+   LOADS FIRST, above) and nav.js opens this page only once they are in.
+   Should it still be on its way, the page says Connecting and looks again
+   in two seconds, asking the server for nothing meanwhile. Once the page has
+   loaded without it (a dropped request, a blocked file), the page says so
+   calmly, asks for the file once more and looks every thirty seconds
+   (laNoLogic). */
 const laLogic = () => window.AltahaAlertsLogic || null;
+let laLoaded = document.readyState === "complete", laWaitFrom = 0, laAsking = false;
+window.addEventListener("load", () => { laLoaded = true; });
+function laLogicLate(){
+  if(!laWaitFrom) laWaitFrom = Date.now();
+  return laLoaded || Date.now() - laWaitFrom > 15000;
+}
+function laAskLogic(){
+  if(laLogic() || laAsking) return;
+  const tag = (document.getElementById("later-9") || {}).content;
+  const was = tag && tag.querySelector('script[src^="alerts-logic.js"]');
+  const s = document.createElement("script");
+  s.src = (was && was.getAttribute("src")) || "alerts-logic.js";
+  laAsking = true;
+  s.onload = () => { laAsking = false; if(laLogic() && laOn) laTick(); };
+  s.onerror = () => { laAsking = false; s.remove(); };
+  document.body.appendChild(s);
+}
+function laNoLogic(){
+  $("ldot").className = "la-dot";
+  if(!laLogicLate()){ $("lstat").textContent = "Connecting"; return; }
+  $("lstat").textContent = "Not loaded";
+  laSet($("lalerts"), `<div class="la-empty"><span class="la-radar"></span><div>The alerts did not finish loading<small>Part of this page did not arrive. It tries again every 30 seconds; reloading the page also works.</small></div></div>`);
+  laAskLogic();
+}
 const LA_STAR = '<span class="la-st" aria-hidden="true">★</span>';
 const LA_STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.5.8-4.8 4.5 1.2 6.4L12 17.3l-5.7 3.1 1.2-6.4-4.8-4.5 6.5-.8z"/></svg>';
 const laNum = v => { const n = Number(v); return isFinite(n) ? n : 0; };
@@ -2657,17 +2684,43 @@ function laSig(html){
 function laSet(el, html){
   const same = laSig(html);
   if(el.__la === same) return false;
+  const back = laFocusOf(el);
   el.__la = same; el.innerHTML = html;
+  laRefocus(el, back);
   return true;
+}
+
+/* A rewrite must not throw away the reader's place: whatever had the focus
+   inside `root` (a card's name that a timeline mark sent the focus to, a
+   mark, a button) is found again in what replaced it, by its key, else its
+   class, else its place among its kind, and focused without a scroll. */
+function laFocusOf(root){
+  const act = document.activeElement;
+  if(!act || act === document.body || !root.contains(act)) return null;
+  const same = [...root.querySelectorAll(act.tagName)];
+  return {k: act.dataset ? act.dataset.k : null, cls: act.classList[0] || null, tag: act.tagName, i: same.indexOf(act)};
+}
+function laRefocus(root, back){
+  if(!back || !root || !root.isConnected || root.contains(document.activeElement)) return;
+  let f = null;
+  if(back.k) f = [...root.querySelectorAll("[data-k]")].find(n => n.dataset.k === back.k) || null;
+  if(!f && back.cls) f = root.matches("." + CSS.escape(back.cls)) ? root : root.querySelector("." + CSS.escape(back.cls));
+  if(!f && back.i >= 0) f = root.querySelectorAll(back.tag)[back.i] || null;
+  if(f && typeof f.focus === "function") f.focus({preventScroll: true});
 }
 
 /* A list of cards, each one written only when it changed: one call's price
    moving rebuilds that card alone, so its neighbours keep their place, their
-   hover and the reader's focus. `list` is [{k, html}], one element each, in
-   order. Returns true when anything was written or moved. */
+   hover and the reader's focus. A card rebuilt, or moved past one that was,
+   gives the focus back to the same place in it (laRefocus). `list` is
+   [{k, html}], one element each, in order. Returns true when anything was
+   written or moved. */
 function laKeyed(el, list){
   const old = new Map();
   [...el.children].forEach(n => { if(n.dataset && n.dataset.k) old.set(n.dataset.k, n); });
+  const act = document.activeElement;
+  const holder = act && act !== document.body ? [...el.children].find(n => n.contains(act)) : null;
+  const back = holder && holder.dataset.k ? laFocusOf(holder) : null;
   let changed = false;
   const nodes = list.map(it => {
     const sig = laSig(it.html), was = old.get(it.k);
@@ -2682,6 +2735,7 @@ function laKeyed(el, list){
   nodes.forEach((n, i) => { if(el.children[i] !== n){ el.insertBefore(n, el.children[i] || null); changed = true; } });
   while(el.children.length > nodes.length){ el.lastElementChild.remove(); changed = true; }
   el.__la = null;
+  if(back && !el.contains(document.activeElement)) laRefocus(nodes.find(n => n.dataset.k === holder.dataset.k), back);
   return changed;
 }
 
@@ -2727,23 +2781,32 @@ function laDay(iso){
 const laSeen = new Set();
 let laFirstPaint = true;
 
-/* Where the trade stands on its rail, in words, for a screen reader. */
-function laRailWords(rl){
+/* "Now" by the server's clock: /intraday/status says what time it is
+   there, so a reader whose own clock runs fast does not see every price go
+   stale, nor a slow one see a stopped price as live. */
+let laSkew = 0;
+const laNow = () => Date.now() + laSkew;
+
+/* Where the trade stands on its rail, in words, for a screen reader. A
+   price that has stopped coming says when it was last seen, not "now". */
+function laRailWords(rl, st){
   const L = laLogic();
   const where = rl.r >= rl.rr ? "at or past the target" : rl.r >= 1 ? "past the half-book"
     : rl.r >= 0 ? "between the entry and the half-book" : rl.r > -1 ? "between the stop loss and the entry" : "at or past the stop loss";
-  return `Now ${L.rmult(rl.r)}, ${where}. Best ${L.rmult(rl.best)}, worst ${L.rmult(rl.worst)}.`;
+  const lead = st && st.stale ? `Last price, at ${st.seen}:` : "Now";
+  return `${lead} ${L.rmult(rl.r)}, ${where}. Best ${L.rmult(rl.best)}, worst ${L.rmult(rl.worst)}.`;
 }
 
 /* One call: which lane, what to do, at what price, where to get out, where
    it stands now, and how it ended. `it` is one of alerts-logic's items(): in
-   All, a break both lanes called is the Classic call carrying its ★ partner,
-   shown once with a "Select confirmed" badge. */
+   All, a break both lanes called is one card, the record whose full card
+   went to Telegram (else the first to fire), carrying the other lane's
+   call as a badge: "★ Select confirmed 10:02 am", "Classic called it". */
 function alertCard(it, open){
   const L = laLogic(), a = it.rec, pair = it.pair;
   const sell = a.direction === "DOWN", sel = L.isSelect(a);
   const fresh = !laFirstPaint && !laSeen.has(it.key);
-  const st = L.liveState(a), at = L.callAt(a);
+  const st = L.liveState(a, laNow()), at = L.callAt(a);
 
   const pills = [];
   const sc = L.num(a.score), rv = L.num(a.rvol), sp = L.num(a.sector_pct), sec = L.sectorShort(a.sector);
@@ -2752,11 +2815,12 @@ function alertCard(it, open){
   if(rv !== null) pills.push(`<span class="la-pill" title="Volume against its usual for this time of day">RVOL ${rv.toFixed(1)}×</span>`);
   if(sec) pills.push(`<span class="la-pill" title="${esc(a.sector)}${sp !== null ? ": the sector's typical move today" : ""}">${esc(sec)}${sp !== null ? " " + esc(L.pct(sp)) : ""}</span>`);
   pills.push(sel ? `<span class="la-pill lane star"><span>${LA_STAR} Select</span></span>` : `<span class="la-pill lane">Classic</span>`);
-  if(pair && !sel){
+  const pn = L.partnerNote(it);
+  if(pn && pn.lane === "select"){
     const pf = !laFirstPaint && !laSeen.has(L.keyOf(pair)), ps = L.num(pair.score);
-    pills.push(`<span class="la-pill confirm${pf ? " is-new" : ""}" title="The stricter Select lane called the same break${ps !== null ? ", scoring it " + Math.round(ps) + "/100" : ""}"><span>${LA_STAR} Select confirmed ${esc(L.clock12(pair.time))}</span></span>`);
+    pills.push(`<span class="la-pill confirm${pf ? " is-new" : ""}" title="The stricter Select lane called the same break${ps !== null ? ", scoring it " + Math.round(ps) + "/100" : ""}"><span>${LA_STAR} ${esc(pn.text)}</span></span>`);
   }
-  if(pair && sel) pills.push(`<span class="la-pill quiet">Classic called it ${esc(L.clock12(pair.time))}</span>`);
+  if(pn && pn.lane === "classic") pills.push(`<span class="la-pill quiet">${esc(pn.text)}</span>`);
 
   let state = "";
   if(st.key === "final"){
@@ -2764,8 +2828,9 @@ function alertCard(it, open){
     const has = st.pnl !== null && st.pnl !== undefined;
     state = `<div class="la-out ${st.tone}">${st.tone === "won" ? "✓" : st.tone === "lost" ? "✕" : "•"} ${st.label}${has ? " · " + (st.pnl > 0 ? "▲\u00A0" : st.pnl < 0 ? "▼\u00A0" : "") + boPct(st.pnl) : ""}</div>`;
   }else if(st.key !== "none"){
-    const fig = st.key !== "live" && st.pnl !== null ? `<b class="${st.pnl > 0 ? "chg-up" : st.pnl < 0 ? "chg-down" : "la-flat"}">${esc(L.pct(st.pnl))}</b>` : "";
-    const note = st.key === "t1" ? [st.price ? "Now " + boMoney(st.price) : "", a.t1_time ? "half-book reached " + L.clock12(a.t1_time) : ""].filter(Boolean).join(" · ")
+    const fig = st.key !== "live" && st.key !== "last" && st.pnl !== null ? `<b class="${st.pnl > 0 ? "chg-up" : st.pnl < 0 ? "chg-down" : "la-flat"}">${esc(L.pct(st.pnl))}</b>` : "";
+    const px = st.price ? (st.stale ? `Last ${boMoney(st.price)} at ${st.seen}` : "Now " + boMoney(st.price)) : "";
+    const note = st.key === "t1" ? [px, a.t1_time ? "half-book reached " + L.clock12(a.t1_time) : ""].filter(Boolean).join(" · ")
       : st.key === "target" ? (st.at ? "at " + L.clock12(st.at) : "")
       : st.key === "stop" ? [st.at ? "at " + L.clock12(st.at) : "", st.t1 ? "after reaching the half-book" : ""].filter(Boolean).join(", ")
       : "";
@@ -2775,7 +2840,7 @@ function alertCard(it, open){
   // The rail is the live tracker's picture; once the close's check has
   // ruled, its line stands alone rather than beside a picture it may differ from.
   const rl = st.key === "final" ? null : L.rail(a);
-  const rail = rl ? `<div class="la-rail" role="img" aria-label="${esc(laRailWords(rl))}">
+  const rail = rl ? `<div class="la-rail" role="img" aria-label="${esc(laRailWords(rl, st))}">
       <span class="ex" style="left:${rl.lo}%;width:${Math.max(0, rl.hi - rl.lo).toFixed(1)}%"></span>
       <span class="tk" style="left:${rl.entry}%"></span><span class="tk" style="left:${rl.t1}%"></span>
       <span class="nw ${rl.r > 0 ? "up" : rl.r < 0 ? "dn" : ""}" style="left:${rl.now}%"></span>
@@ -2783,9 +2848,10 @@ function alertCard(it, open){
     <div class="la-rail-l" aria-hidden="true"><span>Stop</span><span style="left:${rl.entry}%">Entry</span><span style="left:${rl.t1}%">Half</span><span>Target</span></div>` : "";
 
   // For the owner, on a Classic call Select did not make: what Select's own
-  // checks said about it. The running measure of whether they help.
-  const sw = isOwner() && !pair ? L.shadowWords(a) : null;
-  const shadow = sw ? `<p class="la-shadow">${LA_STAR} ${sw.length ? "Select's checks would have skipped it: " + esc(sw.join(", ")) : "Select's checks: all passed"}</p>` : "";
+  // quality filters said about it (the running measure of whether they
+  // help), and what held Select back, never "all passed" for a call it held.
+  const sn = isOwner() && !pair ? L.shadowNote(a, laLast && laLast.b && laLast.b.waiting) : null;
+  const shadow = sn ? `<p class="la-shadow">${LA_STAR} ${esc(sn.text)}</p>` : "";
 
   const t1hit = !!a.t1_hit;
   const when = `<span class="la-when"><time${a.date && a.time ? ` datetime="${esc(a.date)}T${esc(a.time)}+05:30"` : ""}>${esc(L.clock12(a.time) || a.time || "")}</time>${
@@ -2872,20 +2938,21 @@ function renderTimeline(rows, pace, open){
       <div class="la-tl-key" aria-hidden="true"><span class="k-dot">Classic</span><span class="k-star">${LA_STAR_SVG}Select</span><i></i><span class="k-open">Live</span><span class="k-t1">Half-booked</span><span class="k-won">Target</span><span class="k-lost">Stopped</span></div>`;
   }
   // Marks closer than 16px are lifted apart: a percentage of this strip.
-  const wide = host.querySelector(".la-tl-strip").clientWidth || 900;
-  const bands = L.tlBands(pace, rows), dots = L.tlDots(rows, {gap: Math.round(16000 / wide) / 10});
+  // Select's sessions are shaded only while Select runs (tlBands).
+  const wide = host.querySelector(".la-tl-strip").clientWidth || 900, now = laNow();
+  const bands = L.tlBands(pace, rows), dots = L.tlDots(rows, {gap: Math.round(16000 / wide) / 10, now});
   const marks = bands.map(b => `<div class="la-tl-band${b.current ? " now" : ""}" style="left:${b.left}%;width:${b.width}%">
         <span aria-hidden="true"><b>${esc(b.label)}</b> ${laNum(b.used)}/${laNum(b.cap)}</span>
         <span class="la-sr">${esc(b.label)} session, ${esc(L.clock12(b.from))} to ${esc(L.clock12(b.to))}: ${laNum(b.used)} of ${laNum(b.cap)} Select slots used.</span></div>`).join("")
     + dots.map(t => `<button type="button" class="la-tl-dot ${t.lane} ${t.tone} s${t.stack}" style="left:${t.left}%" data-k="${esc(t.key)}" aria-label="${esc(t.label)}" title="${esc(t.label)}">${t.star ? LA_STAR_SVG : ""}</button>`).join("")
     + (dots.length ? "" : `<span class="la-tl-empty">${open ? "Each call lands here at the minute it fires" : "No calls today"}</span>`);
   laSet(host.querySelector(".la-tl-marks"), marks);
-  const cards = L.items(rows, "all"), both = cards.filter(it => it.pair).length;
-  const won = cards.filter(it => L.isWin(it.rec)).length, lost = cards.filter(it => L.isStopped(it.rec)).length;
-  const live = cards.filter(it => L.isActive(it.rec)).length;
-  host.querySelector(".la-tl-sum").textContent = cards.length
-    ? [`${cards.length} call${cards.length === 1 ? "" : "s"}${both ? `, ${both} in both lanes` : ""}`,
-       open && live ? `${live} live` : "", won ? `${won} hit target` : "", lost ? `${lost} stopped` : ""].filter(Boolean).join(" · ")
+  // The same figures as the hero, from the record each card shows; a call
+  // whose price has stopped coming is not counted live.
+  const n = L.dayCounts(rows, now);
+  host.querySelector(".la-tl-sum").textContent = n.calls
+    ? [`${n.calls} call${n.calls === 1 ? "" : "s"}${n.both ? `, ${n.both} in both lanes` : ""}`,
+       open && n.live ? `${n.live} live` : "", n.hit ? `${n.hit} hit target` : "", n.stopped ? `${n.stopped} stopped` : ""].filter(Boolean).join(" · ")
     : "";
   const x = open ? L.tlNow() : null, tick = host.querySelector(".la-tl-now");
   tick.hidden = x === null;
@@ -2921,6 +2988,9 @@ function renderFunnel(b, d){
   if(mf) eng.push(mf.ready ? `Money flow ready, ${laNum(mf.sectors)} sectors` : "Money flow still loading");
   if(d && d.live_tracked !== undefined && d.live_tracked !== null) eng.push(`Tracking ${laNum(d.live_tracked)} open call${laNum(d.live_tracked) === 1 ? "" : "s"} live`);
   if(d && d.updates_tg) eng.push("Telegram follow-ups: " + esc({off: "off", target: "target only", t1: "half-book and target", all: "half-book, target and stop"}[d.updates_tg] || d.updates_tg));
+  // A check that failed on one stock today: the pass went on without it.
+  const er = b.errors;
+  if(er && laNum(er.count)) eng.push(`${laNum(er.count)} stock check${laNum(er.count) === 1 ? "" : "s"} failed today${er.last ? `, last at ${esc(er.at || "")}: ${esc(er.last)}` : ""}`);
   laSet($("leng"), eng.map(x => `<span>${x}</span>`).join(""));
   const rows = L.funnel(b.gates && b.gates.select);
   if(laSet($("lfunnel"), rows.length
@@ -3057,15 +3127,17 @@ async function getJSON(path){
   catch(e){ return null; }
 }
 
-/* One refresh: both feeds at once, then everything drawn from them. */
+/* One refresh: both feeds at once, then everything drawn from them. Without
+   the decisions (alerts-logic.js) nothing can be drawn, so nothing is
+   asked for either (laNoLogic). */
 async function loadLive(){
+  if(!laLogic()){ laNoLogic(); return; }
   const seq = ++laSeq;
   const [d, b] = await Promise.all([getJSON("/intraday/status"), getJSON("/breakouts/status")]);
   if(seq !== laSeq) return;   // a newer refresh started meanwhile: its answer is the one to draw
   const L = laLogic();
   renderTelegram(b, d);
   renderWatch(b);
-  if(!L){ $("lstat").textContent = "Connecting"; return; }
   laPaintBar();
   renderLanes(b);
   renderRadar(b, d);
@@ -3076,22 +3148,27 @@ async function loadLive(){
   }else{
     laMarket = !!d.market_open;
     laLast = {d, b};
+    const told = Date.parse(d.now || "");
+    if(isFinite(told)) laSkew = told - Date.now();
     const stocks = b && b.usable ? laNum(b.stocks) : 0;
     const live = laIsLive(d, b);
     $("ldot").className = "la-dot" + (live ? " on" : "");
     $("lstat").textContent = live ? "Live now" : d.market_open ? "Paused" : "Market closed · back at 9:20 am";
     const rows = d.alerts_today || [];
-    const cards = L.items(rows, "all");
-    laCount($("st-calls"), cards.length);
-    laCount($("st-select"), rows.filter(L.isSelect).length);
-    laCount($("st-hit"), cards.filter(it => L.isWin(it.rec) || (it.pair && L.isWin(it.pair))).length);
+    // One figure per card, from the record the card shows (dayCounts).
+    const n = L.dayCounts(rows, laNow());
+    laCount($("st-calls"), n.calls);
+    laCount($("st-select"), n.select);
+    laCount($("st-hit"), n.hit);
     laCount($("st-watch"), stocks);
-    // Select's pacing, in the server's words; the status pill already says when the market is shut.
+    // Select's pacing, in the server's words; the status pill already says when
+    // the market is shut. Switched off, Select has no pace and no sessions to shade.
     const pace = d.pacing || (b && b.pacing) || null;
-    const paceOn = !!(pace && pace.line && !(pace.session && pace.session.key === "closed"));
+    const selOff = L.selectOff(pace, b && b.lanes);
+    const paceOn = !selOff && !!(pace && pace.line && !(pace.session && pace.session.key === "closed"));
     $("lpace").hidden = !paceOn;
     laSet($("lpace"), paceOn ? esc(pace.line).replace(/★/g, LA_STAR) : "");
-    renderTimeline(rows, pace, !!d.market_open);
+    renderTimeline(rows, selOff ? {enabled: false} : pace, !!d.market_open);
     // If something is stopping calls, tell the owner which thing.
     const problem = !d.running ? "The scanner is not running. Press Start live scanner."
       : d.error && d.market_open ? `The scanner cannot read the market right now: ${d.error}.`
@@ -3137,8 +3214,10 @@ async function laTick(){
   }
   if(!laOn) return;
   clearTimeout(liveTimer);
+  // Without alerts-logic.js: two seconds while the page may still be
+  // bringing it, thirty once it has given up (laNoLogic asked again).
   const L = laLogic();
-  liveTimer = setTimeout(laTick, L ? L.pollDelay(!document.hidden, laMarket) : 2000);
+  liveTimer = setTimeout(laTick, L ? L.pollDelay(!document.hidden, laMarket) : laLogicLate() ? 30000 : 2000);
 }
 document.addEventListener("visibilitychange", () => { if(laOn && !document.hidden) laTick(); });
 

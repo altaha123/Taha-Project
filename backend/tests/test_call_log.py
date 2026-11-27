@@ -381,3 +381,35 @@ def test_index_closes_are_read_once_a_day(app_with_scan, monkeypatch):
     monkeypatch.setattr(main.tracker, "_benchmark_frame",
                         lambda: pytest.fail("the feed was read twice in one day"))
     assert main._index_closes() == [("2026-10-26", 250.0), ("2026-10-28", 255.0)]
+
+
+# --- the lists folded into the fundamental ones (December 2026) ---------------
+
+def test_the_lists_logged_are_month_and_long_and_the_replaced_ones_keep_their_labels(log):
+    assert log.PICK_HORIZONS == ("month", "long")
+    assert {"week", "momentum", "short", "medium"} <= set(log.HORIZONS)
+    # The listing names each horizon it holds from this table, so one missing
+    # here would take the whole record down.
+    assert set(log.HORIZON_LABEL) == set(log.HORIZONS)
+    assert (log.HORIZON_LABEL["week"], log.HORIZON_LABEL["momentum"]) == ("This week", "Momentum")
+    assert (log.HORIZON_LABEL["month"], log.HORIZON_LABEL["long"]) == ("Swing / This month", "Long-term compounders")
+    log.record("momentum", [idea("ABB", setup_key="pick_momentum")], SCAN1, {})
+    out = log.listing(now=NOW)
+    assert out["horizons"] == [{"key": "momentum", "label": "Momentum"}]
+
+
+def test_logging_a_tested_list_closes_what_week_and_momentum_left_open(app_with_scan, monkeypatch):
+    main = app_with_scan
+    main.call_log.record("week", [idea("ABB", setup_key="pick_week")], "20 Oct 2026, 05:10", {})
+    main.call_log.record("momentum", [idea("TCS", setup_key="pick_momentum")], "20 Oct 2026, 05:10", {})
+    monkeypatch.setattr(main.ideas_engine, "select",
+                        lambda p, **k: {"rows": [idea("ABB", setup_key="pick_month")], "available": True,
+                                        "list": "month"})
+    main.ideas(horizon="week")
+    rows = {r["horizon"]: r for r in main.call_log.listing()["rows"]}
+    assert rows["week"]["status"] == rows["momentum"]["status"] == "closed"
+    assert rows["week"]["outcome"] == rows["momentum"]["outcome"] == "dropped"
+    assert rows["month"]["status"] == "open"
+    assert main.call_log.recorded("month", SCAN1) and not main.call_log.recorded("week", SCAN1)
+    # Once: the next scan finds nothing left open there to close.
+    assert main.call_log.retire_replaced(SCAN2, {}) == 0

@@ -117,6 +117,11 @@ EXCEPTIONAL_MAX_SHARE = 0.25     # of profit before tax
 # Net margins are ordered within ±100%: a year-ago loss many times that
 # quarter's revenue would otherwise decide the order on its own.
 MARGIN_CLAMP_PCT = 100.0
+# A business of some size: ₹25 crore of revenue in the quarter, about ₹100
+# crore a year. Ordered on margin swing, the screen otherwise opens with
+# companies of ₹2-90 crore a year, where a few lakh of profit swings the
+# margin by tens of points.
+TURNAROUND_MIN_REVENUE_CR = 25.0
 
 # ── Cash-rich FCF compounders ───────────────────────────────────────────────
 FCF_YEARS = 3               # full years of positive free cash flow, in a row
@@ -142,9 +147,9 @@ SCREENS = [
               % (RUN_MIN_PCT, PAIR_MIN_PCT, PAIR_MARGIN_PTS, OPM_FLOOR_PCT,
                  OPM_DROP_MAX_PTS, MIN_TURNOVER_CR, RUN_MIN_PCT)),
      "order": ("In order of two ranks among the companies listed, averaged: revenue "
-               "growth over the last four quarters (the middle of the four), and the "
-               "change in operating margin on a year earlier (growth alone where "
-               "there is no margin).")},
+               "growth (the middle figure of the quarters shown) and the change in "
+               "operating margin on a year earlier (growth alone where there is no "
+               "margin).")},
     {"id": "turnarounds",
      "name": "Operational turnarounds",
      "description": ("Back to a profit from a loss a year earlier, on higher sales, "
@@ -155,8 +160,9 @@ SCREENS = [
               "items positive and above the same quarter a year earlier. Other income "
               "no more than %g%% of profit before tax, and exceptional items no more "
               "than %g%% of it; a loss before tax fails both. Banks, lenders and "
-              "insurers are not tested on EBITDA or other income, which for them is "
-              "the business." % (OTHER_INCOME_MAX_SHARE * 100, EXCEPTIONAL_MAX_SHARE * 100)),
+              "insurers are not tested on EBITDA or other income: a lender's fees and "
+              "treasury income are its business."
+              % (OTHER_INCOME_MAX_SHARE * 100, EXCEPTIONAL_MAX_SHARE * 100)),
      "order": ("In order of how far the net margin (profit after tax ÷ revenue) moved "
                "from a year earlier, so no company is placed first for its size alone.")},
     {"id": "fcf_compounders",
@@ -368,19 +374,19 @@ def _nse_industries():
 
 def _scan_market(today):
     """
-    {SYMBOL: {"turnover_cr", "price"}} for the companies the latest scan
-    analysed: the average traded value a day (₹ crore, 60 sessions) and the
-    close it scored on, as it recorded them in the point-in-time store. Empty
-    when there is no such scan within SCAN_FRESH_DAYS of `today`, or none
-    could be read. Never raises.
+    {SYMBOL: {"turnover_cr", "price"}} for the companies the latest scan on
+    or before `today` analysed: the average traded value a day (₹ crore, 60
+    sessions) and the close it scored on, as it recorded them in the
+    point-in-time store. Empty when that scan is more than SCAN_FRESH_DAYS
+    old, or none could be read. Never raises.
     """
     try:
         import pit_store
         conn = pit_store._connect()
-        top = conn.execute("SELECT as_of_date FROM factor_snapshots"
-                           " ORDER BY as_of_date DESC LIMIT 1").fetchone()
+        top = conn.execute("SELECT as_of_date FROM factor_snapshots WHERE as_of_date <= ?"
+                           " ORDER BY as_of_date DESC LIMIT 1", (today.isoformat(),)).fetchone()
         day = _day(top[0]) if top else None
-        if day is None or not 0 <= (today - day).days <= SCAN_FRESH_DAYS:
+        if day is None or (today - day).days > SCAN_FRESH_DAYS:
             return {}
         out = {}
         for sym, factor, value in conn.execute(
@@ -495,6 +501,8 @@ def _turnaround(snap, ctx):
         return None
     rev, rev_before = snap.get("revenue_cr"), snap.get("revenue_yoy_cr_prev")
     if not _known(rev, rev_before) or rev <= rev_before:
+        return None
+    if rev < TURNAROUND_MIN_REVENUE_CR:
         return None
     core, core_before = snap.get("core_ebitda_cr"), snap.get("core_ebitda_yoy_cr_prev")
     if not fin and (not _known(core, core_before) or core <= 0 or core <= core_before):

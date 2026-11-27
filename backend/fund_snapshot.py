@@ -420,16 +420,38 @@ def _annual(ann, cfs, sheets, asof, fin):
                         out["roce_pct"] = _r(ebit / ce * 100)
             # Piotroski's liquidity and leverage tests describe a manufacturer;
             # a lender's balance sheet is its borrowing, so it has no F-score.
-            out["f_score"] = None if fin else piotroski(a0, a1, bs, prior, cfs)
+            # `f_score_tests` says how many of the nine could be made.
+            got = None if fin else piotroski_tests(a0, a1, bs, prior, cfs)
+            out["f_score"], out["f_score_tests"] = (None, None) if got is None else got
     return out
 
 
-def piotroski(a0, a1, b0, b1, cfs):
+def _leverage(b):
+    """Long-term borrowings, or all borrowings where the sheet does not split
+    them: about one sheet in ten files no non-current line, most of those
+    with their total (often nil) on record."""
+    v = _f(b.get("borrowings_non_current_cr"))
+    return v if v is not None else _f(b.get("total_borrowings_cr"))
+
+
+def _current_ratio(b):
+    """The current ratio as filed, else current assets over current
+    liabilities where both are on the sheet."""
+    v = _f(b.get("current_ratio_x"))
+    if v is not None:
+        return v
+    ca, cl = _f(b.get("current_assets_cr")), _f(b.get("current_liabilities_cr"))
+    return ca / cl if (ca is not None and cl and cl > 0) else None
+
+
+def piotroski_tests(a0, a1, b0, b1, cfs):
     """
-    Piotroski's nine-point F-score, from the company's own filings: profit,
-    cash flow, the change in returns, accruals, leverage, liquidity, share
-    issuance, margin and asset turnover. None unless both year-end balance
-    sheets and both years' P&L are held, since half a score is no score.
+    Piotroski's nine tests, from the company's own filings, as
+    (points scored, tests that could be made): profit, cash flow, the change
+    in returns, accruals, leverage, liquidity, share issuance, margin and
+    asset turnover. A test whose figures are not filed is not made, rather
+    than counted as failed. None unless both year-end balance sheets and both
+    years' P&L are held, since half a score is no score.
     """
     if not (a0 and a1 and b0 and b1):
         return None
@@ -440,28 +462,32 @@ def piotroski(a0, a1, b0, b1, cfs):
     c0 = next((r for r in _years(cfs) if _day(r.get("period_end")) == _day(a0.get("period_end"))), None)
     cfo = _f((c0 or {}).get("cfo_cr"))
     roa0, roa1 = pat0 / ta0, pat1 / ta1
-    score = 0
-    score += roa0 > 0
-    score += bool(cfo is not None and cfo > 0)
-    score += roa0 > roa1
-    score += bool(cfo is not None and cfo / ta0 > roa0)
-    lev0 = _f(b0.get("borrowings_non_current_cr"))
-    lev1 = _f(b1.get("borrowings_non_current_cr"))
+    tests = [roa0 > 0, roa0 > roa1]
+    if cfo is not None:
+        tests += [cfo > 0, cfo / ta0 > roa0]
+    lev0, lev1 = _leverage(b0), _leverage(b1)
     if lev0 is not None and lev1 is not None:
-        score += (lev0 / ta0) <= (lev1 / ta1)
-    cr0, cr1 = _f(b0.get("current_ratio_x")), _f(b1.get("current_ratio_x"))
+        tests.append((lev0 / ta0) <= (lev1 / ta1))
+    cr0, cr1 = _current_ratio(b0), _current_ratio(b1)
     if cr0 is not None and cr1 is not None:
-        score += cr0 > cr1
+        tests.append(cr0 > cr1)
     eq0, eq1 = _f(b0.get("equity_capital_cr")), _f(b1.get("equity_capital_cr"))
     if eq0 is not None and eq1 is not None:
-        score += eq0 <= eq1 * 1.001
+        tests.append(eq0 <= eq1 * 1.001)
     m0, m1 = _f(a0.get("opm_pct")), _f(a1.get("opm_pct"))
     if m0 is not None and m1 is not None:
-        score += m0 > m1
+        tests.append(m0 > m1)
     r0, r1 = _f(a0.get("revenue_cr")), _f(a1.get("revenue_cr"))
     if r0 is not None and r1 is not None:
-        score += (r0 / ta0) > (r1 / ta1)
-    return int(score)
+        tests.append((r0 / ta0) > (r1 / ta1))
+    return int(sum(bool(t) for t in tests)), len(tests)
+
+
+def piotroski(a0, a1, b0, b1, cfs):
+    """Piotroski's nine-point F-score: the tests passed (piotroski_tests), or
+    None when the two years' sheets and P&L are not both held."""
+    got = piotroski_tests(a0, a1, b0, b1, cfs)
+    return None if got is None else got[0]
 
 
 # ---------------------------------------------------------------------------

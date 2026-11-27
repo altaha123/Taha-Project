@@ -178,3 +178,11 @@ def test_catalysts_reorder_a_setup_list_and_never_change_who_is_on_it(monkeypatc
     assert {r["symbol"] for r in lifted["rows"]} == {r["symbol"] for r in plain["rows"]}
     assert any("never choose it" in n for n in lifted["selection_notes"])
     assert set(ideas.CATALYST_LISTS) == {"breakout", "technical", "quick", "flow", "emerging"}
+
+
+def test_every_list_served_has_a_staleness_limit_and_an_unknown_one_says_what_there_is():
+    import leaders
+    assert set(leaders.LISTS) <= set(ideas.PICK_STALE_DAYS)
+    assert [ideas.PICK_STALE_DAYS[k] for k in leaders.ORDER] == [5, 3, 14]
+    with pytest.raises(ValueError, match="month, results, long"):
+        ideas.select(payload([]), horizon="fortnight")

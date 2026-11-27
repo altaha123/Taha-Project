@@ -1381,8 +1381,10 @@ def _log_calls(horizon, rows, p):
     try:
         if horizon in call_log.PICK_HORIZONS:
             # The first scan with the tested lists closes what is still open
-            # on the two lists they replaced. Nothing would ever drop those.
+            # on the lists they replaced (short and medium, then this week and
+            # momentum). Nothing would ever drop those.
             call_log.retire(call_log.LEGACY_HORIZONS, p.get("scanned_at"), _scan_prices(p))
+            call_log.retire_replaced(p.get("scanned_at"), _scan_prices(p))
         return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p))
     except Exception:
         import traceback
@@ -1654,14 +1656,26 @@ def tracker_export():
                              "attachment; filename=altaha-tracked-ideas.csv"})
 
 
+def _horizon_slug(sel, horizon):
+    """The file name's list: the list that answered (an old name resolves to
+    the list that replaced it), else the name asked for, letters only."""
+    name = str((sel or {}).get("list") or horizon or "ideas").lower()
+    return "".join(ch for ch in name if ch.isalnum() or ch in "-_")[:20] or "ideas"
+
+
 @app.get("/ideas/export.csv")
 def ideas_export(horizon: str = "short", limit: int = 25,
                  min_tier: str = "moderate", include_thin: bool = False):
     p = _state["payload"]
     if not p:
         raise HTTPException(404, "No scan yet.")
-    sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
-                              min_tier=min_tier, include_thin=bool(include_thin))
+    try:
+        # An old list's name (week, momentum, trade, position) resolves to the
+        # list that replaced it; a name no list ever had is the caller's error.
+        sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
+                                  min_tier=min_tier, include_thin=bool(include_thin))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     cols = ["symbol", "name", "sector", "setup", "conviction", "conviction_band",
             "setup_fit", "composite", "technical", "fundamental", "f_score",
             "price", "horizon", "liquidity_tier", "avg_turnover_cr",
@@ -1686,7 +1700,7 @@ def ideas_export(horizon: str = "short", limit: int = 25,
         w.writerow({k: _cell(row.get(k)) for k in cols})
     return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
-                             f"attachment; filename=altaha-ideas-{horizon}.csv"})
+                             f"attachment; filename=altaha-ideas-{_horizon_slug(sel, horizon)}.csv"})
 
 
 @app.get("/patterns")
@@ -2100,6 +2114,19 @@ def share_chart(ticker: str, range: str = "1D"):
         media_type="text/html")
 
 
+def _list_label(horizon):
+    """What the page calls the list a horizon opens. An old list's name opens
+    the list that replaced it, so a week link reads "Swing / This month"."""
+    try:
+        import leaders as _leaders
+        key = _leaders.resolve(horizon)
+        if key:
+            return _leaders.LISTS[key]["label"]
+    except Exception:
+        pass
+    return f"{horizon}-term"
+
+
 @app.get("/share/idea/{ticker}")
 def share_idea(ticker: str, horizon: str = "short"):
     if not ticker or len(ticker) > 20:
@@ -2107,14 +2134,15 @@ def share_idea(ticker: str, horizon: str = "short"):
     sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
     h = (horizon or "short").strip().lower()[:10]
     row = _idea_row(sym, h)
+    label = _list_label(h)
     if row:
         name = row.get("name") or sym
         desc = (f"{name} scores {row.get('conviction')}/100 conviction on the "
-                f"{h}-term list: {row.get('setup') or 'no archetype'}, typical hold "
-                f"{row.get('horizon') or '—'}. The seven weighted inputs that add up "
+                f"{label} list: {row.get('setup') or 'no archetype'}, typical hold "
+                f"{row.get('horizon') or '—'}. The weighted inputs that add up "
                 "to that number are published beside it.")
     else:
-        name, desc = sym, (f"{sym} is not on the current {h}-term list. The scorecard "
+        name, desc = sym, (f"{sym} is not on the current {label} list. The scorecard "
                            "and the arithmetic behind it are on the site.")
     return Response(content=og_cards.share_page(
         f"{name} ({sym}) | conviction {row.get('conviction') if row else '—'}/100",

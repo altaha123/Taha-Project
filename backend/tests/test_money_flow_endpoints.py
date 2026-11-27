@@ -127,20 +127,20 @@ def test_a_broken_money_flow_costs_the_stock_page_nothing(app, monkeypatch):
 # --- the Ideas lists ---------------------------------------------------------
 
 def _rows(n=6):
-    """Six IT names ranked 1..6 on the momentum list, then one metal."""
+    """Six IT names ranked 1..6 on the long-term list, then one metal."""
     out = []
     for i in range(1, n + 1):
         out.append({"symbol": "IT%d" % i, "name": "IT %d" % i, "sector": "Technology",
-                    "leader": {"lists": {"momentum": {"rank": i, "score": 90 - i}}, "universe": 600}})
+                    "leader": {"lists": {"long": {"rank": i, "score": 90 - i}}, "universe": 600}})
     out.append({"symbol": "MT1", "name": "MT 1", "sector": "Basic Materials",
-                "leader": {"lists": {"momentum": {"rank": 9, "score": 60}}, "universe": 600}})
+                "leader": {"lists": {"long": {"rank": 9, "score": 60}}, "universe": 600}})
     return out
 
 
 def _chosen(monkeypatch):
     monkeypatch.setattr(ideas, "_filing_for", lambda *a, **k: None)
-    picked = ideas._choose_picks(_rows(), "momentum", 15, 72)
-    return [t[0]["symbol"] for t in picked[0]], picked[3]
+    picked = ideas._choose_picks(_rows(), "long", 15, 72)
+    return [t[0]["symbol"] for t in picked[0]], picked[2]
 
 
 def test_no_weight_in_ideas_changed():
@@ -178,7 +178,7 @@ def test_the_money_flow_pick_list_is_never_capped_by_it(filled, monkeypatch):
     """That list is four stocks from each of four sectors by construction."""
     monkeypatch.setattr(C, "CAPS_ON", True)
     monkeypatch.setattr(ideas, "_filing_for", lambda *a, **k: None)
-    rows = [dict(r, leader={"lists": {"flow": r["leader"]["lists"]["momentum"]}, "universe": 600})
+    rows = [dict(r, leader={"lists": {"flow": r["leader"]["lists"]["long"]}, "universe": 600})
             for r in _rows()]
     picked = ideas._choose_picks(rows, "flow", 15, 72)
-    assert len(picked[0]) == 7 and picked[3] == 0
+    assert len(picked[0]) == 7 and picked[2] == 0

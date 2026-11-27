@@ -1,18 +1,25 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Altaha Screener — screens.js
 
-   Quarterly screens: a short list of questions asked of every NSE company at
-   once, from the statements the fundamentals crawl has stored — "four
-   quarters of 20%+ revenue growth", "back to profit", and so on. Shown under
-   the lens cards on #research/lenses, and only there.
+   Quarterly screens: three questions asked of every NSE company at once,
+   from the statements the fundamentals crawl has stored — fast growers with
+   expanding margins, operational turnarounds, and cash-rich free-cash-flow
+   compounders (backend/fundamentals_screens.py). Shown under the lens cards
+   on #research/lenses, and only there.
 
    The lenses apply investing philosophies to full financial years; these
-   answer what changed in the latest quarters. Same rules for the wording:
-   a company "meets the condition on the figures shown", every match prints
-   the figures that met it, and nothing is ranked as good or bad.
+   answer what the latest filings show. Same rules for the wording: a
+   company "meets the condition on the figures shown", every match prints
+   the figures that met it, and nothing is called good or bad.
 
-   Each screen is a <details>; its matches are fetched the first time it is
+   Each screen is a <details> carrying what it looks for, its exact rule and
+   the order it lists in; its matches are fetched the first time it is
    opened, not before.
+
+   A figure comes with a unit: "pct" a percentage (24.3%), "pts" a change in
+   percentage points (+3.4 pts), "x" a multiple (1.25×), "cr" rupees crore
+   (₹6,400 cr). A figure the filings do not give is printed as a dash, never
+   as 0.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -39,14 +46,26 @@
     return p[1] === 'lenses' && !p[2];
   }
 
+  // Decimal places by unit: whole rupees crore; two for a multiple, where
+  // 0.25× and 0.3× are different answers to a debt test; one otherwise.
+  var DIGITS = { cr: 0, x: 2, pct: 1, pts: 1 };
+
   function fig(f) {
     if (f.value == null) return '—';
     var n = Number(f.value);
-    var s = n.toLocaleString('en-IN', { maximumFractionDigits: f.unit === 'cr' ? 0 : 1 });
-    if (f.unit === 'pct') return s + '%';
-    if (f.unit === 'x') return s + '×';
+    if (!isFinite(n)) return '—';
+    var d = DIGITS[f.unit] == null ? 1 : DIGITS[f.unit];
+    var s = Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: d });
+    // A figure that rounds to nothing carries no sign: "0 pts", not "-0 pts".
+    var zero = Number(Math.abs(n).toFixed(d)) === 0;
+    var sign = (!zero && n < 0) ? '-' : '';
+    if (f.unit === 'pct') return sign + s + '%';
+    // A change says which way it went, up as well as down.
+    if (f.unit === 'pts') return (zero ? '' : (n < 0 ? '-' : '+')) + s + ' pts';
+    if (f.unit === 'x') return sign + s + '×';
     // The sign goes before the rupee: "-₹6,400 cr", not "₹-6,400 cr".
-    return (n < 0 ? '-₹' : '₹') + s.replace('-', '') + ' cr';
+    if (f.unit === 'cr') return sign + '₹' + s + ' cr';
+    return sign + s;
   }
 
   function matchesTable(d) {
@@ -89,14 +108,18 @@
     if (!d || !d.available) { host.innerHTML = ''; return; }
     host.innerHTML = '<section class="sc-wrap" aria-labelledby="sc-h">' +
       '<h3 id="sc-h" class="sc-h">Quarterly screens</h3>' +
-      '<p class="ln-small">What changed in the latest filings, asked of all ' +
+      '<p class="ln-small">Three questions asked of all ' +
       esc(Number(d.companies_held || 0).toLocaleString('en-IN')) + ' companies whose ' +
-      'statements are held. A company without recent results is left out, not failed.</p>' +
+      'statements are held, from their latest filings. A company without the figures a ' +
+      'screen needs is left out, not failed.</p>' +
       d.screens.map(function (s) {
+        var n = Number(s.count) || 0;
         return '<details class="sc-item" data-screen="' + esc(s.id) + '">' +
-          '<summary>' + esc(s.name) + ' <span>' + s.count + ' ' +
-          (s.count === 1 ? 'company' : 'companies') + '</span></summary>' +
+          '<summary>' + esc(s.name) + ' <span>' + esc(n.toLocaleString('en-IN')) + ' ' +
+          (n === 1 ? 'company' : 'companies') + '</span></summary>' +
+          (s.description ? '<p class="ln-small sc-desc">' + esc(s.description) + '</p>' : '') +
           '<p class="ln-small sc-rule">' + esc(s.rule) + '</p>' +
+          (s.order ? '<p class="ln-small sc-order">' + esc(s.order) + '</p>' : '') +
           '<div class="sc-body"></div></details>';
       }).join('') +
       '<p class="ln-notice" role="note">' + esc(d.notice || '') + '</p></section>';

@@ -1319,3 +1319,57 @@ def test_status_without_a_pacing_engine_says_none(loop, clock):
     st = intraday.status()
     assert st["pacing"] is None and st["lanes"] == {"classic": 0, "select": 0}
     assert intraday.diagnose()["lanes"] is None
+
+
+# ---------------------------------------------------------------------------
+# Found in review of the two lanes, and pinned
+# ---------------------------------------------------------------------------
+
+def test_follow_ups_go_out_after_the_pass_has_looked_for_new_calls(loop, clock, monkeypatch):
+    d, n, set_engine = loop
+    monkeypatch.setattr(intraday, "ALERT_UPDATES_TG", "all")
+    for s in ("A", "B", "C"):                             # three open calls reach half-book on this pass
+        logged().append(call(symbol=s, time="10:00"))
+    order = []
+    plain, batch = n.send_plain, n.send_batch
+
+    def slow_plain(text):                                 # Telegram rate-limiting: 30 s a message
+        order.append(("follow-up", clock.t.strftime("%H:%M:%S")))
+        clock.t = clock.t + dt.timedelta(seconds=30)
+        return plain(text)
+
+    def send_batch(rows, **kw):
+        order.append(("card", clock.t.strftime("%H:%M:%S")))
+        return batch(rows, **kw)
+    n.send_plain, n.send_batch = slow_plain, send_batch
+
+    def check_live(snap, index_pct=None, fired=None, log=None):
+        order.append(("detect", intraday.now_ist().strftime("%H:%M:%S")))
+        px = snap["NEW"]["ltp"]
+        return [call(symbol="NEW", time=intraday.now_ist().strftime("%H:%M"), level=249.0,
+                     entry=px, stop=px - 2, target=px + 4, t1=px + 2)]
+    set_engine(check_live=check_live, watch_symbols=lambda: ["NEW"])
+    d.quotes.update(quotes(A=101.6, B=101.6, C=101.6, NEW=250.0))
+    clock.set(10, 5, 0)
+    fired = intraday.scan_once()
+    # Detected on the quote it was taken from, its card sent, and only then
+    # the three follow-ups, all in the same pass.
+    assert order == [("detect", "10:05:00"), ("card", "10:05:00"), ("follow-up", "10:05:00"),
+                     ("follow-up", "10:05:30"), ("follow-up", "10:06:00")]
+    assert fired[0]["time"] == "10:05" and len(n.plain) == 3
+    assert all(a["tg_t1"] for a in logged()[:3])
+
+
+def test_follow_ups_still_go_out_when_the_rest_of_the_pass_fails(loop, clock, monkeypatch):
+    d, n, _ = loop
+    monkeypatch.setattr(intraday, "ALERT_UPDATES_TG", "all")
+    logged().append(call(time="10:00"))
+    clock.set(10, 5)
+    d.quotes.update(quotes(NEAR=101.6))
+
+    def broken(fired):
+        raise RuntimeError("something after the tracker breaks")
+    monkeypatch.setattr(intraday, "_cap", broken)
+    with pytest.raises(RuntimeError):
+        intraday.scan_once()
+    assert len(n.plain) == 1 and n.plain[0].startswith("✅ <b>NEAR</b>")   # flagged, so it goes once

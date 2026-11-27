@@ -195,31 +195,40 @@ def test_peers_median_rank_and_the_minimum(store):
 
 # ── 5. The quarterly screens ──────────────────────────────────────────────
 
-def test_the_screens(store):
+def test_the_screens(store, monkeypatch):
+    """The three screens read the store. Each one's rules, order and missing
+    figures are pinned in test_fundamentals_screens.py."""
     import fundamentals_screens as S
+    monkeypatch.setattr(S, "_scan_market", lambda today: {})
     # Grower: 25% YoY in each of four quarters.
     rows = [_q(store, "GROW", e, 1250 if i < 4 else 1000, 100) for i, e in enumerate(QS)]
-    # Turnaround, and a margin expander.
+    # A turnaround; and a margin up 5 points on 10% growth, which was a screen
+    # of its own and is now only the growers' second route (15% growth).
     rows += [_q(store, "TURN", QS[0], 500, 40), _q(store, "TURN", QS[4], 480, -30)]
     rows += [_q(store, "WIDE", QS[0], 1100, 90, opm=25), _q(store, "WIDE", QS[4], 1000, 80, opm=20)]
     # Stale: a turnaround a year ago, nothing since.
     rows += [_q(store, "OLD", "2025-06-30", 500, 40), _q(store, "OLD", "2024-06-30", 480, -30)]
-    store.upsert("income", rows + [_year(store, "CASHY", "2026-03-31", 4000, 300),
-                                   _year(store, "FLOW", "2026-03-31", 4000, 300)])
-    for s in ("GROW", "TURN", "WIDE", "OLD"):
+    # Three years of free cash flow on a business growing 10% a year with
+    # little debt; and net cash alone, which no longer lists on its own.
+    years = [_year(store, "FLOW", e, r, 300) for e, r in
+             (("2026-03-31", 4000), ("2025-03-31", 3700), ("2024-03-31", 3400), ("2023-03-31", 3000))]
+    store.upsert("income", rows + years + [_year(store, "CASHY", "2026-03-31", 4000, 300)])
+    for s in ("GROW", "TURN", "WIDE", "OLD", "FLOW"):
         store.recompute_yoy(s)
-    store.upsert("balance", [_sheet(store, "CASHY", "2026-03-31", 4000, 2000, 100, 300)])
+    store.upsert("balance", [_sheet(store, s, "2026-03-31", 4000, 2000, 100, 300)
+                             for s in ("CASHY", "FLOW")])
     store.upsert("cashflow", [_flow(store, "FLOW", e, 500, 100) for e in
                               ("2026-03-31", "2025-03-31", "2024-03-31")])
-    res = S.evaluate(store._connect(), today=TODAY)
+    res = S.evaluate(store._connect(), today=TODAY, market={})
     names = {k: [m["symbol"] for m in v] for k, v in res.items()}
-    assert names["steady_growers"] == ["GROW"]
-    assert names["turnarounds"] == ["TURN"]
-    assert names["margin_expanders"] == ["WIDE"]
-    assert names["net_cash"] == ["CASHY"]
-    assert names["fcf_compounders"] == ["FLOW"]
+    assert names == {"steady_growers": ["GROW"], "turnarounds": ["TURN"],
+                     "fcf_compounders": ["FLOW"]}
     idx = S.index(today=TODAY)
-    assert {s["id"]: s["count"] for s in idx["screens"]}["turnarounds"] == 1
+    assert {s["id"]: s["count"] for s in idx["screens"]} == {
+        "steady_growers": 1, "turnarounds": 1, "fcf_compounders": 1}
     d = S.detail("turnarounds", today=TODAY)
     assert d["matches"][0]["figures"][1]["value"] == -30 and "sort" not in d["matches"][0]
+    # The two screens folded into these still answer by their old ids.
+    assert S.detail("margin_expanders", today=TODAY)["screen"]["id"] == "steady_growers"
+    assert [m["symbol"] for m in S.detail("net_cash", today=TODAY)["matches"]] == ["FLOW"]
     assert S.detail("nope", today=TODAY) is None

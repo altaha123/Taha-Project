@@ -116,8 +116,11 @@ HORIZON_DAYS = {
     "institutional_accumulation": 180,  # 2-6 months
     "quality_at_discount": 365,
     "turnaround": 365,
-    # The four tested lists (leaders.py). Each is held for its period and the
-    # exit line is read on the close, which is how the study measured it.
+    # The tested lists (leaders.py). Each is held for its period and the exit
+    # line is read on the close, which is how the study measured it. This
+    # week and momentum were folded into the month and long-term lists in
+    # December 2026; their keys stay so an idea tracked from them still
+    # expires on its own list's clock.
     "pick_week": 9,
     "pick_month": 32,
     "pick_results": 32,
