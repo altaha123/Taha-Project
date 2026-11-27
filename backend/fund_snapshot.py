@@ -55,10 +55,15 @@ over revenue (_core_opm).
 
 PER-SHARE FIGURES
 -----------------
-Each quarter's EPS is stored as it was filed. After a split or a bonus the
-quarters before it are on the old share count, so a plain sum of four
-quarters mixes two counts. Trailing EPS is put on the latest quarter's count
-where the count each quarter implies (profit over EPS) jumped (_eps_ttm).
+Trailing EPS is the four quarters' EPS added up as each was filed. For up to
+three quarters after a split or a bonus, the older quarters are on the old
+share count and the P/E reads low; a quarter whose filing put the year to
+date's EPS in its row does the same. The tables hold no split dates to
+restate them by, and profit over EPS is no share count to infer one from:
+the profit is the whole group's, minority interests included, and the EPS
+the owners' alone, so the ratio moves by a third or more with no share
+issued. Restating on it was tried and moved the P/E of more companies with
+no split than with one (research/IDEAS-STUDY.md, "What the review changed").
 
 Standard library only.
 """
@@ -91,13 +96,6 @@ FINANCIAL_SECTORS = {"financial services"}
 # lender's, whatever its industry says: an NBFC that files Ind AS results has
 # no bank-format lines and takes no deposits.
 LENDER_LOANS_SHARE = 0.5
-# A quarter whose implied share count (profit over EPS) is this many times the
-# latest quarter's, or this fraction of it, was filed on another share count:
-# a split, a bonus or a consolidation lay between them. Ordinary issues and
-# buybacks move it far less.
-SHARE_JUMP = 1.4
-# Below this, a quarter's EPS is too small for its rounding to imply a count.
-EPS_MIN_FOR_COUNT = 0.05
 
 QUADRANTS = ("Leading", "Improving", "Weakening", "Lagging")
 
@@ -240,32 +238,6 @@ def _margin_change(now, before):
     return None if a is None or b is None else a - b
 
 
-def _implied_shares(row):
-    """Crore shares a quarter's profit and EPS imply, or None when the EPS is
-    too small, or of the other sign, to say."""
-    pat, eps = _f((row or {}).get("pat_cr")), _f((row or {}).get("eps_basic"))
-    if pat is None or eps is None or abs(eps) < EPS_MIN_FOR_COUNT or (pat > 0) != (eps > 0) or pat == 0:
-        return None
-    return abs(pat) / abs(eps)
-
-
-def _eps_ttm(four):
-    """Four quarters' EPS added up on the newest quarter's share count: a
-    quarter filed on another count (SHARE_JUMP) is restated onto it. None
-    when a quarter's EPS is not on file."""
-    ref = next((n for n in (_implied_shares(r) for r in four) if n), None)
-    total = 0.0
-    for r in four:
-        eps = _f(r.get("eps_basic"))
-        if eps is None:
-            return None
-        n = _implied_shares(r)
-        if ref and n and max(n / ref, ref / n) > SHARE_JUMP:
-            eps = eps * n / ref
-        total += eps
-    return total
-
-
 def _in_a_row(rows):
     """True when each row's quarter ended one quarter after the next one's."""
     return all(_apart(a.get("period_end"), b.get("period_end"), QUARTER_APART_DAYS)
@@ -285,7 +257,7 @@ def _ttm(rows, start):
     return {"revenue": total("revenue_cr"), "pat": total("pat_cr"),
             "ebitda": total("ebitda_cr"),
             "core_ebitda": None if any(v is None for v in cores) else sum(cores),
-            "eps": _eps_ttm(four), "through": four[0].get("period_end")}
+            "eps": total("eps_basic"), "through": four[0].get("period_end")}
 
 
 def _quarters(rows, asof, fin):

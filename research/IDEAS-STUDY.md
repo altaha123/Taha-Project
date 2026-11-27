@@ -241,13 +241,16 @@ second window is then printed whatever it shows.
   to the last list whose year had run, 17 November 2025. 2018–22, with the
   balance-sheet checks skipped as unknown, is reported for reference only.
   The checks did not all start with the sheets. A check is made only where
-  its figure is known, and of the liquid companies the list ranks, lenders
-  aside, at least half had debt to equity from 9 November 2022, return on
+  its figure is known, and the lab counts, on every list date from 24 January
+  2017 (`coverage` in its file), how many of the liquid companies the list
+  ranks, lenders aside, had each figure. Over 2017–21 return on capital, debt
+  to equity and the F-score were known for 0% of them on average and cash
+  from operations against profit for 9.4%. At least half had cash against
+  profit from 28 May 2021 on, debt to equity from 9 November 2022, return on
   capital from 19 May 2023 and an F-score, which needs two year-end sheets
-  running, only from 21 May 2024 (counted on every list date: `coverage` in
-  the lab's file). In the first window the F-score was known for 0.4% of them
-  on average, so the version was chosen with its F-score floor effectively
-  untested.
+  running, only from 21 May 2024. In the first window the F-score was known
+  for 0.4% of them on average, so the version was chosen with its F-score
+  floor effectively untested.
 
 What each version did, the lead over the average stock with its t:
 

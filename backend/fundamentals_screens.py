@@ -340,13 +340,15 @@ _COLUMNS = {
                  "interest_cover_x", "revenue_yoy_pct", "ebitda_yoy_pct", "pat_yoy_pct",
                  "operating_profit_pre_provision_cr", "provisions_cr"),
     "annuals": ("symbol", "company", "basis", "period_end", "label", "months", "filed_at",
-                "revenue_cr", "pat_cr", "opm_pct", "pbt_cr", "finance_cost_cr",
-                "interest_cover_x"),
+                "revenue_cr", "pat_cr", "ebitda_cr", "exceptional_cr", "opm_pct", "pbt_cr",
+                "finance_cost_cr", "interest_cover_x"),
     "cashflows": ("symbol", "basis", "period_end", "months", "cfo_cr", "fcf_cr"),
+    # loans and total assets: a balance sheet that is mostly loans is a
+    # lender's (fund_snapshot.is_financial), as on the Ideas lists.
     "balances": ("symbol", "basis", "period_end", "total_borrowings_cr", "net_debt_cr",
                  "debt_equity_x", "cash_and_equivalents_cr", "other_bank_balances_cr",
                  "current_investments_cr", "total_equity_cr", "deposits_cr",
-                 "total_liabilities_cr"),
+                 "total_liabilities_cr", "loans_cr", "total_assets_cr"),
 }
 _SOURCES = {
     "quarters": ("income_statement", "freq = 'quarterly'", QUARTERS_BACK_DAYS),

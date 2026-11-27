@@ -790,6 +790,20 @@ def test_a_results_scan_from_an_earlier_recipe_claims_no_count_of_this_recipes_t
     assert "chosen the earlier way" in notes
 
 
+def test_an_earlier_recipes_scan_says_only_the_rebuilt_lists_were_chosen_another_way(quiet):
+    """Only the three lists by holding time were rebuilt. A setup list on a
+    scan from before the deploy chose its picks as it does now: its note says
+    only that the record is held back."""
+    blocks = leaders.rank(universe())
+    for b in blocks.values():
+        b["recipe"] = "2026-12 setup lists v2"
+    p = scan_payload(blocks)
+    for key in ("breakout", "technical", "quick", "emerging"):
+        notes = " ".join(ideas.select(p, horizon=key)["selection_notes"])
+        assert "earlier recipe" in notes and "chosen the earlier way" not in notes, key
+    assert "chosen the earlier way" in " ".join(ideas.select(p, horizon="long")["selection_notes"])
+
+
 def test_a_study_of_the_lists_that_were_replaced_is_not_printed_beside_the_new_ones(quiet, monkeypatch):
     """
     The study file is the record of a recipe. A file the lab has not written

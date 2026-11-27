@@ -360,6 +360,20 @@ def test_compounders_never_list_a_lender_known_by_its_filing(S, store):
     assert res["fcf_compounders"] == []
 
 
+def test_a_lender_known_by_its_loans_is_a_lender_on_the_screens_too(S, store):
+    """An NBFC outside NSE's list files no bank-format lines and takes no
+    deposits; its loans are most of its assets. The Ideas lists know it as a
+    lender by that, and so do the screens: no compounder test, no margin."""
+    _compounder(store, "NBFCX")
+    sheet = _sheet(store, "NBFCX", FY[0], 1000.0, 100.0, 50.0)
+    sheet["loans_cr"] = 0.9 * sheet["total_assets_cr"]
+    store.upsert("balance", [sheet])
+    res = S.evaluate(store._connect(), today=TODAY, market={})
+    assert all(m["symbol"] != "NBFCX" for m in res["fcf_compounders"])
+    _compounder(store, "MAKERX")
+    assert any(m["symbol"] == "MAKERX" for m in S.evaluate(store._connect(), today=TODAY, market={})["fcf_compounders"])
+
+
 def test_compounders_are_ordered_on_fcf_yield_then_return_on_capital(S, store):
     _compounder(store, "YA")                                  # 100 crore FCF on a 2,000 crore value
     _compounder(store, "YB")                                  # ...on a 5,000 crore value

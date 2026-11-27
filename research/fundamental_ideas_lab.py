@@ -54,7 +54,9 @@ pick only companies still in that list. Those beat the average liquid stock
 on their own, which flatters a lead measured against every liquid stock. The
 month records therefore also carry the lead over the average liquid stock in
 the same industry map (vs_eligible) and how far that average ran ahead of
-every liquid stock's on the same dates (member_premium).
+every liquid stock's on the same dates (member_premium). The liquid stocks in
+the map are more than the list could pick: it also refuses an industry with
+too few liquid stocks to rank on money flow.
 
 THE CHOICE, DECLARED BEFORE ANY RUN (research/IDEAS-STUDY.md)
 Each tab has a handful of declared versions (VARIANTS). One rule picks among
@@ -66,8 +68,8 @@ says:
 The rule: the highest mean return over the average liquid stock after the
 0.49% round trip, among versions with enough picks in the first window and a
 positive mean after costs; within 0.05 points, the one with fewer rules. The
-lead over the eligible stocks and the long list's coverage are reported
-beside it and never used to choose.
+lead over the liquid stocks in the industry map and the long list's coverage
+are reported beside it and never used to choose.
 
 PUBLISHING
 --publish turns the chosen versions' picks into the record the Ideas page
@@ -400,8 +402,9 @@ def replay(procs=4):
             for tab, names in got.items():
                 if names:
                     picks.setdefault(name, {}).setdefault(tab, []).append((P.C.index[i], names))
-    # The industry map goes with the picks: the month list's eligible stocks
-    # are read from the very map the engine was handed (_replay_map).
+    # The industry map goes with the picks: the liquid stocks in it, the
+    # month list's second bar, are read from the very map the engine was
+    # handed (_replay_map).
     with open(PICKS_FILE, "wb") as f:
         pickle.dump({"stamp": stamp, "sets": [n for n, _ in _G["sets"]], "picks": picks,
                      "sectors": sectors}, f)
@@ -428,10 +431,12 @@ def _replay_map(got):
 
 
 def eligible_universe(U, sectors):
-    """The liquid stocks the month list could pick: U, less every company
-    the engine cannot place in an industry. rank() reads the map's keys in
+    """The liquid stocks in the industry map: U, less every company the
+    engine cannot place in an industry. rank() reads the map's keys in
     capitals and drops a symbol with an empty industry, and a stock with
-    none fails the month list's industry test."""
+    none fails the month list's industry test. More than the list could
+    pick: its gate also refuses an industry too small to rank on money flow
+    (leaders.FLOW_MIN_MEMBERS liquid stocks), which this does not judge."""
     have = {str(k).upper() for k, v in (sectors or {}).items() if v}
     return U & pd.Series([str(c).upper() in have for c in U.columns], index=U.columns)
 
@@ -442,9 +447,9 @@ def eligible_universe(U, sectors):
 
 def _avg_stock(P, U, hold):
     """Each date's average stock in the mask U (every liquid stock, or the
-    ones a list could pick), bought at the next open and held. Kept per
-    panel and mask; the cache holds both, so neither id can be reused while
-    it is kept."""
+    liquid stocks in the industry map), bought at the next open and held.
+    Kept per panel and mask; the cache holds both, so neither id can be
+    reused while it is kept."""
     key = ("ew", hold, id(P), id(U))
     if key not in _G:
         _G[key] = (P, U, (P.C.shift(-hold) / P.entry - 1).where(U).mean(axis=1))
@@ -455,8 +460,8 @@ def window_record(P, U, df, hold, start, end, eligible=None):
     """One list over one window: how many, how often up, the average before
     and after costs, the middle pick, the worst one in twenty, and the lead
     over the Nifty 500 and over the average liquid stock (Newey-West t).
-    With `eligible`, the stocks the list could pick (a mask like U), the lead
-    over their average as well (eligible_lead)."""
+    With `eligible`, the liquid stocks in the industry map (a mask like U,
+    eligible_universe), the lead over their average as well (eligible_lead)."""
     d = df[(df["date"] >= start) & (df["date"] <= end)]
     if not len(d):
         return {"picks": 0}
@@ -480,7 +485,7 @@ def eligible_lead(P, U, eligible, per, hold):
     """`per` (each list date's mean pick) against the average stock in
     `eligible`, after costs too, and member_premium_pct: that average less
     every liquid stock's on the same list dates, the part of the lead over
-    the average liquid stock that the eligible stocks earned on their own.
+    the average liquid stock that the stocks in the map earned on their own.
     Per hold, in percent, with Newey-West t's as for vs_avg_stock."""
     lags = max(1, int(np.ceil(hold / STEP)))
     theirs = _avg_stock(P, eligible, hold).reindex(per.index)
@@ -497,9 +502,10 @@ def eligible_lead(P, U, eligible, per, hold):
 
 
 def member_premium(P, U, eligible, df, hold, first):
-    """How far the average eligible stock ran ahead of the average liquid
-    stock over a list's dates, per hold in percent: on the whole record and
-    by half, as S.vs_average_stock splits it."""
+    """How far the average liquid stock in the industry map (`eligible`)
+    ran ahead of the average liquid stock over a list's dates, per hold in
+    percent: on the whole record and by half, as S.vs_average_stock splits
+    it."""
     dates = pd.DatetimeIndex(sorted(df["date"].unique()))
     gap = (_avg_stock(P, eligible, hold) - _avg_stock(P, U, hold)).reindex(dates).dropna()
 
@@ -568,12 +574,13 @@ def choose(records):
 # When the long list's checks had data: counted, not assumed
 # --------------------------------------------------------------------------
 
-COVERAGE_TEXT = ("On every long list date from its first window to the end of the data. companies: the liquid "
-                 "companies listed a year that the engine ranks for the long list, less the ones it judges as "
-                 "lenders (a company with no filings counts as none, as the list reads it); with_filings: how "
-                 "many of them had any filing visible that session; and for each check, how many had its figure. "
-                 "most_from is the first list date a figure was known for at least half of them, first_pct and "
-                 "second_pct its mean share known over each window's list dates.")
+COVERAGE_TEXT = ("On every long list date. companies: the liquid companies listed a year that the engine ranks for "
+                 "the long list, less the ones it judges as lenders (a company with no filings counts as none, as "
+                 "the list reads it); with_filings: how many of them had any filing visible that session; and for "
+                 "each check, how many had its figure. most_from is the list date from which a figure was known "
+                 "for at least half of them on every list date after (None if not on the last); first_pct and "
+                 "second_pct are its mean share known over each window's list dates, and first_half_pct over the "
+                 "list dates of the record's first half (first_half), as the page splits the record.")
 
 
 def _known(v):
@@ -625,23 +632,28 @@ def _count_one(i):
 
 def _coverage_key(P, stamp, sectors, days):
     """What the counts depend on: the candidates (their cache's stamp), the
-    engine's universe rule and the snapshot code (their source), the four
-    tables, the industry map (it marks lenders) and the dates."""
+    sessions and the dates, the industry map (it marks lenders), the four
+    tables, and the code that turns those into counts, read as source: this
+    file (the 15:30 rule, the pool, the counting), the study helpers it calls
+    (ideas_study.py), the engine's universe rule (leaders.py) and the
+    snapshot (fund_snapshot.py). A change to any of them counts again."""
     import leaders
-    h = hashlib.sha1(repr((stamp, len(P.C), days, sorted(sectors.items()), list(CHECKS))).encode())
-    for path in [leaders.__file__, FS.__file__] + [os.path.join(DATA, n) for n in TABLE_FILES.values()]:
+    h = hashlib.sha1(repr((stamp, len(P.C), str(P.C.index[0]), str(P.C.index[-1]), days,
+                           sorted(sectors.items()), list(CHECKS))).encode())
+    code = [os.path.abspath(__file__), S.__file__, leaders.__file__, FS.__file__]
+    for path in code + [os.path.join(DATA, n) for n in TABLE_FILES.values()]:
         with open(path, "rb") as f:
             h.update(f.read())
     return h.hexdigest()[:16]
 
 
 def long_coverage(P, stamp, sectors, procs=4):
-    """count_known() on every long list date from the first window to the
-    end of the data, from the replay's own candidates (cached under `stamp`)
-    and the filings visible that session. Cached in DATA under everything
-    the counts depend on, so --report and --publish read one count."""
+    """count_known() on every long list date, the same dates the record is
+    made on, from the replay's own candidates (cached under `stamp`) and the
+    filings visible that session. Cached in DATA under everything the counts
+    depend on (_coverage_key), so --report and --publish read one count."""
     import multiprocessing as mp
-    days = [i for i in _dates(P) if P.C.index[i] >= pd.Timestamp(WINDOWS["long"][0][0])]
+    days = _dates(P)
     path = os.path.join(COVERAGE_DIR, _coverage_key(P, stamp, sectors, days) + ".json")
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
@@ -658,24 +670,42 @@ def long_coverage(P, stamp, sectors, procs=4):
     return rows
 
 
-def coverage_summary(rows, windows, last=None):
-    """From long_coverage()'s rows: for each check, the first list date its
-    figure was known for at least half the companies (most_from, None if
-    never), and its mean share known over each window's list dates, in
-    percent. `last`, the last list date whose hold had run, ends the second
-    window as it ends the record."""
+def _held_from(rows, k):
+    """The first of `rows` (in date order) from which every later one had
+    k's figure for at least half its companies, so that "from" that date is
+    true; None when the last did not. Read from the end: a check that
+    reached half and fell back below it counts from after the fall."""
+    out = None
+    for r in reversed(rows):
+        if 2 * r[k] < r["companies"]:
+            break
+        out = r["date"]
+    return out
+
+
+def coverage_summary(rows, windows, last=None, half=None):
+    """From long_coverage()'s rows: for each check, the list date from which
+    its figure was known for at least half the companies (most_from,
+    _held_from), and its mean share known, in percent, over each window's
+    list dates and over the record's first half. `last`, the last list date
+    whose hold had run, ends the second window as it ends the record; `half`
+    is (the first half's label, the date it ends before), as the page splits
+    the record (FIRST_HALF, S.SPLIT)."""
+    label, split = half or (FIRST_HALF["long"], S.SPLIT)
     rows = sorted((r for r in rows if r["companies"]), key=lambda r: r["date"])
     (a0, b0), (a1, b1) = windows
     spans = {"first": [a0, b0], "second": [a1, min(b1, last) if last else b1]}
     inside = {w: [r for r in rows if a <= r["date"] <= b] for w, (a, b) in spans.items()}
+    early = [r for r in rows if r["date"] < split]
 
     def mean_pct(rs, k):
         return round(float(np.mean([r[k] / r["companies"] for r in rs]) * 100), 1) if rs else None
-    checks = {k: {"most_from": next((r["date"] for r in rows if 2 * r[k] >= r["companies"]), None),
-                  "first_pct": mean_pct(inside["first"], k), "second_pct": mean_pct(inside["second"], k)}
+    checks = {k: {"most_from": _held_from(rows, k), "first_pct": mean_pct(inside["first"], k),
+                  "second_pct": mean_pct(inside["second"], k), "first_half_pct": mean_pct(early, k)}
               for k in CHECKS}
     return {"from": rows[0]["date"] if rows else None, "to": rows[-1]["date"] if rows else None,
-            "windows": spans, "list_dates": {w: len(rs) for w, rs in inside.items()}, "checks": checks}
+            "windows": spans, "list_dates": {w: len(rs) for w, rs in inside.items()},
+            "first_half": {"label": label, "before": split, "list_dates": len(early)}, "checks": checks}
 
 
 def _last_held(P, hold):
@@ -688,7 +718,7 @@ def coverage_record(P, stamp, sectors, procs=4):
     """The long list's coverage as the lab's file keeps it: the summary,
     what it counts, and every list date's counts."""
     rows = long_coverage(P, stamp, sectors, procs)
-    out = coverage_summary(rows, WINDOWS["long"], _last_held(P, TABS["long"][0]))
+    out = coverage_summary(rows, WINDOWS["long"], _last_held(P, TABS["long"][0]), (FIRST_HALF["long"], S.SPLIT))
     cols = ["date", "companies", "with_filings"] + list(CHECKS)
     out.update(what=COVERAGE_TEXT, by_date={"columns": cols, "rows": [[r[c] for c in cols] for r in rows]})
     return out
@@ -699,8 +729,9 @@ ELIGIBLE_TEXT = ("The month list refuses a stock with no industry, and the repla
                  "liquid stock, its records measure the lead over the liquid stocks in that list: "
                  "vs_eligible_pct (after the round trip, vs_eligible_net_pct; Newey-West t, vs_eligible_t) and "
                  "lists_ahead_of_eligible_pct, with member_premium_pct, how far their average ran ahead of "
-                 "every liquid stock's over the same list dates, per hold. Reported beside the rule, never "
-                 "used by it.")
+                 "every liquid stock's over the same list dates, per hold. Those stocks are more than the list "
+                 "could pick: it also refuses an industry with too few liquid stocks to rank on money flow. "
+                 "Reported beside the rule, never used by it.")
 
 
 def report(procs=4):
@@ -710,8 +741,8 @@ def report(procs=4):
         got = pickle.load(f)
     sets = got["sets"]
     picks = got["picks"]
-    # The month tab is measured against the stocks it could pick as well:
-    # the liquid ones with an industry in the map the replay ran with.
+    # The month tab is also measured against the liquid stocks in the
+    # industry map the replay ran with: it could pick no others.
     sectors = _replay_map(got)
     elig = {"month": eligible_universe(U, sectors)}
     records = {}
@@ -778,45 +809,19 @@ CHECK_DATES = 8                  # list dates the engine is re-ranked on before 
 
 REPLAY_TEXT = ("The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices "
                "and filings cut at that session; its top fifteen bought at the next open.")
-# What each list is, and what flatters its record. A {name} in a note is
-# filled at publish time (bias_text) with what the same run measured, so no
-# figure of its own is typed here.
-NOTES = {
-    "month": {
-        "what": ("Market leaders (leader score in the top 30%) in an uptrend and outside the most volatile "
-                 "fifth, in an industry in the top half on money flow, with no loss and no fall in profit last "
-                 "quarter, no results the market sold in the last month and no more than 10% of the company "
-                 "pledged. Ranked on the month's pullback, closeness to the 52-week high, the last quarter's "
-                 "sales and margin growth, the industry's money flow and a live catalyst; at most four from one "
-                 "industry."),
-        "bias": ("Pledges, deliveries and orders have no history to replay: they were unknown here, which the "
-                 "list counts as neutral, and the live list reads them. {members} Quarterly filings start in "
-                 "{quarters_from} and cover companies listed today; a stock with none is never refused for it, "
-                 "and a revised quarter is seen from the revision's date."),
-    },
-    "results": {
-        "what": ("Liquid companies whose quarterly results were first priced in the last 10 sessions and showed "
-                 "real growth: sales up 8% or more, profit and operating profit up, other income no more than "
-                 "35% and an exceptional gain no more than 30% of profit before tax, and cash from operations "
-                 "positive in the last full year. Not already up 18% on the day, nor more than 15% under the "
-                 "200-day average. Ranked half on that session's move less the average liquid stock's, a "
-                 "quarter on the volume behind it and a quarter on the growth; at most four from one industry. "
-                 "A list is made only when eight or more pass every test."),
-        "bias": ("The results tables hold companies listed today, so one delisted after a bad quarter is "
-                 "missing, and a revised quarter is seen from the revision's date with the revised figures. "
-                 "vs_reporters compares the list with every liquid company whose results were priced in the "
-                 "same ten sessions, which shares that bias."),
-    },
-    "long": {
-        "what": ("Above the 200-day average and outside the most volatile fifth, a profit over the last four "
-                 "quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, "
-                 "cash from operations positive and at least 0.7 times profit, debt no more than equity (a "
-                 "lender: a return on equity of 13% or more), and a P/E under 90 unless its PEG is 1.5 or under "
-                 "on profit growing 35% a year. Ranked on quality, three-year compounding, governance, valuation "
-                 "against its own industry and the year-long trend; at most four from one industry."),
-        "bias": ("{checks} Pledges and holdings have no history and were unknown throughout. The tables hold "
-                 "companies listed today, and a revised filing is seen from the revision's date."),
-    },
+# What flatters each list's record, as the page prints it under "how". A
+# {name} is filled at publish time (bias_text) with what the same run
+# measured, so no figure is typed here; what each list is, is written from
+# its recipe (what_text).
+BIAS = {
+    "month": ("Pledges, deliveries and orders have no history to replay: they were unknown here, which the list "
+              "counts as neutral, and the live list reads them. {members} Quarterly filings start in "
+              "{quarters_from} and cover companies listed today; a stock with none is never refused for it, and "
+              "a revised quarter is seen from the revision's date."),
+    "results": ("The results tables hold companies listed today, so one delisted after a bad quarter is missing, "
+                "and a revised quarter is seen from the revision's date with the revised figures. {reporters}"),
+    "long": ("{checks} Pledges and holdings have no history and were unknown throughout. The tables hold "
+             "companies listed today, and a revised filing is seen from the revision's date."),
 }
 
 
@@ -835,63 +840,231 @@ def _pc(x):
     return f"{x:.1f}".rstrip("0").rstrip(".")
 
 
+def _signed(x):
+    """A lead as the page prints one (picks.js signed(v, 2)): +0.55%, \u22120.13%."""
+    return ("+" if x > 0 else "\u2212" if x < 0 else "") + f"{abs(x):.2f}%"
+
+
 def _and(parts):
     return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
 
 
-def _list(parts):
-    """Items that hold commas of their own: a; b; and c."""
-    return " and ".join(parts) if len(parts) < 3 else "; ".join(parts[:-1]) + "; and " + parts[-1]
+def _have(x):
+    return x is not None and bool(np.isfinite(x))
 
 
-def month_members(premium, gated=True):
-    """The month note's sentence on the industry map, with `premium` (the
-    eligible stocks' lead over the average liquid stock across the record,
-    member_premium()["pct"]) as the same run measured it. `gated`: the
-    version refuses a stock with no industry, so it could pick nothing else."""
+# --------------------------------------------------------------------------
+# What each list is: its recipe in words, from the dictionary the engine
+# reads (leaders.MONTH, RESULTS, LONG, as _recipe sets them for a version),
+# so a threshold changed in backend/leaders.py changes the words with it.
+# --------------------------------------------------------------------------
+
+def _calm():
+    """The volatility gate: leaders.CALM_FLOOR is the share of liquid stocks
+    it leaves out, the most volatile."""
+    import leaders
+    return "the most volatile " + ("fifth" if leaders.CALM_FLOOR == 0.2 else f"{leaders.CALM_FLOOR * 100:.0f}%")
+
+
+def _parts(mix, words):
+    """A score's parts in words, in the order of its weights; a part weighted
+    zero is not ranked on and is left out."""
+    return [words[k] for k, w in mix.items() if w and w > 0]
+
+
+def _weighted(mix, words):
+    """"half on a, a quarter on b and a quarter on c", or "on a" alone."""
+    parts = [(w, words[k]) for k, w in mix.items() if w and w > 0]
+    if len(parts) == 1:
+        return "on " + parts[0][1]
+    share = {0.5: "half", 0.25: "a quarter", 0.75: "three quarters"}
+    return _and([f"{share.get(round(w, 4)) or f'{w * 100:.0f}%'} on {t}" for w, t in parts])
+
+
+def _what_month(cfg):
+    pull = [w for k, w in (("dip21", "the month's"), ("dip", "the week's")) if (cfg.get("pull_mix") or {}).get(k)]
+    top = cfg["sector_top"]
+    # The gate compares the industry's rank with its count (leaders._month).
+    gate = ((f"in an industry ranked in the top {'half' if top == 0.5 else f'{top * 100:.0f}%'} on money "
+             "flow, ") if cfg["sector_gate"] else "")
+    rules = ((["no loss and no fall in profit last quarter"] if cfg["profit_guard"] else [])
+             + ([f"no results the market sold in the last {cfg['result_lookback']} sessions"]
+                if cfg["result_guard"] else [])
+             + [f"no more than {cfg['pledge_max']:g}% of the company pledged"])
+    words = {"pull": _and(pull or ["the"]) + " pullback", "high": "closeness to the 52-week high",
+             # A lender's margin is not read (leaders._snapshot_pcts).
+             "fundmom": "the last quarter's sales and margin growth (a lender's sales alone)",
+             "secflow": "the industry's money flow", "catalyst": "a live catalyst"}
+    return (f"Market leaders (leader score in the top {100 - cfg['leader_floor'] * 100:.0f}%) in an uptrend and "
+            f"outside {_calm()}, {gate}with " + _and(rules) + ". Ranked on " + _and(_parts(cfg["mix"], words))
+            + f"; at most {cfg['sector_cap']} from one industry.")
+
+
+def _what_results(cfg):
+    import leaders
+    under = (1 - leaders.RESULTS_SMA200_FLOOR) * 100
+    floor = {"sma200_85": f", nor more than {under:.0f}% under the 200-day average",
+             "sma50": ", nor under the 50-day average"}.get(cfg["floor"], "")
+    # leaders._result_quality: a lender's other income, operating profit and
+    # cash flow are its business, so it is not tested on them.
+    real = ((f" and showed real growth: sales up {cfg['rev_min']:g}% or more on a year ago, a profit and an "
+             "operating profit, both up on a year ago (one-off items left out of the operating profit), other "
+             f"income no more than {cfg['other_income_max']:g}% and an exceptional gain no more than "
+             f"{cfg['exceptional_max'] * 100:.0f}% of profit before tax, and cash from operations positive in the "
+             "last full year. A lender is tested on its sales, profit and exceptional gain only")
+            if cfg["quality_gate"] else "")
+    words = {"reaction": "that session's move less the average liquid stock's", "volume": "the volume behind it",
+             "growth": "the growth"}
+    return (f"Liquid companies whose quarterly results were first priced in the last {leaders.RESULTS_WINDOW} "
+            f"sessions{real}. Not already up more than {cfg['chase_max'] * 100:.0f}% on the day{floor}. Ranked "
+            + _weighted(cfg["mix"], words) + f"; at most {cfg['sector_cap']} from one industry. A list is made "
+            f"only when {cfg['min_qualified']} or more pass every test.")
+
+
+def _what_long(cfg):
+    de = "equity" if cfg["de_max"] == 1 else f"{cfg['de_max']:g} times equity"
+    # leaders._long_floor: a lender is judged on its return on equity alone,
+    # and a negative equity fails every company.
+    floors = ((f", a return on capital of {cfg['roce_min']:g}% or more, cash from operations positive and at "
+               f"least {cfg['cfo_to_pat_min']:g} times profit, debt no more than {de} (a lender instead: a return "
+               f"on equity of {cfg['roe_min_fin']:g}% or more) and positive shareholders' equity")
+              if cfg["floors"] else "")
+    ceiling = ((f", and a P/E of {cfg['pe_max']:g} or under unless its PEG is {cfg['peg_escape']:g} or under on "
+                f"three-year profit growth of {cfg['cagr_escape']:g}% a year or more")
+               if cfg["valuation_ceiling"] else "")
+    words = {"quality": "quality", "compounding": "three-year compounding", "governance": "governance",
+             "valuation": "valuation against its own industry", "trendq": "the year-long trend"}
+    return (f"Above the 200-day average and outside {_calm()}, a profit over the last four quarters, an F-score "
+            f"of {cfg['f_score_min']:g} or more, no more than {cfg['pledge_max']:g}% pledged{floors}{ceiling}. "
+            "Ranked on " + _and(_parts(cfg["mix"], words)) + f"; at most {cfg['sector_cap']} from one industry.")
+
+
+WHAT = {"month": _what_month, "results": _what_results, "long": _what_long}
+
+
+def what_text(tab, cfg):
+    """What a list is, as the page prints it under "how", from the recipe
+    `cfg` (a version's, _recipe)."""
+    return WHAT[tab](cfg)
+
+
+# --------------------------------------------------------------------------
+# What flatters each record, with what the same run measured
+# --------------------------------------------------------------------------
+
+def _lead(lead):
+    """A lead in vs_average_stock's shape, as the page writes its own:
+    "+0.55% a pick (2017-21 +1.05%, 2022-26 +0.04%)"."""
+    halves = [f"{k} {_signed(v['excess_pct'])}" for k, v in (lead.get("by_half") or {}).items()
+              if v and _have(v.get("excess_pct"))]
+    return f"{_signed(lead['excess_pct'])} a pick" + (f" ({', '.join(halves)})" if halves else "")
+
+
+def month_members(premium, lead=None, gated=True):
+    """The month note's sentences on the industry map, with what the same
+    run measured: `premium`, how far the average liquid stock in the map ran
+    ahead of the average liquid stock on the list's dates (member_premium()
+    ["pct"]), and `lead`, the list against the liquid stocks in the map
+    (vs_eligible_stock: the record's and each half's). `gated`: the version
+    refuses a stock with no industry, so it could pick no other."""
     said = ("Industries are NSE's list as it stands today, and a stock without one fails the industry test, so "
             "the replay could pick only companies in that list." if gated else
             "Industries are NSE's list as it stands today, and this version does not need one.")
-    them = "Those companies" if gated else "The liquid companies in that list"
-    if premium is None:
-        return f"{said} vs_eligible_stock measures the list against the liquid companies in that list."
-    how = (f"did better than the average liquid stock by {premium:.2f} points a hold" if premium >= 0.005 else
-           f"did worse than the average liquid stock by {-premium:.2f} points a hold" if premium <= -0.005 else
-           "did as well as the average liquid stock")
-    return f"{said} {them} {how} over the record; vs_eligible_stock measures the list against them."
+    parts = []
+    if _have(premium):
+        parts.append("the liquid stocks in that list " + (
+            f"did better than the average liquid stock by {premium:.2f}%" if premium >= 0.005 else
+            f"did worse than the average liquid stock by {-premium:.2f}%" if premium <= -0.005 else
+            "did as well as the average liquid stock"))
+    if lead and _have(lead.get("excess_pct")):
+        parts.append(f"the list's lead over {'them' if parts else 'the liquid stocks in that list'} was "
+                     + _lead(lead))
+    return said + (" On the same days " + ", and ".join(parts) + "." if parts else "")
+
+
+def reporters_text(lead):
+    """The results note's sentence on vs_reporters, the list against every
+    liquid company whose results were priced in the same sessions."""
+    import leaders
+    if not lead or not _have(lead.get("excess_pct")):
+        return ""
+    return (f"Against every liquid company whose results were priced in the same {leaders.RESULTS_WINDOW} "
+            f"sessions, which shares that bias, the list's lead was {_lead(lead)}.")
+
+
+def _untested(pct):
+    """A mean share known under UNTESTED_PCT: the check did not test the
+    list there."""
+    return _have(pct) and pct < UNTESTED_PCT
+
+
+def _early_checks(cov, who):
+    """The record's first half (before S.SPLIT, cov["first_half"]): the
+    checks known for almost none of the companies there, with their shares,
+    and, when that was every check, what the list was ranked on instead."""
+    c = cov["checks"]
+    low = [k for k in sorted(CHECKS, key=lambda k: c[k]["most_from"] or "9999")
+           if _untested(c[k].get("first_half_pct"))]
+    if not low:
+        return ""
+    shares = _and([f"{CHECKS[k]} {'was known ' if n == 0 else ''}for {_pc(c[k]['first_half_pct'])}%"
+                   + (" on average" if n == 0 else "") for n, k in enumerate(low)])
+    # The checks' figures are three of quality's four inputs and governance
+    # has no history; compounding and valuation read the income tables,
+    # which begin in 2018. With every check this rare, the trend is most of
+    # what the list could rank on.
+    so = ("so there the list was ranked mostly on its trend" if len(low) == len(CHECKS) else
+          "so " + ("that check was" if len(low) == 1 else "those checks were") + " effectively untested there")
+    return f"In {cov['first_half']['label']}, of {who} {shares}, {so}."
+
+
+def _held_checks(cov, who):
+    """From when each check had its figure for at least half the companies
+    on every later list date (most_from), and the ones short of half on the
+    last list date, which have no such date."""
+    c = cov["checks"]
+    held = sorted((k for k in CHECKS if c[k]["most_from"]), key=lambda k: c[k]["most_from"])
+    out = []
+    if held:
+        out.append(f"At least half of {who} had " + _and([
+            f"{CHECKS[k]} from {_day(c[k]['most_from'])}{' on' if n == 0 else ''}" for n, k in enumerate(held)])
+            + ".")
+    never = [CHECKS[k] for k in CHECKS if not c[k]["most_from"]]
+    if never:
+        out.append(f"Fewer than half of {'them' if held else who} had {_and(never)} on the last list date, "
+                   f"{_day(cov['to'])}.")
+    return " ".join(out)
+
+
+def _chosen_window(cov):
+    """The checks known for almost none of the companies in the window that
+    chose the version, with each one's share in the window after it."""
+    c = cov["checks"]
+    low = [k for k in sorted(CHECKS, key=lambda k: c[k]["most_from"] or "9999") if _untested(c[k]["first_pct"])]
+    if not low:
+        return ""
+    (a, b), (s0, s1) = cov["windows"]["first"], cov["windows"]["second"]
+    said = []
+    for n, k in enumerate(low):
+        later = "" if not _have(c[k]["second_pct"]) else (
+            f" ({_pc(c[k]['second_pct'])}% from {_month_year(s0)} to {_month_year(s1)})" if n == 0 else
+            f" ({_pc(c[k]['second_pct'])}% then)")
+        said.append(f"{CHECKS[k]} {'was known ' if n == 0 else ''}for {_pc(c[k]['first_pct'])}%"
+                    + (" of them on average" if n == 0 else "") + later)
+    return (f"From {_month_year(a)} to {_month_year(b)}, the period this version was chosen on, " + _and(said)
+            + ", so " + ("that check was" if len(low) == 1 else "those checks were") + " effectively untested there.")
 
 
 def long_checks(cov):
-    """The long note's sentences on its checks, from coverage_summary():
-    when each check first had its figure for at least half the companies the
-    list ranks, and any made on almost none of them (under UNTESTED_PCT on
-    average) in the window that chose the version. Every figure is cov's."""
-    def when(k):
-        d = cov["checks"][k]["most_from"]
-        if d is None:
-            return f"{CHECKS[k]} not by {_day(cov['to'])}, the last date counted"
-        if d == cov["from"]:
-            # Known for half on the first date counted: when it got there is
-            # before the count, so only "already" can be said.
-            return f"{CHECKS[k]} already on {_day(d)}, the first date counted"
-        return f"{CHECKS[k]} from {_day(d)}"
-    order = sorted(CHECKS, key=lambda k: cov["checks"][k]["most_from"] or "9999")
-    text = ("A check is made only where its figure is known. Among the liquid companies the list ranks, lenders "
-            "aside, at least half had each figure: " + _list([when(k) for k in order]) + ".")
-    low = [k for k in order if cov["checks"][k]["first_pct"] is not None
-           and cov["checks"][k]["first_pct"] < UNTESTED_PCT]
-    if low:
-        a, b = cov["windows"]["first"]
-        said = []
-        for n, k in enumerate(low):
-            c = cov["checks"][k]
-            later = "" if c["second_pct"] is None else f" ({_pc(c['second_pct'])}% in the second window)"
-            said.append(f"{CHECKS[k]}{' was known' if n == 0 else ''} for {_pc(c['first_pct'])}% of them on "
-                        f"average{later}")
-        text += (f" In the window that chose this version, {_month_year(a)} to {_month_year(b)}, " + _and(said)
-                 + (", so that check was" if len(low) == 1 else ", so those checks were")
-                 + " effectively untested there.")
-    return text
+    """The long note's sentences on its checks, from coverage_summary(), in
+    the order the record runs: the first half, when each check had its
+    figure for most of the companies the list ranks, and the window that
+    chose the version. Every figure is cov's."""
+    who = "the liquid companies the list ranks, lenders aside,"
+    text = ["A check is made only where its figure is known.", _early_checks(cov, who)]
+    text.append(_held_checks(cov, "them" if text[-1] else who))
+    text.append(_chosen_window(cov))
+    return " ".join(t for t in text if t)
 
 
 def _recipe(tab, key):
@@ -908,15 +1081,16 @@ def _recipe(tab, key):
 def bias_text(tab, key, rec, coverage=None, R=None):
     """What flatters a list, as the page prints it under "how": its note,
     with what this run measured put in where the note needs a figure (the
-    month record's member_premium and the year of the first quarterly
-    filing the replay could see, in R; the long list's coverage)."""
+    month record's member_premium and vs_eligible_stock and the year of the
+    first quarterly filing the replay could see, in R; the results record's
+    vs_reporters; the long list's coverage)."""
     if tab == "month":
         gated = _recipe(tab, key).get("sector_gate", True)
-        return NOTES[tab]["bias"].format(members=month_members(rec["member_premium"]["pct"], gated),
-                                         quarters_from=int(R["d0"].min().year))
-    if tab == "long":
-        return NOTES[tab]["bias"].format(checks=long_checks(coverage))
-    return NOTES[tab]["bias"]
+        members = month_members(rec["member_premium"]["pct"], rec.get("vs_eligible_stock"), gated)
+        return BIAS[tab].format(members=members, quarters_from=int(R["d0"].min().year))
+    if tab == "results":
+        return BIAS[tab].format(reporters=reporters_text(rec.get("vs_reporters"))).strip()
+    return BIAS[tab].format(checks=long_checks(coverage))
 
 
 OVERLAP_TEXT = ("Names two of the three lists share on the same list date, out of 15: mean_shared over the dates "
@@ -999,13 +1173,13 @@ def engine_check(P, R, sectors, chosen, stamp, n=CHECK_DATES):
 def list_record(P, U, tab, key, picks, lab, R=None, eligible=None, coverage=None):
     """One list's record in the schema of every other list in the study
     file, from the chosen version's picks, plus what the lab measured (lab).
-    The month list is also measured against `eligible`, the stocks it could
-    pick (eligible_universe), and the long list's note is written from
-    `coverage` (coverage_record)."""
+    The month list is also measured against `eligible`, the liquid stocks in
+    the industry map (eligible_universe), and the long list's note is
+    written from `coverage` (coverage_record)."""
     import leaders
     if (tab == "month" and (eligible is None or R is None)) or (tab == "long" and coverage is None):
-        raise ValueError(f"{tab}: the month record needs its eligible stocks and the results table, the long "
-                         "one its coverage")
+        raise ValueError(f"{tab}: the month record needs the liquid stocks in the industry map and the results "
+                         "table, the long one its coverage")
     hold, exit_pct = TABS[tab]
     exit_pct = VARIANTS[tab][key][0].get("_exit_pct", exit_pct)
     spec = leaders.LISTS[tab]
@@ -1019,8 +1193,8 @@ def list_record(P, U, tab, key, picks, lab, R=None, eligible=None, coverage=None
                avg_after_costs_pct=round(rec["avg_pct"] - S.ROUND_TRIP_COST_PCT, 2),
                vs_average_stock=S.vs_average_stock(P, U, ran, hold, first=first))
     if tab == "month":
-        # Against the liquid stocks it could pick, which ran ahead of every
-        # liquid stock on their own (the module's THE MONTH LIST'S OWN UNIVERSE).
+        # Against the liquid stocks in the industry map, which ran ahead of
+        # every liquid stock on their own (THE MONTH LIST'S OWN UNIVERSE).
         rec["vs_eligible_stock"] = S.vs_average_stock(P, eligible, ran, hold, first=first)
         rec["member_premium"] = member_premium(P, U, eligible, ran, hold, first)
     if tab == "results":
@@ -1036,7 +1210,8 @@ def list_record(P, U, tab, key, picks, lab, R=None, eligible=None, coverage=None
                     "dates_tried": int(sum(d >= picks[0][0] for d in grid)),
                     "filings": int(len(R)), "companies": int(R["symbol"].nunique()),
                     "window_sessions": leaders.RESULTS_WINDOW, "min_companies": leaders.RESULTS_MIN_POOL})
-    rec.update(what=NOTES[tab]["what"], bias=bias_text(tab, key, rec, coverage, R), replay=REPLAY_TEXT)
+    rec.update(what=what_text(tab, _recipe(tab, key)), bias=bias_text(tab, key, rec, coverage, R),
+               replay=REPLAY_TEXT)
 
     # The lab's own two windows, measured again from the same picks: the
     # lab's file and the picks file must be one run.
@@ -1110,9 +1285,9 @@ def published(P, U, R=None, check=True):
     chosen = chosen_picks(got, lab)
     if check:
         engine_check(P, R, replay_sectors(), chosen, got["stamp"])
-    # The month list's eligible stocks from the map the replay ran with, and
-    # the long list's coverage counted again: its note prints those figures,
-    # so they must be the ones on disk now.
+    # The liquid stocks in the industry map the replay ran with, and the long
+    # list's coverage counted again: the notes print those figures, so they
+    # must be the ones on disk now.
     sectors = _replay_map(got)
     eligible = eligible_universe(U, sectors)
     coverage = coverage_record(P, got["stamp"], sectors)
@@ -1189,7 +1364,8 @@ def publish():
 
 def print_measures(r):
     """What --report measures beside the rule: the month tab against the
-    stocks it could pick, and when the long list's checks had data."""
+    liquid stocks in the industry map, and when the long list's checks had
+    data."""
     cols = ("vs_avg_stock_pct", "vs_eligible_pct", "vs_eligible_t", "member_premium_pct")
     print("\nmonth tab, first window | second:  " + "  ".join(cols))
     for group in ("records", "before"):
@@ -1197,10 +1373,12 @@ def print_measures(r):
             cells = ["  ".join(str((rec[w] or {}).get(c)) for c in cols) for w in ("first", "second")]
             print(f"  {group:8s}{k:7s}" + " | ".join(cells))
     cov = r["coverage"]["long"]
-    print(f"\nlong list's checks, {cov['from']} to {cov['to']}: known for half from, and mean % known over the "
-          f"first and second windows ({cov['list_dates']['first']} and {cov['list_dates']['second']} list dates)")
+    half = cov["first_half"]
+    print(f"\nlong list's checks, {cov['from']} to {cov['to']}: known for half from, and mean % known over "
+          f"{half['label']} and the first and second windows ({half['list_dates']}, {cov['list_dates']['first']} "
+          f"and {cov['list_dates']['second']} list dates)")
     for k, c in cov["checks"].items():
-        print(f"  {k:14s}{c['most_from']}  {c['first_pct']}%  {c['second_pct']}%")
+        print(f"  {k:14s}{c['most_from']}  {c['first_half_pct']}%  {c['first_pct']}%  {c['second_pct']}%")
 
 
 def main():

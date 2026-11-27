@@ -1438,7 +1438,7 @@ def _tab_method(key):
                     f"{cfg['exceptional_max'] * 100:.0f}% of it and cash from operations positive in the last "
                     "full year (for a bank or lender: sales, profit and the exceptional test only)")
                    if cfg["quality_gate"] else "")
-                + f", and a stock not already up {cfg['chase_max'] * 100:.0f}% that day{floor}. With fewer "
+                + f", and a stock not already up more than {cfg['chase_max'] * 100:.0f}% that day{floor}. With fewer "
                 f"than {cfg['min_qualified']} such companies there is no list, and at most "
                 f"{cfg['sector_cap']} come from one industry.")
     return ("A company is here when it is above its 200-day average and outside the most volatile fifth, made "
@@ -1449,7 +1449,7 @@ def _tab_method(key):
                 f"equity (a bank or lender: {cfg['roe_min_fin']:g}% or more on its equity), and its "
                 "shareholders' equity is positive")
                if cfg["floors"] else "")
-            + ((f"; and it is priced under a P/E of {cfg['pe_max']:g}, unless its PEG is "
+            + ((f"; and it is priced at a P/E of {cfg['pe_max']:g} or under, unless its PEG is "
                 f"{cfg['peg_escape']:g} or under on profit growing {cfg['cagr_escape']:g}% a year")
                if cfg["valuation_ceiling"] else "")
             + ". It is ordered on returns and cash, three-year growth, pledges and holdings, its valuation "
@@ -1618,9 +1618,13 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         notes.append(f"Stocks on the {leaders.LISTS[other]['label'].lower()} list are left off "
                      "this one, so the two lists show different stocks.")
     if not recipe_current:
+        # Only the three lists by holding time were rebuilt: a setup list's
+        # picks are chosen as they were, and only its record is held back.
         notes.append("This scan was ranked with an earlier recipe: these picks were chosen the earlier "
                      "way, not as described above, and its tested record is not shown. The next scan "
-                     "ranks it the current way.")
+                     "ranks it the current way." if leaders.recipe_of(key) is not None else
+                     "This scan was ranked with an earlier recipe, so its tested record is not shown. "
+                     "The next scan ranks it the current way.")
     elif not study_current:
         notes.append("This list was rebuilt on company filings in December 2026 and the replay of the new "
                      "recipe is not in the study file yet, so no tested record is shown beside it.")

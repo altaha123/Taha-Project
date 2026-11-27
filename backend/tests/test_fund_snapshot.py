@@ -260,18 +260,16 @@ def test_a_test_whose_lines_were_not_filed_is_not_counted_as_failed():
 
 # --- figures the review found wrong (December 2026) ---------------------------
 
-def test_trailing_eps_is_on_the_latest_share_count_across_a_split():
-    """A 1:10 split between quarters: the quarter before it was filed on a
-    tenth of the shares. Its EPS is restated, so the P/E is the true one."""
+def test_trailing_eps_is_the_quarters_as_filed_whatever_profit_over_eps_says():
+    """Profit is the whole group's and EPS the owners': their ratio swings
+    with a minority interest when no share was issued (GODREJIND's last four
+    quarters imply 40, 62, 64 and 58 crore shares). Trailing EPS adds the
+    quarters as filed and never rescales one on that ratio."""
     q = quarters()
-    q[3]["eps_basic"] = round(q[3]["pat_cr"] / (SHARES_CR / 10), 4)      # filed before the split
+    for r, n in zip(q[:4], (40.4, 62.0, 63.8, 58.1)):
+        r["eps_basic"] = round(r["pat_cr"] / n, 4)
     s = FS.build(q, annuals(), cashflows(), balances(), asof=ASOF)
-    pat_ttm = sum(r["pat_cr"] for r in q[:4])
-    assert s["eps_ttm"] == pytest.approx(pat_ttm / SHARES_CR, rel=1e-3)
-    assert FS.valuation(s, 120.0)["pe"] == pytest.approx(120.0 / (pat_ttm / SHARES_CR), abs=0.1)
-    # Ordinary quarters are summed as filed.
-    plain = FS.build(quarters(), annuals(), cashflows(), balances(), asof=ASOF)
-    assert plain["eps_ttm"] == pytest.approx(sum(r["eps_basic"] for r in quarters()[:4]), abs=0.01)
+    assert s["eps_ttm"] == pytest.approx(sum(r["eps_basic"] for r in q[:4]), abs=0.01)
 
 
 def test_margins_leave_one_off_items_out():
