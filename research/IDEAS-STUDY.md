@@ -646,13 +646,11 @@ over the index). The version shipped until now is measured beside it.
 
 What the rule took that the reader did not ask for, said plainly:
 
-- **The rule took breakouts on pattern A alone; the reader then chose A and
-  B.** In the lab A or B led by 1.6 points on 2017–21, A alone by 2.2, B alone
-  by 0.5 (B did best of the three on 2022–26, 1.8, which the rule may not look
-  at). Both patterns were switched on after those figures were seen, so that
-  early turnarounds of the HFCL kind reach the list. The record printed is the
-  engine replayed with both; the A-only record is below it.
-  `leaders.LAUNCH_PATTERNS = ("A",)` and a replay put back what the rule chose.
+- **Breakouts are pattern A alone.** A or B led by 1.6 points on 2017–21, A
+  alone by 2.2, B alone by 0.5 (B did best of the three on 2022–26, 1.8,
+  which the rule may not look at). B, the base turnaround, is measured on
+  every stock, listed under the breakouts as *Setting up*, and one constant
+  away (`leaders.LAUNCH_PATTERNS`).
 - **Money flow has no anti-chasing screen.** The version without it led by
   2.6 points on 2017–21 against 2.4 with it.
 - **Emerging leaves on the 50-day average.** On 2017–21 it led 63 sessions
@@ -673,8 +671,7 @@ Engine replay, every fifth session, 486 list dates tried, after 0.49% costs:
 
 | List | Picks | Rose | 25%+ winners | After costs | Nifty 500 | Against the average stock (t) | 2017–21 / 2022–26 | Before (after costs) |
 |---|---|---|---|---|---|---|---|---|
-| Breakouts (A or B, shipped) | 2,955 | 52.0% | 10.2% | **+3.00%** | +2.63% | +1.15% (1.5) | +2.61 / **−0.23** | +0.56% |
-| *Breakouts, A alone (the rule's choice)* | *2,504* | *51.9%* | *10.2%* | *+2.87%* | *+2.52%* | *+1.60% (2.1)* | *+3.23 / +0.08* | |
+| Breakouts | 2,504 | 51.9% | 10.2% | **+2.87%** | +2.52% | +1.60% (2.1) | +3.23 / +0.08 | +0.56% |
 | Technicals | 5,637 | 49.3% | 13.7% | **+3.86%** | +3.30% | +0.96% (1.3) | +2.53 / **−0.72** | +0.80% |
 | Swing dips | 4,439 | 50.9% | 4.0% | **+0.87%** | +1.07% | +0.81% (2.5) | +1.31 / +0.32 | **−0.14%** |
 | Money flow | 5,629 | 55.5% | 13.9% | **+4.94%** | +3.32% | +2.12% (2.5) | +3.17 / +1.01 | +0.90% |
@@ -689,12 +686,8 @@ not with its old self alone. Read plainly:
 - **Swing dips now keep a profit after costs**, in both halves, at the price
   of a hit rate near half where it was two in three.
 - **Breakouts and technicals are mostly a 2017–21 result.** Against the
-  average stock on the same days, breakouts trailed it in 2022–26 (−0.23 with
-  both patterns, +0.08 with A alone) and technicals trailed it (−0.72, with
-  fewer than half the picks rising). Adding pattern B raised the average pick
-  after costs (+3.00% against +2.87%) and put about one more name on each list
-  (6.9 against 5.9), but it lowered the lead over the average stock in both
-  halves, and its t-statistic fell from 2.1 to 1.5.
+  average stock on the same days, breakouts were level in 2022–26 (+0.08) and
+  technicals behind it (−0.72, with fewer than half the picks rising).
 - **Emerging is carried by a few large winners.** Six picks in ten fell; the
   median pick lost 3%. Only 292 of 486 dates had a list, 2.5 names on average.
 - The lab picked every day; the replay is the engine every fifth session,
@@ -713,8 +706,8 @@ not with its old self alone. Read plainly:
   2022: 31 Oct 2022 (VCP launchpad, ₹83.15, stopped at −13.4%), 7 Aug 2023
   (base turnaround, ₹73.80, stopped at −12.1%) and 9 Apr 2026 (base
   turnaround, ₹80.40, **+167%** in 63 sessions). The 2026 move came from
-  pattern B, which the list picks from since both patterns were switched on.
-  The late-2023 and mid-2024 rallies were not caught by either version.
+  pattern B, which the shipped list does not pick from. The late-2023 and
+  mid-2024 rallies were not caught by either version.
 
 ## The daily brief
 

@@ -1099,27 +1099,13 @@ def test_a_first_sixty_session_high_out_of_a_long_base_is_a_turnaround_even_for_
     assert launch is None and "leader score" in why
 
 
-def test_the_breakout_list_picks_both_patterns_on_the_exit_the_lab_chose():
-    """The lab's rule took pattern A alone; the reader chose A and B after
-    seeing the figures. The exit is still the one the lab chose, and the
-    record on the page is the engine replayed with both patterns."""
+def test_the_shipped_breakout_list_is_the_pattern_the_lab_chose():
     with open(os.path.join(HERE, "..", "..", "research", "setups-lab-v2.json"), encoding="utf-8") as f:
         lab = json.load(f)
     taken = lab["taken"]["breakout"]
-    assert taken["version"].startswith("new: A ") and leaders.LAUNCH_PATTERNS == ("A", "B")
+    assert taken["version"].startswith("new: A ") and leaders.LAUNCH_PATTERNS == ("A",)
     spec = leaders.LISTS["breakout"]
     assert (spec["hold_sessions"], spec["exit_pct"]) == (taken["hold"], taken["stop"])
-    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
-        assert "base turnaround" in json.load(f)["lists"]["breakout"]["what"]
-
-
-def test_a_launch_that_fails_as_a_launchpad_counts_as_a_turnaround_and_says_so():
-    g = _sig(_hfcl_like())
-    L, pattern, _w = leaders._launch(g, g["tech"], {"leader": 0.30}, None, None)
-    assert L["a"] and L["b"] and pattern == "Base turnaround"
-    blocks = {"AAA": {"lists": {"breakout": {"pattern": pattern, "launch_ago": L["sessions_ago"]}},
-                      "technicals": {"launch": [{"sessions_ago": 0, "a": {}, "b": {}}]}}}
-    assert ideas.breakout_pattern(blocks["AAA"]) == "Base turnaround"
 
 
 def _pullback(**over):

@@ -925,11 +925,9 @@ def has_picks(payload):
 
 def breakout_pattern(block):
     """The pattern of the breakout a block's breakout pick was made on:
-    "VCP launchpad" or "Base turnaround", as the engine counted it, or None.
-    A scan from before the engine recorded it is read from the launches."""
-    entry = ((block or {}).get("lists") or {}).get("breakout") or {}
-    if "pattern" in entry:
-        return entry["pattern"]
+    "VCP launchpad" or "Base turnaround", by the same order the list uses
+    (the earliest launch of the last five sessions of a pattern it picks
+    from), or None."""
     t = (block or {}).get("technicals") or {}
     for L in t.get("launch") or []:
         if L.get("a") and "A" in leaders.LAUNCH_PATTERNS:
@@ -982,17 +980,15 @@ def _setup_evidence(key, block):
         launch = (t.get("launch") or [])
         f, q = block.get("sector_flow") or {}, block.get("quarter") or {}
         # The breakout the list counted: the earliest of the last five still above its base.
-        ago = ((block.get("lists") or {}).get("breakout") or {}).get("launch_ago")
-        L = next((x for x in launch if x.get("sessions_ago") == ago), None) if ago is not None else None
-        L = L or next((x for x in launch if (x.get("a") and "A" in leaders.LAUNCH_PATTERNS)
-                       or (x.get("b") and "B" in leaders.LAUNCH_PATTERNS)), None) or {}
+        L = next((x for x in launch if (x.get("a") and "A" in leaders.LAUNCH_PATTERNS)
+                  or (x.get("b") and "B" in leaders.LAUNCH_PATTERNS)), None) or {}
         pattern = breakout_pattern(block) or "VCP launchpad"
         base = (L.get("a") if pattern == "VCP launchpad" else L.get("b")) or {}
         line("Pattern", pattern + (": a base that tightened before it broke." if pattern == "VCP launchpad" else
                                    ": a first 60-session high after a long sideways base."), True)
-        need = leaders.LAUNCH_A_WIDTH if pattern == "VCP launchpad" else leaders.LAUNCH_B_WIDTH
         line("The base", f"{base.get('base')} sessions between \u20b9{base.get('low')} and \u20b9{base.get('top')}: "
-                         f"a {base.get('width_pct')}% range. The list needs {need * 100:.0f}% or tighter.", True)
+                         f"a {base.get('width_pct')}% range. The list needs "
+                         f"{leaders.LAUNCH_A_WIDTH * 100:.0f}% or tighter.", True)
         ago = L.get("sessions_ago")
         line("The breakout", ("Closed" if not ago else f"{ago} session{'s' if ago != 1 else ''} ago it closed")
              + f" at \u20b9{L.get('close')}, above the top of the base, on {L.get('rel_volume')} times its usual "
@@ -1179,11 +1175,7 @@ SETUP_METHOD = {
                  "or tightening before the break (a calmer last fortnight, or volume drying up): a VCP "
                  "launchpad. The breakout needs 1.6 times the usual volume and a close in the top 45% of the "
                  "day's range. The stock must be above its 200-day average, with a leader score of 45 or "
-                 "more and its industry in the top 60% on money flow. Or it is a base turnaround: the first "
-                 "close above its 60-session top in 20 sessions, out of a base 35% wide or less that "
-                 "tightened, on twice the usual volume, above rising 50- and 200-day averages, with sales or "
-                 "profit growing where a quarter is on file; no leader score is needed. Either way its month "
-                 "must beat the Nifty 500's. "
+                 "more, its industry in the top 60% on money flow, and a month better than the Nifty 500's. "
                  "It is left out if it is already more than 16% above its 50-day average or up 55% in three "
                  "months, if its last quarter's profit fell more than 10%, or if the market sold its results. "
                  "Newest breakouts first, then the heaviest volume. Held about three months." + _REPLAYED),
