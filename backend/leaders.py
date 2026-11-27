@@ -241,9 +241,11 @@ MIN_YOUNG_SESSIONS = 127           # six months of closes plus the base one
 MAX_YOUNG_SPAN_DAYS = 215          # calendar days those 127 closes may cover
 YOUNG_LISTS = ()
 CALM_FLOOR = 0.20                  # calm percentile under which a name is out
-# The leader percentile a month pick must reach: the top 35% (December 2026;
-# it was the top 30% while the month list read prices alone). MONTH reads it.
-LEADER_FLOOR = 0.65
+# The leader percentile a month pick must reach: the top 30%. The specification
+# asked for the top 35%; research/fundamental_ideas_lab.py tried both, and the
+# rule declared before the run chose this one (version M3, with the pullback
+# read over the month alone) on 2018-21. MONTH reads it.
+LEADER_FLOOR = 0.70
 # Nothing that moves less than this in a year is a company share. A liquid-fund
 # ETF creeps up in a straight line at about 1% volatility, which every
 # return-for-its-risk measure here would rank first on the exchange. The scan
@@ -308,7 +310,7 @@ MONTH = {
     "pledge_max": 10.0,                # % of the company promoters may have pledged
     "catalyst_order_pct": 2.0,         # an order worth this % of market value is a catalyst
     "mix": {"pull": 0.30, "high": 0.25, "fundmom": 0.20, "secflow": 0.15, "catalyst": 0.10},
-    "pull_mix": {"dip21": 0.5, "dip": 0.5},     # the month's pullback, and the week's
+    "pull_mix": {"dip21": 1.0},        # the month's pullback (M3; M0 blended in the week's)
     "min_score": 0.0,                  # a score floor, as a fraction of 100
     "sector_cap": 4,
 }
