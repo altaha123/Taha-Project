@@ -13,9 +13,16 @@
    Every call carries `engine`: "classic" (today's calls, exactly as they have
    always been) or "select" (fewer, stronger calls, paced through the day). A
    row without `engine` is Classic: the log is older than the second lane.
-   When both lanes flag the same break the reader is shown ONE card, the
-   Classic call, which came first, with a ★ "Select confirmed" badge. Never
-   two cards for one break: that would read as two trades.
+   When both lanes flag the same break the reader is shown ONE card: the
+   record whose full card went out on Telegram (the trade the owner was
+   sent), or, where the log does not say, the one that fired first. The
+   other lane rides on it as a badge: "★ Select confirmed 10:02 am" on a
+   Classic call, "Classic called it 10:02 am" on a Select one. Never two
+   cards for one break: that would read as two trades.
+
+   A LIVE PRICE is the tracker's last 20-second price (`live_at` says when).
+   One more than two minutes old is not live: the quotes have stopped, and
+   the card says what the last price was and when.
 
    TIME
    Calls are stamped in India time ("HH:MM", IST, no seconds). The reader's
@@ -36,6 +43,7 @@
   var IST_MS = 330 * 60000;         // India is UTC+5:30 all year: no daylight saving
   var OPEN = 9 * 60 + 15;           // 09:15, the session's first minute
   var CLOSE = 15 * 60 + 30;         // 15:30, its last
+  var STALE_MS = 2 * 60000;         // a live price older than this is no longer live
 
   /* Select's three sessions, as breakouts.pacing() describes them. Used when
      the server has not said (an older backend, or no answer yet): the
@@ -183,10 +191,24 @@
     return { byClassic: byClassic, bySelect: bySelect };
   }
 
+  /* Of the two records of one break, the one its card is built from: the
+     one whose full card went out on Telegram (intraday.py marks the other
+     tg_card false: a Select call carried a Classic one in the same pass, or
+     the later call got only a short line), so the page shows the trade the
+     owner was sent. Where the log does not say, the one that fired first;
+     Classic on a tie. */
+  function primary(classic, select) {
+    var c = classic.tg_card !== false, s = select.tg_card !== false;
+    if (c !== s) return c ? classic : select;
+    var tc = mins(classic.time), ts = mins(select.time);
+    return tc !== null && ts !== null && ts < tc ? select : classic;
+  }
+
   /* The cards for a lane, in the order the rows came (the server sends the
-     newest first). `all` is Classic's cards with their ★ partner folded in,
-     plus the Select calls no Classic call made. `classic` and `select` are
-     each lane's own records, each still knowing its partner. */
+     newest first). `all` is one card per break: a break both lanes called
+     is its primary() record with the other lane's folded in as `pair`, plus
+     every call the other lane did not make. `classic` and `select` are each
+     lane's own records, each still knowing its partner. */
   function items(rows, lane) {
     var p = pairs(rows), out = [];
     (rows || []).forEach(function (a) {
@@ -195,10 +217,29 @@
       if (lane === 'select' && !sel) return;
       if (lane === 'classic' && sel) return;
       var pair = (sel ? p.bySelect[k] : p.byClassic[k]) || null;
-      if (lane !== 'select' && lane !== 'classic' && sel && pair) return;   // folded into its Classic card
+      if (lane !== 'select' && lane !== 'classic' && pair) {
+        var main = sel ? primary(pair, a) : primary(a, pair);
+        if (main !== a) return;                        // folded into its partner's card
+      }
       out.push({ key: k, rec: a, pair: pair, lane: sel ? 'select' : 'classic' });
     });
     return out;
+  }
+
+  /* The badge a card's partner earns. A Select call made after the Classic
+     one "confirmed" it: a later minute, or the same minute where the routing
+     gave Select only the short confirm line. One made before "called it"
+     too, as does a Classic call on a Select card. */
+  function partnerNote(it) {
+    if (!it || !it.pair || !it.rec) return null;
+    var pair = it.pair, sel = isSelect(pair), tp = mins(pair.time), tr = mins(it.rec.time);
+    var later = tp !== null && tr !== null &&
+                (tp > tr || (tp === tr && pair.tg_card === false && it.rec.tg_card !== false));
+    return {
+      lane: sel ? 'select' : 'classic', time: pair.time || '', later: later,
+      text: sel ? (later ? 'Select confirmed ' : 'Select called it ') + clock12(pair.time)
+                : 'Classic called it ' + clock12(pair.time)
+    };
   }
 
   /* Calls made today, a break called by both lanes counted once. The same
@@ -207,15 +248,54 @@
     return (rows || []).filter(function (a) { return a && !(a.engine === 'select' && a.pair_time); }).length;
   }
 
+  /* Today's figures, one per card, each read from the record the card
+     shows (a break both lanes called is one card, and its own result is
+     the one counted), so the hero's numbers and the timeline's line agree
+     with the cards under them. `live` leaves out a call whose price has
+     stopped coming (isStale). */
+  function dayCounts(rows, nowMs) {
+    var cards = items(rows, 'all');
+    var n = function (fn) { return cards.filter(fn).length; };
+    return {
+      calls: cards.length,
+      both: n(function (it) { return !!it.pair; }),
+      select: (rows || []).filter(isSelect).length,
+      hit: n(function (it) { return isWin(it.rec); }),
+      stopped: n(function (it) { return isStopped(it.rec); }),
+      live: n(function (it) { return isLive(it.rec, nowMs); })
+    };
+  }
+
   /* ── what a call's state is ─────────────────────────────────────────── */
+
+  /* When the tracker last priced a call (`live_at`, "HH:MM:SS" IST on the
+     call's date), as a timestamp; null when the row does not say. */
+  function liveAt(a) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((a && a.date) || '');
+    var t = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(String((a && a.live_at) || ''));
+    if (!m || !t) return null;
+    return Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2], +(t[3] || 0)) - IST_MS;
+  }
+
+  /* A live price that has not moved on for two minutes is not live: the
+     quotes stopped (an expired token, a lapsed subscription, the scanner
+     down). Without a clock, or a row that never said when, nothing is stale. */
+  function isStale(a, nowMs) {
+    if (nowMs === undefined || nowMs === null || !a || a.live_outcome || a.outcome) return false;
+    var at = liveAt(a);
+    return at !== null && num(a.live_price) !== null && nowMs - at > STALE_MS;
+  }
 
   /* The 5-minute-candle check after the close (`outcome`) is the authority,
      so once it has run its line is the one shown. Before that the live
      tracker's 20-second fields say where the trade stands. An exit beats a
-     half-book, and a half-book beats a plain price. */
-  function liveState(a) {
+     half-book, and a half-book beats a plain price. `nowMs` (the server's
+     clock, where the page knows it) decides whether that price is still
+     live: an old one reads "Last ₹… · 10:29 am", never LIVE. */
+  function liveState(a, nowMs) {
     a = a || {};
     var pnl = num(a.live_pnl_pct), px = num(a.live_price);
+    var stale = isStale(a, nowMs), seen = stale ? clock12(a.live_at) : '';
     if (a.outcome === 'TARGET' || a.outcome === 'STOP' || a.outcome === 'OPEN_AT_CLOSE') {
       var fp = num(a.pnl_pct);
       return {
@@ -229,15 +309,23 @@
     if (a.live_outcome === 'OPEN_AT_CLOSE') {
       return { key: 'closed', tone: pnl > 0 ? 'won' : pnl < 0 ? 'lost' : 'flat', label: 'CLOSED 3:15 pm', pnl: pnl };
     }
-    if (a.t1_hit) return { key: 't1', tone: 'hl', label: 'T1 HIT · Move SL to cost', pnl: pnl, price: px, at: a.t1_time || null };
+    if (a.t1_hit) {
+      return { key: 't1', tone: 'hl', label: 'T1 HIT · Move SL to cost', pnl: pnl, price: px, at: a.t1_time || null,
+               stale: stale, seen: seen };
+    }
     if (px !== null && px > 0) {
-      return { key: 'live', tone: 'info', label: 'LIVE · ' + money(px) + (pnl !== null ? ' (' + pct(pnl) + ')' : ''), pnl: pnl, price: px };
+      var fig = money(px) + (pnl !== null ? ' (' + pct(pnl) + ')' : '');
+      if (stale) return { key: 'last', tone: 'flat', label: 'Last ' + fig + ' · ' + seen, pnl: pnl, price: px, stale: true, seen: seen };
+      return { key: 'live', tone: 'info', label: 'LIVE · ' + fig, pnl: pnl, price: px, stale: false };
     }
     return { key: 'none', tone: 'flat', label: '', pnl: null };
   }
 
   /* Still in play: neither the live tracker nor the close has ended it. */
   function isActive(a) { return !!a && !a.outcome && !a.live_outcome; }
+
+  /* In play and priced within the last two minutes: what "N live" counts. */
+  function isLive(a, nowMs) { return isActive(a) && !isStale(a, nowMs); }
 
   /* Hit its target, by either account. Counted once per card. */
   function isWin(a) { return !!a && (a.outcome === 'TARGET' || (!a.outcome && a.live_outcome === 'TARGET')); }
@@ -291,6 +379,29 @@
   function shadowWords(a) {
     if (!a || !Array.isArray(a.shadow) || isSelect(a)) return null;
     return a.shadow.map(function (c) { return SHADOW_WORDS[c] || String(c); });
+  }
+
+  /* The owner's line under a Classic call Select did not make. `shadow`
+     only covers Select's five quality filters, so an empty list says those
+     passed, never that Select would have taken the call: what held Select
+     back on the same pass (breakouts.py notes it as `select_wait`), or, for
+     an older row, what Select's radar says about the stock now (`waiting`,
+     /breakouts/status), is said beside it. Null when the row says nothing. */
+  function shadowNote(a, waiting) {
+    var sw = shadowWords(a);
+    if (!sw) return null;
+    var held = a.select_wait && a.select_wait.why ? String(a.select_wait.why) : '', now = false;
+    if (!held) {
+      var side = a.direction === 'DOWN' ? 'DOWN' : 'UP';
+      var w = (waiting || []).filter(function (r) {
+        return r && r.lane === 'select' && r.symbol === a.symbol && (r.dir === 'DOWN' ? 'DOWN' : 'UP') === side && r.why;
+      })[0];
+      if (w) { held = String(w.why); now = true; }
+    }
+    var held_ = held ? (now ? 'Select is holding it: ' : 'Select held it: ') + held : '';
+    if (sw.length) return { failed: sw, held: held, text: 'Select’s quality filters would have skipped it: ' + sw.join(', ') + (held_ ? ' · ' + held_ : '') };
+    if (held) return { failed: [], held: held, text: held_ + ' · its quality filters passed' };
+    return { failed: [], held: '', text: 'Select’s quality filters: all passed' };
   }
 
   /* ── filters ────────────────────────────────────────────────────────── */
@@ -404,10 +515,19 @@
     return n < OPEN || n > CLOSE ? null : Math.round((n - OPEN) / (CLOSE - OPEN) * 1000) / 10;
   }
 
+  /* Select is switched off today (BO_LANES): the server's pacing says
+     enabled false, or /breakouts/status's lanes do. */
+  function selectOff(pacing, lanes) {
+    return !!((pacing && pacing.enabled === false) ||
+              (lanes && lanes.select && lanes.select.enabled === false));
+  }
+
   /* Select's three windows, shaded on the strip, each with its ★ slots used.
      The server's pacing says it best; without it the windows are the
-     defaults and the use is counted from today's Select rows. */
+     defaults and the use is counted from today's Select rows. None at all
+     while Select is switched off: it has no slots to spend. */
   function tlBands(pacing, rows) {
+    if (pacing && pacing.enabled === false) return [];
     var given = pacing && Array.isArray(pacing.slots) && pacing.slots.length ? pacing.slots : null;
     var now = pacing && pacing.session && pacing.session.key;
     return (given || SLOTS).map(function (s) {
@@ -431,7 +551,7 @@
     }).filter(Boolean);
   }
 
-  var STATE_WORDS = { live: 'live', none: 'live', t1: 'half-book reached', target: 'target hit',
+  var STATE_WORDS = { live: 'live', none: 'live', last: 'no fresh price', t1: 'half-book reached', target: 'target hit',
                       stop: 'stopped out', closed: 'closed at 3:15 pm' };
 
   function dotTone(st) {
@@ -446,17 +566,24 @@
   /* One mark per call (both lanes; ★ for Select), on its own row by lane,
      oldest first so a later mark draws over an earlier one. Marks closer
      than `gap` percent on the same row are lifted onto the next of three
-     levels so a busy minute still shows how many calls it held. */
+     levels so a busy minute still shows how many calls it held; past three,
+     a mark goes a gap to the right of the level that frees up first, never
+     on top of another, where neither could be seen or pressed. `opts.now`
+     is the clock liveState() judges a price's freshness by. */
   function tlDots(rows, opts) {
-    var gap = (opts && opts.gap) || 3, levels = { classic: [], select: [] };
+    var gap = (opts && opts.gap) || 3, now = opts && opts.now, levels = { classic: [], select: [] };
     return (rows || []).filter(function (a) { return a && a.symbol && mins(a.time) !== null; })
       .slice().sort(function (x, y) { return mins(x.time) - mins(y.time); })
       .map(function (a) {
         var lane = engineOf(a), left = tlPos(a.time), lv = levels[lane], k = 0;
         while (k < lv.length && left - lv[k] < gap) k++;
-        if (k > 2) k = 0;
+        if (k > 2) {
+          k = 0;
+          for (var j = 1; j < 3; j++) if (lv[j] < lv[k]) k = j;
+          left = Math.min(100, Math.round((lv[k] + gap) * 10) / 10);
+        }
         lv[k] = left;
-        var st = liveState(a), tone = dotTone(st);
+        var st = liveState(a, now), tone = dotTone(st);
         var words = st.key === 'final'
           ? { TARGET: 'target hit', STOP: 'stopped out', OPEN_AT_CLOSE: 'closed at 3:15 pm' }[st.outcome]
           : STATE_WORDS[st.key] || 'live';
@@ -500,7 +627,8 @@
     index:    { label: 'Index against', tone: 'muted', rank: 9 },
     rpos:     { label: 'Low in its range', labelDn: 'High in its range', tone: 'muted', rank: 10 },
     extended: { label: 'Stretched', tone: 'muted', rank: 11 },
-    vwap:     { label: 'Wrong side of VWAP', tone: 'muted', rank: 12 }
+    vwap:     { label: 'Wrong side of VWAP', tone: 'muted', rank: 12 },
+    novwap:   { label: 'No VWAP on the quote', tone: 'muted', rank: 13 }
   };
 
   function reason(code, dir) {
@@ -648,7 +776,8 @@
     rpos: 'Not near the day’s extreme', sector: 'Sector not moving with it', extended: 'Too far past VWAP',
     book: 'Order book leaning against it', confirm: 'Did not hold for a second pass', risk: 'Stop too wide',
     room: 'No room to the next level', index: 'Index against it', spent: 'Already moved too far today',
-    cap: 'Held back by the slot budget', pdh: 'Yesterday’s high or low on its own'
+    cap: 'Held back by the slot budget', pdh: 'Yesterday’s high or low on its own',
+    novwap: 'No VWAP on the quote yet'
   };
 
   /* breakouts.status() counts, per check, the stocks (one per stock and
@@ -665,15 +794,18 @@
   }
 
   return {
-    IST_MS: IST_MS, OPEN: OPEN, CLOSE: CLOSE, SLOTS: SLOTS, PREFS_KEY: PREFS_KEY, FILTER: FILTER, REASONS: REASONS,
+    IST_MS: IST_MS, OPEN: OPEN, CLOSE: CLOSE, STALE_MS: STALE_MS, SLOTS: SLOTS, PREFS_KEY: PREFS_KEY, FILTER: FILTER,
+    REASONS: REASONS,
     num: num, mins: mins, clock12: clock12, span12: span12, money: money, pct: pct, rmult: rmult,
     ist: ist, callAt: callAt, ago: ago,
-    engineOf: engineOf, isSelect: isSelect, keyOf: keyOf, pairs: pairs, items: items, countCalls: countCalls,
-    liveState: liveState, isActive: isActive, isWin: isWin, isStopped: isStopped, rail: rail,
-    scoreTitle: scoreTitle, shadowWords: shadowWords,
+    engineOf: engineOf, isSelect: isSelect, keyOf: keyOf, pairs: pairs, primary: primary, items: items,
+    partnerNote: partnerNote, countCalls: countCalls, dayCounts: dayCounts,
+    liveAt: liveAt, isStale: isStale, liveState: liveState, isActive: isActive, isLive: isLive, isWin: isWin,
+    isStopped: isStopped, rail: rail,
+    scoreTitle: scoreTitle, shadowWords: shadowWords, shadowNote: shadowNote,
     normFilter: normFilter, press: press, pressed: pressed, view: view, describe: describe,
     loadPrefs: loadPrefs, savePrefs: savePrefs, unseen: unseen, pollDelay: pollDelay,
-    tlPos: tlPos, tlNow: tlNow, tlBands: tlBands, tlDots: tlDots, tlHours: tlHours,
+    selectOff: selectOff, tlPos: tlPos, tlNow: tlNow, tlBands: tlBands, tlDots: tlDots, tlHours: tlHours,
     reason: reason, progress: progress, radarSort: radarSort, pastLevel: pastLevel,
     sectorShort: sectorShort, sectorTape: sectorTape,
     record: record, lanesRecord: lanesRecord, sessionRows: sessionRows, shadowRows: shadowRows, funnel: funnel

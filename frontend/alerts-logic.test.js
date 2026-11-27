@@ -265,9 +265,10 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.strictEqual(bySym("BEL")[0].label, "10:02 am, Buy BEL, Classic, half-book reached");
   assert.strictEqual(bySym("HINDALCO")[0].label, "9:47 am, Sell HINDALCO, Classic, stopped out");
   assert.strictEqual(bySym("SBIN")[0].label, "11:12 am, Buy SBIN, Select, live", "a label is read aloud: no star glyph in it");
-  // A busy few minutes lifts marks onto the next level; a fourth goes back to the first.
+  // A busy few minutes lifts marks onto the next level; a fourth goes back to
+  // the first level, a gap to the right of the mark already there.
   const busy = ["10:00", "10:02", "10:04", "10:05"].map((t, i) => ({ date: D, time: t, symbol: "S" + i, direction: "UP" }));
-  assert.deepStrictEqual(L.tlDots(busy).map(d => d.stack), [0, 1, 2, 0]);
+  assert.deepStrictEqual(L.tlDots(busy).map(d => [d.stack, d.left]), [[0, 12], [1, 12.5], [2, 13.1], [0, 15]]);
   // The other lane's row does not crowd this one.
   assert.deepStrictEqual(L.tlDots([busy[0], { ...busy[1], engine: "select" }]).map(d => d.stack), [0, 0]);
   assert.deepStrictEqual(L.tlHours().map(h => h.label), ["9:15", "10", "11", "12", "1", "2", "3", "3:30"]);
@@ -374,5 +375,123 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.strictEqual(f[2].label, "newcheck", "a check this page does not know is shown by its code");
   assert.deepStrictEqual(L.funnel(null), []);
 }
+
+/* ── found in review of the two lanes, and pinned ─────────────────────── */
+
+// A merged break is the record the owner was sent: Select's full card when
+// Classic only followed it (Select measured volume against the stock's own
+// habits and cleared it two minutes earlier), Classic's when Select only
+// confirmed it, and the first to fire where the log does not say.
+{
+  const sel = { date: D, time: "10:00", symbol: "NEAR", direction: "UP", engine: "select", score: 74, pair_time: "10:02",
+    entry: 111.4, stop: 110.67, t1: 112.13, target: 112.87, tg_card: true, live_outcome: "TARGET", live_time: "10:12", t1_hit: true };
+  const cls = { date: D, time: "10:02", symbol: "NEAR", direction: "UP", engine: "classic", score: 70, select_time: "10:00",
+    entry: 111.6, stop: 110.67, t1: 112.53, target: 113.47, tg_card: false, live_price: 112.9, t1_hit: true };
+  const all = L.items([cls, sel], "all");
+  assert.strictEqual(all.length, 1, "one break, one card");
+  assert.strictEqual(all[0].rec, sel, "the card is the call whose full card went to Telegram");
+  assert.strictEqual(all[0].pair, cls);
+  assert.deepStrictEqual(L.partnerNote(all[0]), { lane: "classic", time: "10:02", later: true, text: "Classic called it 10:02 am" });
+  assert.deepStrictEqual(L.view([cls, sel], { active: true }), [], "Active reads the card's own record: it hit its target");
+  assert.strictEqual(L.dayCounts([cls, sel]).hit, 1);
+  // Both in one pass: Select's card carried Classic's.
+  const c2 = { ...cls, time: "10:00", select_time: "10:00" }, s2 = { ...sel, pair_time: "10:00" };
+  assert.strictEqual(L.items([s2, c2], "all")[0].rec, s2);
+  // Select confirming an earlier Classic call got the short line: Classic's card stands.
+  const c3 = { ...cls, time: "10:02", tg_card: true }, s3 = { ...sel, time: "10:05", tg_card: false };
+  const it3 = L.items([s3, c3], "all");
+  assert.strictEqual(it3.length, 1);
+  assert.strictEqual(it3[0].rec, c3);
+  assert.strictEqual(L.partnerNote(it3[0]).text, "Select confirmed 10:05 am");
+  // Twenty seconds later, the same minute: the routing still says Select came second.
+  const it4 = L.items([{ ...s3, time: "10:02" }, c3], "all");
+  assert.strictEqual(it4[0].rec, c3);
+  assert.strictEqual(L.partnerNote(it4[0]).text, "Select confirmed 10:02 am");
+  // Rows from before the routing marks: the first to fire, Classic on a tie.
+  const old = r => { const o = { ...r }; delete o.tg_card; return o; };
+  assert.strictEqual(L.items([old(sel), old(cls)], "all")[0].rec.engine, "select", "Select fired first");
+  assert.strictEqual(L.items([old(s2), old(c2)], "all")[0].rec.engine, "classic", "the same minute: Classic");
+  assert.strictEqual(L.partnerNote(L.items([old(s2), old(c2)], "all")[0]).text, "Select called it 10:00 am",
+    "Select is only 'confirmed' when it came later");
+  assert.strictEqual(L.partnerNote({ rec: C4, pair: null }), null);
+  // Each lane's own column still shows its own record.
+  assert.strictEqual(L.items([cls, sel], "classic")[0].rec, cls);
+  assert.strictEqual(L.items([cls, sel], "select")[0].rec, sel);
+}
+
+// The hero counts what each card shows: here Classic's card (its full card
+// went out) stopped out while the folded Select record reached its own,
+// nearer target. One stop, no hit, as the card and the timeline say.
+{
+  const c = { date: D, time: "10:35", symbol: "HOD1", direction: "UP", engine: "classic", kind: "BO_RANGE", select_time: "10:35",
+    tg_card: true, live_outcome: "STOP", live_time: "10:51" };
+  const s = { date: D, time: "10:35", symbol: "HOD1", direction: "UP", engine: "select", kind: "BO_HOD", pair_time: "10:35",
+    tg_card: false, live_outcome: "TARGET", live_time: "10:47" };
+  assert.deepStrictEqual(L.dayCounts([s, c]), { calls: 1, both: 1, select: 1, hit: 0, stopped: 1, live: 0 });
+}
+
+// A price that stopped coming is not LIVE: the last one is shown with its time.
+{
+  const a = { date: D, time: "10:00", symbol: "NEAR", direction: "UP", entry: 111.3, stop: 110.67, live_price: 111.8,
+    live_pnl_pct: 0.45, live_r: 0.79, live_at: "10:29:40" };
+  assert.strictEqual(L.liveAt(a), Date.parse("2026-11-27T10:29:40+05:30"));
+  const late = Date.parse("2026-11-27T11:42:10+05:30"), soon = Date.parse("2026-11-27T10:31:00+05:30");
+  const st = L.liveState(a, late);
+  assert.deepStrictEqual([st.key, st.tone, st.label, st.stale, st.seen],
+    ["last", "flat", "Last ₹111.80 (+0.5%) · 10:29 am", true, "10:29 am"]);
+  assert.strictEqual(L.liveState(a, soon).label, "LIVE · ₹111.80 (+0.5%)", "80 seconds old is still live");
+  assert.strictEqual(L.liveState(a).key, "live", "no clock given: as before");
+  assert.ok(L.isStale(a, late) && !L.isStale(a, soon) && !L.isStale({ ...a, live_at: undefined }, late));
+  assert.ok(L.isActive(a) && !L.isLive(a, late) && L.isLive(a, soon), "still in play, but not live");
+  assert.strictEqual(L.dayCounts([a], late).live, 0);
+  assert.strictEqual(L.dayCounts([a], soon).live, 1);
+  const t1 = L.liveState({ ...a, t1_hit: true, t1_time: "10:20" }, late);
+  assert.deepStrictEqual([t1.key, t1.stale, t1.seen], ["t1", true, "10:29 am"]);
+  assert.ok(!L.isStale({ ...a, live_outcome: "TARGET" }, late), "an ended call is not stale, it is over");
+  assert.strictEqual(L.tlDots([a], { now: late })[0].label, "10:00 am, Buy NEAR, Classic, no fresh price");
+}
+
+// Select switched off (BO_LANES=classic): no pacing line, no sessions shaded.
+{
+  const pace = { enabled: false, line: "Opening session · 0/3 ★ slots used · Live 09:45 IST",
+                 slots: [{ key: "open", label: "Opening", from: "09:25", to: "10:15", used: 0, cap: 3 }] };
+  assert.deepStrictEqual(L.tlBands(pace, []), []);
+  assert.ok(L.selectOff(pace, null));
+  assert.ok(L.selectOff({ ...pace, enabled: true }, { select: { enabled: false } }), "the lanes' own word counts too");
+  assert.ok(!L.selectOff({ ...pace, enabled: true }, { select: { enabled: true } }));
+  assert.ok(!L.selectOff(null, null), "an older backend says nothing: Select is on");
+  assert.strictEqual(L.tlBands({ ...pace, enabled: true }, []).length, 1);
+}
+
+// The owner's line never says "all passed" for a call Select held back.
+{
+  const base = { date: D, time: "10:00", symbol: "DN1", direction: "DOWN", engine: "classic", shadow: [] };
+  const held = L.shadowNote({ ...base, select_wait: { code: "score", why: "score 57, needs 66" } });
+  assert.strictEqual(held.text, "Select held it: score 57, needs 66 · its quality filters passed");
+  assert.ok(!/all passed/.test(held.text));
+  assert.strictEqual(L.shadowNote(base).text, "Select’s quality filters: all passed", "says what was measured");
+  // An older row: Select's radar of the moment says what it is waiting on.
+  const radar = [{ symbol: "DN1", dir: "DOWN", lane: "select", code: "volume", why: "last-5-minute volume 1.9x usual, needs 2.5x" },
+                 { symbol: "DN1", dir: "UP", lane: "select", code: "score", why: "the other side" }];
+  assert.strictEqual(L.shadowNote({ ...base, shadow: ["rpos"] }, radar).text,
+    "Select’s quality filters would have skipped it: not near the day’s extreme · Select is holding it: last-5-minute volume 1.9x usual, needs 2.5x");
+  assert.strictEqual(L.shadowNote({ ...base, engine: "select" }), null);
+  assert.strictEqual(L.shadowNote({ date: D, symbol: "X" }), null, "an older row says nothing");
+}
+
+// Six Classic calls in one minute: six marks, none on top of another.
+{
+  const burst = [0, 1, 2, 3, 4, 5].map(i => ({ date: D, time: "09:40", symbol: "S" + i, direction: "UP", engine: "classic" }));
+  const dots = L.tlDots(burst, { gap: 1.6 });
+  const spots = new Set(dots.map(d => d.left + "/" + d.stack));
+  assert.strictEqual(spots.size, 6, "every mark has a place of its own");
+  assert.deepStrictEqual(dots.map(d => [d.left, d.stack]),
+    [[6.7, 0], [6.7, 1], [6.7, 2], [8.3, 0], [8.3, 1], [8.3, 2]], "past three levels, the next column along");
+  assert.ok(dots.every(d => d.left <= 100));
+}
+
+// A quote without VWAP has its own reason on the radar and in the funnel.
+assert.strictEqual(L.reason("novwap").label, "No VWAP on the quote");
+assert.strictEqual(L.funnel({ novwap: 1 })[0].label, "No VWAP on the quote yet");
 
 console.log("alerts-logic.test.js: all good");
