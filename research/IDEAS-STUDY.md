@@ -240,6 +240,14 @@ second window is then printed whatever it shows.
   2022, so its windows are later: November 2022 to April 2024, then May 2024
   to the last list whose year had run, 17 November 2025. 2018–22, with the
   balance-sheet checks skipped as unknown, is reported for reference only.
+  The checks did not all start with the sheets. A check is made only where
+  its figure is known, and of the liquid companies the list ranks, lenders
+  aside, at least half had debt to equity from 9 November 2022, return on
+  capital from 19 May 2023 and an F-score, which needs two year-end sheets
+  running, only from 21 May 2024 (counted on every list date: `coverage` in
+  the lab's file). In the first window the F-score was known for 0.4% of them
+  on average, so the version was chosen with its F-score floor effectively
+  untested.
 
 What each version did, the lead over the average stock with its t:
 
@@ -389,7 +397,10 @@ What to hold against it:
   balance sheets: return on capital, debt and the F-score were unknown and
   skipped, and on 2018–22 the list led the average stock by +3.67 with a t of
   1.0. So the 2017–21 half of its record on the page was ranked mostly on
-  its trend and its income figures.
+  its trend and its income figures. Nor did the sheets bring every check at
+  once: return on capital ran for half the companies only from May 2023 and
+  the F-score only from May 2024, so the first window, which chose L1, left
+  its F-score floor effectively untested (the protocol above has the dates).
 - **Some years were behind the index**: the swing list's lists made in 2017
   and 2025, after results in 2018, 2019, 2022 and 2025, long term in 2017,
   2018, 2021 and 2024.
