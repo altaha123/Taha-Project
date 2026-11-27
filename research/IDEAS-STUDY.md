@@ -202,7 +202,7 @@ code for the live scan and for the replay.
 
 | List | What it is | Hold | Exit line |
 |---|---|---|---|
-| **Swing / This month** | A market leader (leader score in the top 30%) in an uptrend and outside the most volatile fifth, in an industry ranked in the top half of industries on money flow. A pullback is ranked, not required. Left out: a loss or a fall in profit last quarter, results the market sold in the last 21 sessions, more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, last quarter's sales and margin growth (a lender's sales alone), the industry's money flow and a live catalyst | 21 sessions | close 12% under |
+| **Swing / This month** | A market leader (a leader score of 70 or more out of 100) in an uptrend and outside the most volatile fifth, in an industry ranked in the top half of industries on money flow. A pullback is ranked, not required. Left out: a loss or a fall in profit last quarter, results the market sold (more than 2% under the average stock that day) in the last 21 sessions, more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, last quarter's sales and margin growth (a lender's sales alone), the industry's money flow and a live catalyst | 21 sessions | close 12% under |
 | **After results** | A company whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more on a year ago; a profit and an operating profit, both up on a year ago, with one-off items left out of the operating profit; other income no more than 35% and an exceptional gain no more than 30% of profit before tax; cash from operations positive in the last full year. A lender is tested on its sales, its profit and the exceptional share only. Not already up more than 18% on the day, nor more than 15% under its 200-day average. Ranked half on the day's move against the average stock, a quarter on the volume behind it and a quarter on the growth: a rise on the day is ranked, not required. No list unless eight pass | 21 | close 12% under |
 | **Long-term compounders** | Above its 200-day average and outside the most volatile fifth; a profit over the last four quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, cash from operations positive and at least 0.7 times profit, debt no more than equity (a lender instead: a return on equity of 13% or more), a positive shareholders' equity, and a P/E of 90 or under unless its PEG is 1.5 or under on three-year profit growth of 35% a year or more. Ranked on quality, three-year compounding, governance, valuation against its own industry and the year-long trend | 252 | close 30% under |
 
@@ -224,7 +224,7 @@ Each list had a few versions, all declared before any run:
 
 | List | Versions |
 |---|---|
-| Swing / This month | **M0** as specified: leader in the top 35%, the pullback half the month's and half the week's. **M1** M0 without the industry gate. **M2** M0 without the profit and results guards. **M3** M0 with the leader in the top 30% and the pullback over the month alone |
+| Swing / This month | **M0** as specified: a leader score of 65 or more, the pullback half the month's and half the week's. **M1** M0 without the industry gate. **M2** M0 without the profit and results guards. **M3** M0 with a leader score of 70 or more and the pullback over the month alone |
 | After results | **R1** the quality gate and the chase guard, ranked on the day's move alone. **R2** R1, and not more than 15% under the 200-day average. **R3** R1, and above the 50-day average. **R4** as specified: R2 ranked half on the move, a quarter on volume and a quarter on growth. **R5** R4 without the floor |
 | Long-term compounders | **L1** as specified, with a 30% line. **L2** L1 with a 25% line. **L3** L1 with valuation's weight moved to the trend. **L4** L1's gates with the old long-term ranking, the trend alone |
 
@@ -257,7 +257,7 @@ What each version did, the lead over the average stock with its t:
 
 | List | Version | Picks, first window | After costs | Lead, first window | Lead, second window |
 |---|---|---|---|---|---|
-| Swing / This month | M0 | 2,386 | +2.05% | +1.40 (2.2) | +0.26 (0.8) |
+| Swing / This month | M0 | 2,386 | +2.05% | +1.40 (2.2) | +0.26 (0.9) |
 | | M1 | 2,647 | +2.13% | +1.40 (2.3) | +0.31 (1.0) |
 | | M2 | 2,448 | +2.00% | +1.34 (2.2) | +0.09 (0.3) |
 | | **M3, taken** | 2,316 | +2.08% | +1.49 (2.4) | +0.22 (0.6) |
@@ -272,7 +272,7 @@ What each version did, the lead over the average stock with its t:
 | | L4 | 1,093 | +45.61% | +1.21 (0.4) | +0.60 (0.3) |
 
 The rule took **M3**, **R4** and **L1**. R4 and L1 are the recipes as
-specified. M3 is not: the specification asked for a leader in the top 35%
+specified. M3 is not: the specification asked for a leader score of 65 or more
 and a pullback read half over the week, and M3's two values were written back
 into `backend/leaders.py`. Before the
 record was written, `--publish` re-ranked seven list dates with `leaders.py`
@@ -300,7 +300,7 @@ is. Worst 1 in 20 is the fifth percentile of picks.
 |---|---|---|---|---|---|---|---|---|
 | **New (M3)** | 3,562 | 50.6% | +1.14% | +0.65% | +0.16% | −14.0% | +0.34 | +0.22 (0.6) |
 | This month as it ran (21, 12%) | 3,569 | 51.5% | +1.05% | +0.56% | +0.35% | −13.5% | +0.25 | +0.13 (0.5) |
-| This week (5 sessions, 7% line) | 3,615 | 51.1% | +0.29% | −0.20% | +0.09% | −8.6% | +0.08 | +0.22 (2.1) |
+| This week (5 sessions, 7% line; lists to 16 November 2026) | 3,615 | 51.1% | +0.29% | −0.20% | +0.09% | −8.6% | +0.08 | +0.22 (2.1) |
 
 **After results, June 2018 to December 2021**
 
@@ -330,7 +330,7 @@ is. Worst 1 in 20 is the fifth percentile of picks.
 |---|---|---|---|---|---|---|---|---|
 | **New (L1)** | 1,155 | 49.7% | +6.53% | +6.04% | −0.18% | −32.4% | +4.29 | +5.13 (3.9) |
 | Long term as it ran (252, 30%) | 1,142 | 44.2% | +10.11% | +9.62% | −4.96% | −32.2% | +7.87 | +8.78 (1.4) |
-| Momentum (63 sessions, 15% line) | 1,719 | 46.5% | +1.84% | +1.35% | −1.43% | −18.2% | +1.28 | +0.74 (0.6) |
+| Momentum (63 sessions, 15% line; lists to 25 August 2026) | 1,719 | 46.5% | +1.84% | +1.35% | −1.43% | −18.2% | +1.28 | +0.74 (0.6) |
 
 Read plainly:
 
@@ -395,7 +395,7 @@ What to hold against it:
 
 - **The rule chose on the first window, and the second does not always agree
   with it.** On 2022–26 the swing list as specified (M0) led the average stock
-  by more than the version taken (+0.26, t 0.8, against +0.22), and so did M1,
+  by more than the version taken (+0.26, t 0.9, against +0.22), and so did M1,
   M0 without the industry gate (+0.31, t 1.0). Every other results version did
   better there than R4 (+0.70, t 2.7), and R3, the one that stays above its
   50-day average, did best (+1.22, t 4.1). On long term the two windows agree:
