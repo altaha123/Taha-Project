@@ -770,6 +770,26 @@ def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record
     assert fresh["recipe_current"] is True and fresh["tested"]
 
 
+def test_a_results_scan_from_an_earlier_recipe_claims_no_count_of_this_recipes_tests(quiet):
+    """The recipe before this one counted no results against the tests of
+    real growth, so its scan carries no count of them. It must not say that
+    none passed them beside picks it chose another way."""
+    cands, results = reporters(20)
+    snaps = {c["symbol"]: healthy() for c in cands}
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    fresh = ideas.select(scan_payload(blocks), horizon="results")
+    assert fresh["recipe_current"] is True and fresh["rows"]
+    assert any("passed every test of real growth" in n for n in fresh["selection_notes"])
+    for b in blocks.values():
+        b["recipe"] = "2026-12 setup lists v2"
+        (b.get("results") or {}).pop("qualified", None)
+    old = ideas.select(scan_payload(blocks), horizon="results")
+    assert old["recipe_current"] is False and old["rows"]
+    notes = " ".join(old["selection_notes"])
+    assert "passed every test" not in notes
+    assert "chosen the earlier way" in notes
+
+
 def test_a_study_of_the_lists_that_were_replaced_is_not_printed_beside_the_new_ones(quiet, monkeypatch):
     """
     The study file is the record of a recipe. A file the lab has not written

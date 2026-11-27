@@ -464,6 +464,9 @@
        tab slot is the most specific thing in the address, so it is read first
        — the section beside it may be a name this site stopped using. Failing
        that, a bare tab id sitting in the section slot resolves to its owner. */
+    /* #ideas/<list> names a stock-picks list, not a tool: "results" is
+       both the After results list and the Results calendar. */
+    if (sectionId === 'ideas' && tabId && ownerOf('ideas')) return { section: ownerOf('ideas').id, tab: 'ideas' };
     if (tabId) {
       var tabOwner = ownerOf(tabId) || ownerOf(MOVED[tabId]);
       if (tabOwner) return { section: tabOwner.id, tab: tabId };

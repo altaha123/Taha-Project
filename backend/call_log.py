@@ -94,15 +94,27 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 # their labels: this week and momentum were folded into the month and
 # long-term lists in December 2026, and short and medium before them.
 PICK_HORIZONS = ("month", "long")
-RETIRED_HORIZONS = ("week", "momentum")
+# The month and long-term lists kept their keys when they were rebuilt to read
+# company filings (December 2026), so every call already in the log under
+# those keys was made by the price lists they replaced. The first start of
+# this code files those calls under keys of their own, once (_migrate), and
+# they keep their own names; the first scan of the rebuilt lists closes what
+# they left open, as it closes this week's and momentum's.
+REKEYED = {"month": "month_old", "long": "long_old"}
+RETIRED_HORIZONS = ("week", "momentum") + tuple(REKEYED.values())
 LEGACY_HORIZONS = ("short", "medium")
 HORIZONS = PICK_HORIZONS + RETIRED_HORIZONS + LEGACY_HORIZONS
 HORIZON_LABEL = {"month": "Swing / This month", "long": "Long-term compounders",
                  "week": "This week", "momentum": "Momentum",
+                 "month_old": "This month (earlier list)", "long_old": "Long term (earlier list)",
                  "short": "Short term", "medium": "Medium term"}
 # Why an open call on a retired list was closed: the list that took its place.
 RETIRED_NOTE = {"week": "List replaced by Swing / This month.",
-                "momentum": "List replaced by Long-term compounders."}
+                "momentum": "List replaced by Long-term compounders.",
+                "month_old": "List rebuilt as Swing / This month.",
+                "long_old": "List rebuilt as Long-term compounders."}
+# The log's own version (PRAGMA user_version): 1 once REKEYED has been applied.
+SCHEMA_VERSION = 1
 
 
 def _anchored(setup_key):
@@ -197,8 +209,31 @@ def _connect():
     except sqlite3.DatabaseError:
         pass
     conn.executescript(SCHEMA)
+    _migrate(conn)
     _local.conn, _local.path = conn, DB_PATH
     return conn
+
+
+def _migrate(conn):
+    """Bring a log written by earlier code up to SCHEMA_VERSION, once.
+
+    Version 1 files the month and long-term calls already in the log under
+    REKEYED: they were made by the lists those two keys named before the
+    rebuild. It runs in one transaction, and checks the version again inside
+    it, so two threads opening the log at once apply it once."""
+    if conn.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION:
+        return
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        if conn.execute("PRAGMA user_version").fetchone()[0] < 1:
+            for old, new in REKEYED.items():
+                conn.execute("UPDATE calls SET horizon=? WHERE horizon=?", (new, old))
+                conn.execute("UPDATE recorded_scans SET horizon=? WHERE horizon=?", (new, old))
+        conn.execute(f"PRAGMA user_version={int(SCHEMA_VERSION)}")
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
 
 
 @contextmanager
@@ -652,10 +687,11 @@ def open_index(horizon: str, prices: dict | None = None) -> dict:
 
 def retire_replaced(scanned_at: str, prices: dict | None = None) -> int:
     """
-    Close the open calls of this week and momentum, the two lists folded into
-    the month and long-term lists in December 2026, each with the name of the
-    list that took its place. Idempotent: once closed, nothing is open there
-    to close again.
+    Close the open calls of the lists replaced in December 2026 (this week and
+    momentum, folded into the month and long-term lists, and the month and
+    long-term lists as they were before the rebuild), each with the name of
+    the list that took its place. Idempotent: once closed, nothing is open
+    there to close again.
     """
     return sum(retire((h,), scanned_at, prices, RETIRED_NOTE[h]) for h in RETIRED_HORIZONS)
 

@@ -232,8 +232,9 @@
     if (!(d.rows || []).some(function (r) { return r.plan && finite(r.plan.aim); })) return '';
     var pct = Number(d.exit_pct).toFixed(0), t = d.target_test;
     var one = function (v) { return Number(v).toFixed(1).replace(/\.0$/, ''); };
-    /* A list not measured yet says nothing about what its test found. */
-    var tested = d.study_current === false ? ''
+    /* A list whose record is withheld (not measured yet, or a scan ranked
+       with an earlier recipe) says nothing about what its test found. */
+    var tested = d.study_current === false || d.recipe_current === false ? ''
       : t && t.sold && t.held && finite(t.sold.up_pct) && finite(t.held.up_pct) &&
         finite(t.sold.avg_pct) && finite(t.held.avg_pct)
       ? 'In the test, selling at the target: <b>' + one(t.sold.up_pct) + '</b> of 100 picks ended up, average <b>' +
@@ -330,7 +331,7 @@
         : 'A loss, or much of it from other income or a one-off gain']);
     }
     var roce = n(f.roce_pct), roe = n(f.roe_pct);
-    add('Returns', fin ? [roe !== null && 'Return on equity ' + pc(roe) + ' (a lender)']
+    add('Returns', fin ? [roe !== null && 'Return on equity ' + pc(roe) + ' (a financial company)']
                        : [roce !== null && 'ROCE ' + pc(roce), roe !== null && 'ROE ' + pc(roe)]);
     if (!fin) {
       var c2p = n(f.cfo_to_pat), fcf = n(f.fcf_pos_years_3y), de = n(f.debt_equity_x);

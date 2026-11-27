@@ -1045,6 +1045,19 @@ def has_picks(payload):
     return any((r.get("leader") or {}).get("lists") for r in rows)
 
 
+def _stamps(rows):
+    """The leaders.RECIPE stamps a scan's ranked rows carry."""
+    return {(r.get("leader") or {}).get("recipe") for r in rows or () if (r.get("leader") or {}).get("lists")}
+
+
+def scan_recipe(payload):
+    """The recipe a scan's leader ranks were made under: the one stamp its
+    ranked rows carry, or None (no ranks, or rows of more than one stamp)."""
+    rows = (payload or {}).get("factor_universe") or (payload or {}).get("rankings") or []
+    stamps = _stamps(rows)
+    return next(iter(stamps)) if len(stamps) == 1 else None
+
+
 def breakout_pattern(block):
     """The pattern of the breakout a block's breakout pick was made on:
     "VCP launchpad" or "Base turnaround", by the same order the list uses
@@ -1515,7 +1528,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
      universe, considered) = _choose_picks(rows_all, key, limit, hours, exclude)
     # A scan ranked under an earlier recipe (made before the last deploy) still
     # answers, but the tested record printed beside it would be another list's.
-    stamps = {(r.get("leader") or {}).get("recipe") for r in rows_all if (r.get("leader") or {}).get("lists")}
+    stamps = _stamps(rows_all)
     recipe_current = stamps == {leaders.RECIPE}
     # And the study file must have measured the recipe this scan ran.
     study_current = _study_current(key)
@@ -1596,8 +1609,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         notes.append(f"Stocks on the {leaders.LISTS[other]['label'].lower()} list are left off "
                      "this one, so the two lists show different stocks.")
     if not recipe_current:
-        notes.append("This scan was ranked with an earlier recipe, so its tested record is not "
-                     "shown. The next scan ranks it the current way.")
+        notes.append("This scan was ranked with an earlier recipe: these picks were chosen the earlier "
+                     "way, not as described above, and its tested record is not shown. The next scan "
+                     "ranks it the current way.")
     elif not study_current:
         notes.append("This list was rebuilt on company filings in December 2026 and the replay of the new "
                      "recipe is not in the study file yet, so no tested record is shown beside it.")
@@ -1606,7 +1620,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     reported = max([h.get("reported") or 0 for h in held] or [0])
     qualified = max([h.get("qualified") or 0 for h in held] or [0])
     empty_text = "Nothing passed every test in this scan."
-    if event and not chosen:
+    # An earlier recipe counted no results against the tests above, so its
+    # counts would say none passed them.
+    if event and not chosen and recipe_current:
         empty_text = _results_empty_text(reported, qualified, called_on)
     setup = spec.get("kind") == "setup"
     if setup and not chosen:
@@ -1618,7 +1634,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         notes.append("Listed under a year, ranked on six months of prices in place of twelve: "
                      + ", ".join(young_shown[:6]) + ". In the test such companies led the average "
                      "stock on this list in both halves.")
-    if event and chosen:
+    if event and chosen and recipe_current:
         notes.append(f"{reported} liquid companies had results priced in the last "
                      f"{leaders.RESULTS_WINDOW} sessions and {qualified} passed every test of real growth; "
                      "these are ranked on the day's move against the average stock, the volume behind it "

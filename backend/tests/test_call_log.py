@@ -404,7 +404,7 @@ def test_logging_a_tested_list_closes_what_week_and_momentum_left_open(app_with_
     main.call_log.record("momentum", [idea("TCS", setup_key="pick_momentum")], "20 Oct 2026, 05:10", {})
     monkeypatch.setattr(main.ideas_engine, "select",
                         lambda p, **k: {"rows": [idea("ABB", setup_key="pick_month")], "available": True,
-                                        "list": "month"})
+                                        "list": "month", "recipe": main.ideas_engine.leaders.RECIPE})
     main.ideas(horizon="week")
     rows = {r["horizon"]: r for r in main.call_log.listing()["rows"]}
     assert rows["week"]["status"] == rows["momentum"]["status"] == "closed"
@@ -462,3 +462,73 @@ def test_the_live_tally_counts_only_the_running_recipes_calls(app_with_scan, mon
     assert log.recipe_since("month", leaders.RECIPE) is not None
     # The other list kept its old calls out of its tally too.
     assert main._live_record("long") is None
+
+
+# --- the month and long-term lists, rebuilt under their old keys --------------
+
+def _reopen(log):
+    """Drop this thread's connection, so the next call opens the file anew."""
+    log._local.conn = None
+
+
+def test_the_first_start_files_the_old_lists_calls_under_their_own_names(log):
+    import sqlite3
+    log.record("month", [idea("ABB", setup_key="pick_month")], SCAN1, {})
+    log.record("long", [idea("TCS", setup_key="pick_long")], SCAN1, {})
+    log.record("week", [idea("INFY", setup_key="pick_week")], SCAN1, {})
+    # As the log stands on the server before this code first starts.
+    raw = sqlite3.connect(log.DB_PATH)
+    raw.execute("PRAGMA user_version=0")
+    raw.commit(); raw.close()
+    _reopen(log)
+    rows = {r["symbol"]: r for r in log.listing(now=NOW)["rows"]}
+    assert (rows["ABB"]["horizon"], rows["ABB"]["horizon_label"]) == ("month_old", "This month (earlier list)")
+    assert (rows["TCS"]["horizon"], rows["TCS"]["horizon_label"]) == ("long_old", "Long term (earlier list)")
+    assert rows["INFY"]["horizon"] == "week"
+    assert {h["key"] for h in log.listing(now=NOW)["horizons"]} == {"month_old", "long_old", "week"}
+    # The rebuilt list has not logged this scan: it will, under its own key.
+    assert not log.recorded("month", SCAN1) and log.recorded("month_old", SCAN1)
+    assert log.open_index("month") == {}
+    # Once: a call the rebuilt list makes stays its own on the next start.
+    log.record("month", [idea("HDFC", setup_key="pick_month")], SCAN2, {})
+    _reopen(log)
+    assert {r["symbol"]: r["horizon"] for r in log.listing(now=NOW)["rows"]}["HDFC"] == "month"
+    # And the first scan of the rebuilt lists closes what the old ones left open.
+    assert log.retire_replaced(SCAN3, {"ABB": 120.0}) == 3
+    rows = {r["symbol"]: r for r in log.listing(now=NOW)["rows"]}
+    assert rows["ABB"]["status"] == "closed" and rows["ABB"]["events"][-1]["note"] == "List rebuilt as Swing / This month."
+    assert rows["TCS"]["events"][-1]["note"] == "List rebuilt as Long-term compounders."
+    assert rows["HDFC"]["status"] == "open"
+
+
+def test_a_new_log_starts_at_the_current_version(log):
+    log.listing()
+    import sqlite3
+    raw = sqlite3.connect(log.DB_PATH)
+    assert raw.execute("PRAGMA user_version").fetchone()[0] == log.SCHEMA_VERSION
+    raw.close()
+
+
+def test_a_scan_ranked_under_an_earlier_recipe_logs_nothing(app_with_scan, monkeypatch):
+    main = app_with_scan
+    main.call_log.record("week", [idea("ABB", setup_key="pick_week")], "20 Oct 2026, 05:10", {})
+    monkeypatch.setattr(main.ideas_engine, "select",
+                        lambda p, **k: {"rows": [idea("OLD", setup_key="pick_month")], "available": True,
+                                        "list": "month", "recipe": "2026-12 setup lists v2"})
+    main.ideas(horizon="month")
+    assert not main.call_log.recorded("month", SCAN1)
+    rows = main.call_log.listing()["rows"]
+    # Its picks open no calls, and the lists it replaced are not closed by it.
+    assert [(r["symbol"], r["status"]) for r in rows] == [("ABB", "open")]
+
+
+def test_no_thread_is_started_for_a_scan_ranked_under_an_earlier_recipe(app_with_scan, monkeypatch):
+    main = app_with_scan
+    ranked = dict(idea("ABB"), leader={"lists": {"month": {"rank": 1}}, "recipe": "2026-12 setup lists v2"})
+    monkeypatch.setitem(main._state, "payload", {"scanned_at": SCAN1, "rankings": [ranked],
+                                                 "factor_universe": [ranked]})
+    monkeypatch.setattr(main.ideas_engine, "select", lambda p, **k: pytest.fail("an old scan was selected"))
+    assert main._log_scan_calls(main._state["payload"]) is False
+    now = dict(ranked, leader={"lists": {"month": {"rank": 1}}, "recipe": main.ideas_engine.leaders.RECIPE})
+    assert main.ideas_engine.scan_recipe({"rankings": [now]}) == main.ideas_engine.leaders.RECIPE
+    assert main.ideas_engine.scan_recipe({"rankings": [ranked, now]}) is None

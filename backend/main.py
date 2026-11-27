@@ -1353,6 +1353,11 @@ def _call_horizons(p):
     return call_log.PICK_HORIZONS if ideas_engine.has_picks(p) else call_log.LEGACY_HORIZONS
 
 
+def _running_recipe():
+    """leaders.RECIPE as the ideas engine loaded it, or None."""
+    return getattr(getattr(ideas_engine, "leaders", None), "RECIPE", None)
+
+
 def _live_record(horizon):
     """How this list's own calls have done since the recipe running now went
     live. The month and long-term lists kept their names through the December
@@ -1363,8 +1368,7 @@ def _live_record(horizon):
     if call_log is None or horizon not in getattr(call_log, "PICK_HORIZONS", ()):
         return None
     try:
-        import leaders as _leaders
-        since = call_log.recipe_since(horizon, _leaders.RECIPE)
+        since = call_log.recipe_since(horizon, _running_recipe())
         if since is None:
             return None
         rows = (call_log.listing(horizon=horizon, since=since, limit=1000) or {}).get("rows") or []
@@ -1385,6 +1389,11 @@ def _live_record(horizon):
 
 def _log_calls(horizon, rows, p, recipe=None):
     if call_log is None or not p or p.get("partial"):
+        return None
+    # A scan ranked under an earlier recipe is not this list's record: its
+    # picks were made by the list this one replaced. Nothing is logged from it,
+    # and nothing retired, until the first scan ranked under the running one.
+    if horizon in getattr(call_log, "PICK_HORIZONS", ()) and (not recipe or recipe != _running_recipe()):
         return None
     try:
         if horizon in call_log.PICK_HORIZONS:
@@ -1433,6 +1442,10 @@ def _log_scan_calls(p):
     """Record both horizons of a scan nobody has opened yet, off the request
     thread: select() reaches the news, sector and regime feeds."""
     if call_log is None or not p or p.get("partial"):
+        return False
+    # Ranked before the running recipe: nothing of it is logged (_log_calls),
+    # so there is nothing to start a thread for.
+    if ideas_engine.has_picks(p) and ideas_engine.scan_recipe(p) != _running_recipe():
         return False
     try:
         if all(call_log.recorded(h, p.get("scanned_at")) for h in _call_horizons(p)):

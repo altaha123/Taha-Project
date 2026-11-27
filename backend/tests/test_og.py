@@ -782,3 +782,47 @@ def test_the_share_page_points_a_crawler_at_the_icon():
     assert 'og:logo" content="https://altahascreener.in/icon-512.png"' in html
     # A target that is not an absolute URL must not produce a half-built link.
     assert "rel=\"icon\"" not in og.share_page("T", "D", "i.png", "/?q=X")
+
+
+def test_no_factor_label_is_painted_over_by_its_bar():
+    """The rebuilt lists' factor names (leaders.FACTOR_LABELS) are longer than
+    the old ones. Each is drawn whole, or cut short with an ellipsis, and ends
+    before its bar starts."""
+    import leaders
+    from PIL import ImageDraw
+
+    texts, bars = [], []
+    t0, r0 = ImageDraw.ImageDraw.text, ImageDraw.ImageDraw.rectangle
+
+    def text(self, xy, s, *a, **k):
+        if xy[0] == 64 and k.get("font") is not None:
+            texts.append((xy[1], str(s), self.textlength(str(s), font=k["font"])))
+        return t0(self, xy, s, *a, **k)
+
+    def rect(self, box, *a, **k):
+        bars.append(box)
+        return r0(self, box, *a, **k)
+
+    def draw(evidence):
+        texts.clear(); bars.clear()
+        ImageDraw.ImageDraw.text, ImageDraw.ImageDraw.rectangle = text, rect
+        try:
+            og.idea_card({"symbol": "LONGNAMES", "conviction": 71, "evidence": evidence})
+        finally:
+            ImageDraw.ImageDraw.text, ImageDraw.ImageDraw.rectangle = t0, r0
+        starts = {round(b[0]) for b in bars if isinstance(b, (list, tuple)) and len(b) == 4 and b[1] >= 318 - 4}
+        assert len(starts) == 1, starts
+        bar = starts.pop()
+        drawn = [t for t in texts if t[0] >= 314]
+        for _, s, width in drawn:
+            assert 64 + width < bar, f"{s!r} runs under its bar"
+        return [s for _, s, _ in drawn]
+
+    # Every label the lists use is drawn whole, six at a time.
+    labels = list(leaders.FACTOR_LABELS.values())
+    for i in range(0, len(labels), 6):
+        part = labels[i:i + 6]
+        assert draw([{"factor": t, "points": 10 - j, "of": 20} for j, t in enumerate(part)]) == part
+    # One too long for any card is cut short, not painted over.
+    shown = draw([{"factor": "x" * 80, "points": 9, "of": 20}, {"factor": labels[0], "points": 1, "of": 20}])
+    assert shown[0].endswith("\u2026") and shown[1] == labels[0]

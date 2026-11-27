@@ -318,7 +318,7 @@ async function checkCards(panel, key) {
                'a lender is shown cash flow and debt, or a company is not');
   assert.equal(dd[dt.indexOf('Pledged')], 'No shares pledged');
   assert.equal(dd[dt.indexOf('Industry on Money Flow')], 'Leading');
-  dd.forEach(t => assert.doesNotMatch(t, /null|undefined|NaN|\bbuy\b|\bsell\b|should|recommend/i, `a figure reads "${t}"`));
+  dd.forEach(t => assert.doesNotMatch(t, /\bnull\b|\bundefined\b|\bNaN\b|\bbuy\b|\bsell\b|should|recommend/i, `a figure reads "${t}"`));
   // The F-score is said once, from the filings.
   assert.doesNotMatch(await rows.first().locator('.ln').innerText(), /Piotroski/);
 
@@ -480,7 +480,8 @@ async function checkCards(panel, key) {
   }
   // An address naming an old list opens the one that replaced it, and the
   // address says so.
-  for (const [hash, now] of [['#ideas/week', 'month'], ['#research/ideas/momentum', 'long'], ['#ideas/position', 'long']]) {
+  for (const [hash, now] of [['#ideas/week', 'month'], ['#research/ideas/momentum', 'long'], ['#ideas/position', 'long'],
+                             ['#ideas/results', 'results']]) {
     await page.goto('about:blank');
     await page.goto(url(hash));
     await page.locator(`#idearows .idea[data-t="${FIX[now].rows[0].symbol}"]`).waitFor();
@@ -599,10 +600,17 @@ async function checkCards(panel, key) {
   assert.equal(await page.locator('#dri-picks .pk-record').count(), 0, 'a record was printed beside an older recipe');
   assert.match(await page.locator('#dri-picks .pk-body').innerText(), /previous recipe/);
   assert.equal(await page.locator('#dri-picks .pk-measuring').count(), 0, 'two lines say why there is no record');
+  // Nor does the target note say what the test found, or that it found nothing.
+  for (const note of await page.locator('#dri-picks .pk-aimnote').allInnerTexts()) {
+    assert.doesNotMatch(note, /In the test|was tested|not tested/, 'the target note spoke for a record that is withheld');
+  }
   await page.goto(url('#research/ideas'));
   await page.locator('#idearows .idea').first().waitFor();
   assert.equal(await page.locator('#pickhead .pk-record').count(), 0);
   assert.match(await page.locator('#pickhead').innerText(), /previous recipe/);
+  for (const note of await page.locator('.pk-aimnote').allInnerTexts()) {
+    assert.doesNotMatch(note, /In the test|was tested|not tested/, 'the target note spoke for a record that is withheld');
+  }
   assert.deepEqual(state.errors, [], 'the page threw on an older recipe');
   await context.close();
 

@@ -767,12 +767,22 @@ def idea_card(row: dict) -> bytes:
     ev = sorted(ev, key=lambda e: -(e.get("points") or 0))[:6]
     y = 318
     d.line([(64, y - 18), (W - 64, y - 18)], fill=RULE, width=1)
-    for e in ev:
+    # The bars start after the longest label, up to a point; a label longer
+    # than the room left is cut short, never painted over.
+    fl = mono(17)
+    labels = [str(e.get("factor") or "") for e in ev]
+    widest = max((d.textlength(t, font=fl) for t in labels), default=0)
+    bx0, bx1 = min(max(330, int(64 + widest + 18) + 1), 520), 900
+    room = bx0 - 18 - 64
+    for e, label in zip(ev, labels):
         pts = e.get("points") or 0
         of = e.get("of") or 1
         frac = max(0.0, min(1.0, float(pts) / float(of)))
-        d.text((64, y - 4), str(e.get("factor") or ""), font=mono(17), fill=INK_2)
-        bx0, bx1 = 330, 900
+        if d.textlength(label, font=fl) > room:
+            while label and d.textlength(label + "\u2026", font=fl) > room:
+                label = label[:-1]
+            label = label.rstrip() + "\u2026"
+        d.text((64, y - 4), label, font=fl, fill=INK_2)
         d.rectangle([bx0, y + 4, bx1, y + 12], fill=PAPER_2)
         d.rectangle([bx0, y + 4, bx0 + (bx1 - bx0) * frac, y + 12], fill=GOLD_LT)
         tail = f"{float(pts):.1f} / {int(of)}"
