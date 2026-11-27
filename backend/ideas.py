@@ -769,12 +769,23 @@ def market_context(horizon: str = "short"):
 # ---------------------------------------------------------------------------
 
 PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
-PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14,
+# How old a scan may be before a list warns that it is stale: about a quarter
+# of each list's hold, and a day for a trade held a few days.
+PICK_STALE_DAYS = {"month": 5, "results": 3, "long": 14,
                    "short": 2, "breakout": 2, "technical": 3, "quick": 1, "flow": 5, "emerging": 5}
-# A long-term pick with these on its record is left out. Not measured by the
-# price study (no ten-year fundamentals history exists to test it on); kept as
-# a plain safety screen and reported in the notes whenever it removes a name.
-LONG_MIN_PIOTROSKI = 4
+PICK_STALE_DEFAULT = 5
+# The long-term list used to drop, here, a pick with a Piotroski score under 4
+# or a trailing loss, read from Yahoo and never tested. Since December 2026
+# the long-term list's own gates in leaders.rank read the company's filings
+# (an F-score of 5 or more, no loss over four quarters) and were replayed
+# point in time, so that screen is gone.
+
+# The mixes the three fundamental lists had before December 2026. A scan
+# ranked then carries no breakdown, and its ledger is rebuilt from these so it
+# still adds up to the score beside it until the next scan.
+_EARLIER_MIX = {"month": {"dip21": 0.5, "high": 0.5},
+                "long": {"m12": 1 / 3, "high": 1 / 3, "trend": 1 / 3},
+                "results": {"reaction": 1.0}}
 
 _EVIDENCE = (
     ("m12", "momentum_12m", "12-month return for its risk"),
@@ -1159,12 +1170,40 @@ def _setup_evidence(key, block):
     return out
 
 
+def _tab_evidence(key, block):
+    """
+    The ledger of one of the three fundamental lists, read from the
+    breakdown leaders.rank wrote beside the score: one row per part of the
+    mix (pull, high, fundmom, secflow, catalyst; reaction, volume, growth;
+    quality, compounding, governance, valuation, trendq), each with what it
+    read, its weight and the points it adds, so the rows add up to the
+    conviction printed beside them. None for a block ranked before the lists
+    carried a breakdown.
+    """
+    entry = (((block or {}).get("lists") or {}).get(key)) or {}
+    rows = entry.get("breakdown")
+    if rows is None:
+        return None
+    out = []
+    for b in rows:
+        k = b.get("factor")
+        detail = str(b.get("detail") or "").strip().rstrip(".")
+        out.append({"factor": b.get("label") or leaders.FACTOR_LABELS.get(k, k), "key": k,
+                    "points": round(_finite_num(b.get("points")) or 0.0, 1),
+                    "of": round((_finite_num(b.get("weight")) or 0.0) * 100, 1),
+                    "share_pct": b.get("value"), "detail": (detail + ".") if detail else ""})
+    return out
+
+
 def _pick_evidence(key, block):
     """The ledger: each measurement's percentile and its share of the score."""
     spec = leaders.LISTS[key]
     if spec.get("kind") == "setup":
         return _setup_evidence(key, block)
-    mix = dict(spec["mix"])
+    tab = _tab_evidence(key, block)
+    if tab is not None:
+        return tab
+    mix = dict(_EARLIER_MIX.get(key) or spec["mix"])
     if "leader" in mix:                       # the leader score is four parts
         w = mix.pop("leader")
         for k in ("m12", "m6", "high", "trend"):
@@ -1222,10 +1261,10 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
 
     Cheap on purpose (no news, no regime, no sector feed), so a list that
     gives way to another can work out what that list shows. Returns
-    (chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe,
+    (chosen, excluded_adverse, capped, gave_way, per_sector, universe,
     considered), where each chosen item is (row, entry, filing, adverse).
     """
-    pool, excluded_adverse, weak, gave_way = [], [], [], []
+    pool, excluded_adverse, gave_way = [], [], []
     universe = None
     for r in rows_all:
         block = r.get("leader") or {}
@@ -1249,11 +1288,6 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
                                      "line": filing.get("line"),
                                      "setup_fit": r.get("setup_fit")})
             continue
-        if key == "long":
-            f, eps = r.get("f_score"), r.get("trailing_eps")
-            if (f is not None and f < LONG_MIN_PIOTROSKI) or (eps is not None and eps < 0):
-                weak.append(sym)
-                continue
         pool.append((r, entry, filing, adverse))
 
     pool.sort(key=lambda t: t[1]["rank"])
@@ -1270,7 +1304,7 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
             continue
         per_sector[sec] = per_sector.get(sec, 0) + 1
         chosen.append(item)
-    return chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe, len(pool)
+    return chosen, excluded_adverse, capped, gave_way, per_sector, universe, len(pool)
 
 
 _REPLAYED = (" The record beside the list is this rule replayed on NSE prices from 2017 to 2026: "

@@ -204,11 +204,13 @@ def _stamp(P):
     """What the cached candidates depend on: the engine's own signals on a
     probe date. A changed signals() changes this and the cache is rebuilt."""
     S._AGE["age"] = S.listing_ages(P)
-    probe = S._engine_candidates(P, 1500)[:40]
-    blob = pickle.dumps([(c["symbol"], sorted((c["leader_sig"] or {}).keys())) for c in probe]
-                        + [str(probe[0]["leader_sig"].get("days"))[:400],
-                           str(probe[0]["leader_sig"].get("day_vols"))[:400]])
-    return hashlib.sha1(blob + str(len(P.C)).encode()).hexdigest()[:16]
+    h = hashlib.sha1(str(len(P.C)).encode())
+    # Whole candidates, values and all, on three dates: a change to any number
+    # signals() or technicals() produces shows up here.
+    for i in (700, 1500, 2400):
+        for c in S._engine_candidates(P, i)[:60]:
+            h.update(repr((c["symbol"], sorted((c["leader_sig"] or {}).items()))).encode())
+    return h.hexdigest()[:16]
 
 
 _G = {}
@@ -247,14 +249,20 @@ def prepare(procs=4):
 # --------------------------------------------------------------------------
 
 def _apply(overrides):
-    """Set leaders.MONTH / RESULTS / LONG to their defaults plus overrides."""
+    """Set leaders.MONTH / RESULTS / LONG to their defaults plus overrides.
+    A key the engine does not have is an error, not a silent default: a typo
+    would otherwise measure the default recipe under a variant's name.
+    Keys starting with "_" belong to the lab (an exit line, say)."""
     import leaders
     for tab, name in (("month", "MONTH"), ("results", "RESULTS"), ("long", "LONG")):
         base = _G["defaults"][name]
         cfg = dict(base)
         for k, v in (overrides.get(tab) or {}).items():
-            if not k.startswith("_"):
-                cfg[k] = v
+            if k.startswith("_"):
+                continue
+            if k not in base:
+                raise KeyError(f"leaders.{name} has no '{k}': the variant would run the default")
+            cfg[k] = v
         setattr(leaders, name, cfg)
 
 

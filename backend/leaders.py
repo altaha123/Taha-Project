@@ -19,13 +19,56 @@ session from 2016 to 2026, delisted companies included:
      technical score reached the list, down to companies trading 50 lakh a
      day, and two rows in three then said WAIT.
 
-WHAT IT DOES INSTEAD
---------------------
-Five lists. Four are one per holding period, because "what should I buy for
-a week" and "what should I hold for a year" are different questions. Those
-four are built from the same measurements, each a published, decades-old effect
-that also held on our own data, turned into a percentile among every liquid
-stock:
+THREE FUNDAMENTAL LISTS (December 2026)
+---------------------------------------
+The price lists below read a stock's chart and nothing else, so a company
+whose profit had just collapsed could top them. They are now three lists,
+each read from the company's own filings as well as its chart
+(fund_snapshot.py builds the figures, the same code for the live scan and
+for the replay):
+
+  Swing / This month       a market leader (leader score in the top 35%), in
+                an uptrend and outside the most volatile fifth, in an industry
+                in the top half on money flow, that pulled back over the last
+                month, ranked on the pullback, its closeness to the 52-week
+                high, its last quarter's sales and margin growth, its
+                industry's money flow and a live catalyst. Left out: a loss or
+                a fall in profit last quarter, results the market sold in the
+                last month, promoters pledging more than 10% of the company.
+                About a month, left on a close 12% under.
+  After results            companies whose results the market rewarded for a
+                real reason: sales up 8% or more, profit and operating profit
+                up, not carried by other income or a one-off gain, and not
+                already up 18% on the day. Ranked on that day's move against
+                the average stock, the volume behind it and the growth itself.
+                About a month, 12% under. Empty, and saying when it fills in,
+                between results seasons.
+  Long-term compounders    high returns on capital backed by cash, little
+                debt, no heavy pledge, an F-score of 5 or more, a P/E under 90
+                unless three-year growth carries it, above the 200-day average
+                and calm; ranked on quality, compounding, governance,
+                valuation against its own industry and the year-long trend.
+                Banks and lenders are judged on return on equity instead.
+                About a year.
+
+Every threshold and weight is in the MONTH, RESULTS and LONG dictionaries
+below, so research/fundamental_ideas_lab.py can replay the engine itself on
+each declared version, point in time, and write the chosen one back here. A
+figure a company has not filed is unknown, never zero: it counts as the
+middle of the field in a score and skips only the check that needs it.
+Pledges, holdings, deliveries and orders have no history to replay; the live
+lists read them and the replay treats them as unknown.
+
+This week and momentum became these two (week to this month, momentum to
+long term). Their names still resolve, so an old link opens the list that
+replaced it, and their calls in the log keep their labels.
+
+WHAT THE FIVE PRICE LISTS WERE (November 2026)
+----------------------------------------------
+Four were one per holding period, because "what should I buy for a week"
+and "what should I hold for a year" are different questions. Those four were
+built from the same measurements, each a published, decades-old effect that
+also held on our own data, turned into a percentile among every liquid stock:
 
   · 12-month return, last month skipped, per unit of volatility
   · 6-month return, last month skipped, per unit of volatility
@@ -87,8 +130,9 @@ A company with six to twelve months of prices has no 12-month return, so its
 6-month one stands in. It is placed against the established universe (its
 percentile on each measure is the share of established stocks at or below its
 figure) so that letting it in changes no established stock's score. Such
-companies are on the week and momentum lists, where their picks led the
-average stock in both halves of the test, and on no other, where they did not.
+companies were on the week and momentum lists, where their picks led the
+average stock in both halves of the test. Those two lists are gone, so since
+December 2026 they are on the emerging list only (YOUNG_LISTS is empty).
 Under six months nothing ranks them.
 
 THE SETUP LISTS, REBUILT (December 2026)
@@ -187,15 +231,19 @@ MIN_PRICE = 20.0
 MIN_SESSIONS = 253                 # twelve months of closes plus the base one
 MAX_SPAN_DAYS = 395                # calendar days those 253 closes may cover
 # A company listed six to twelve months. It has no 12-month return, so its
-# 6-month one stands in, and it is admitted to the two lists on which such
+# 6-month one stands in. It was admitted to the two lists on which such
 # companies led the average stock in both halves of the test (this week and
-# momentum; research/IDEAS-STUDY.md, "Younger companies"). Under six months
-# there is no 6-month return either, and nothing here ranks it.
+# momentum; research/IDEAS-STUDY.md, "Younger companies"). Both lists were
+# folded into the fundamental ones in December 2026, which need a year of
+# prices and filings, so a young company is on the emerging list only. Under
+# six months there is no 6-month return either, and nothing here ranks it.
 MIN_YOUNG_SESSIONS = 127           # six months of closes plus the base one
 MAX_YOUNG_SPAN_DAYS = 215          # calendar days those 127 closes may cover
-YOUNG_LISTS = ("week", "momentum")
+YOUNG_LISTS = ()
 CALM_FLOOR = 0.20                  # calm percentile under which a name is out
-LEADER_FLOOR = 0.70                # leader percentile a month pick must reach
+# The leader percentile a month pick must reach: the top 35% (December 2026;
+# it was the top 30% while the month list read prices alone). MONTH reads it.
+LEADER_FLOOR = 0.65
 # Nothing that moves less than this in a year is a company share. A liquid-fund
 # ETF creeps up in a straight line at about 1% volatility, which every
 # return-for-its-risk measure here would rank first on the exchange. The scan
@@ -211,7 +259,17 @@ RESULTS_MIN_POOL = 8
 # A filing that reaches the exchange after this time of day is first priced
 # by the NEXT session's close.
 MARKET_CLOSE_MIN = 15 * 60 + 30
-DAYS_KEPT = 12                     # recent daily moves each stock carries for that
+# The recent daily moves (and volumes) each stock carries, to find the session
+# a result was first priced in. The month list asks whether the market sold a
+# company's results in the last 21 sessions; a result is placed only from the
+# second session held, so 21 needs 22, and one more is the spare for a stock
+# that missed a day.
+DAYS_KEPT = 23
+# A session's volume is read against the median of the sessions before it:
+# "3.2 times its usual volume". Fewer than VOLUME_BASE_MIN of those with a
+# volume on record is no usual to speak of.
+VOLUME_BASE_SESSIONS = 20
+VOLUME_BASE_MIN = 10
 # Sector breakout (research/setups_lab.py --sector): an industry's own index,
 # the mean daily move of its liquid stocks chained, at a new 60-session
 # closing high in the last 10 sessions, or within 3% of that high.
@@ -230,49 +288,105 @@ BREAKOUT_SECTOR_NEAR_HIGH = True
 # Stamped on every block rank() writes. A scan made under an earlier recipe
 # still serves its lists after a deploy, but the page must not print this
 # recipe's tested record beside them. Change it whenever LISTS changes.
-RECIPE = "2026-12 setup lists v2"
+RECIPE = "2026-12 fundamental lists v3"
 
-# The four lists. `mix` is the weight on each percentile; `calm_gate` says
-# whether the most volatile fifth is removed (True) or merely ranked lower.
-# `leader_floor`, where set, is the leader percentile a stock must reach to be
-# on the list at all. `gives_way_to` names a list whose top LIST_SIZE this
-# list leaves out, so the two never show the same stock.
+# The three fundamental lists' recipes (December 2026). Every threshold and
+# weight each list reads is here, so research/fundamental_ideas_lab.py can
+# replay the engine itself on each declared version by swapping one of these
+# dictionaries, and write the version its rule chose back as the default.
+# The defaults are the recipe as specified before the run (the lab's M0, R4
+# and L1). Each `mix` sums to 1; `sector_cap` is how many stocks of one NSE
+# industry a list may hold.
+MONTH = {
+    "leader_floor": LEADER_FLOOR,      # leader percentile a pick must reach
+    "sector_gate": True,               # its industry must rank on money flow ...
+    "sector_floor": 50.0,              # ... at this score (0-100) or better: the top half
+    "profit_guard": True,              # no loss, and no fall in profit, last quarter
+    "result_guard": True,              # no results the market sold ...
+    "result_lookback": 21,             # ... in this many sessions ...
+    "bad_reaction": -0.02,             # ... by this much against the average stock
+    "pledge_max": 10.0,                # % of the company promoters may have pledged
+    "catalyst_order_pct": 2.0,         # an order worth this % of market value is a catalyst
+    "mix": {"pull": 0.30, "high": 0.25, "fundmom": 0.20, "secflow": 0.15, "catalyst": 0.10},
+    "pull_mix": {"dip21": 0.5, "dip": 0.5},     # the month's pullback, and the week's
+    "min_score": 0.0,                  # a score floor, as a fraction of 100
+    "sector_cap": 4,
+}
+RESULTS = {
+    "quality_gate": True,              # the result must be real growth (below)
+    "rev_min": 8.0,                    # sales growth on a year ago, %
+    "other_income_max": 35.0,          # other income as a % of profit before tax
+    "exceptional_max": 0.30,           # an exceptional gain as a share of profit before tax
+    "chase_max": 0.18,                 # a result-day rise past this is not chased
+    "floor": "sma200_85",              # None | "sma200_85" (within 15% of the 200-day) | "sma50"
+    "mix": {"reaction": 0.50, "volume": 0.25, "growth": 0.25},
+    "accel_bonus": 0.10,               # added to growth when sales growth sped up
+    "min_qualified": 8,                # fewer passing every test is no list
+    "sector_cap": 4,
+}
+LONG = {
+    "floors": True,                    # the return, cash and debt floors below
+    "valuation_ceiling": True,         # the P/E ceiling below
+    "pledge_max": 5.0,                 # % of the company promoters may have pledged
+    "pledge_scale": 10.0,              # governance falls to nothing at a pledge this size
+    "f_score_min": 5,
+    "roce_min": 14.0,                  # return on capital employed, %, non-lenders
+    "cfo_to_pat_min": 0.70,            # cash from operations over profit, non-lenders
+    "de_max": 1.0,                     # debt over equity, non-lenders
+    "roe_min_fin": 13.0,               # return on equity, %, lenders
+    "pe_max": 90.0,                    # the P/E past which a stock is priced out ...
+    "peg_escape": 1.5,                 # ... unless its PEG is this or under ...
+    "cagr_escape": 35.0,               # ... on three-year profit growth of this or more
+    "mix": {"quality": 0.30, "compounding": 0.25, "governance": 0.15,
+            "valuation": 0.15, "trendq": 0.15},
+    "min_score": 0.0,
+    "sector_cap": 4,
+}
+# A part with nothing to read counts as the middle of the field.
+NEUTRAL = 0.5
+# A percentile against its own industry needs this many pool members with the
+# figure; with fewer it is taken against every liquid stock.
+INDUSTRY_PCT_MIN = 5
+# The results list's floors. "sma200_85": a close more than 15% under the
+# 200-day average is a stock still falling, whatever the day said.
+RESULTS_SMA200_FLOOR = 0.85
+# A table row filed more than this many days before a result reached the
+# exchange is an earlier quarter, not the one the market just read.
+RESULT_MATCH_DAYS = 3
+# When companies report: seasons begin about the tenth of the month after a
+# quarter ends, and run about fifty days (the March quarter has sixty).
+RESULTS_SEASON_STARTS = ((1, 10), (4, 10), (7, 10), (10, 10))
+RESULTS_SEASON_DAYS = 50
+
+# The lists. Each spec carries how long a pick is held and where it is left
+# (`exit_pct`, a close that far under the call price), what the page calls
+# it, and `mix`, the weight on each part of its score. The three fundamental
+# lists name their recipe dictionary in `recipe`; rank() reads that live, so
+# a dictionary swapped by the lab is the one used. `gives_way_to` would name
+# a list whose top LIST_SIZE this list leaves out (none does since December
+# 2026: the three lists overlap little without it).
 #
-# `tested` is what each recipe did when replayed on NSE's daily bhavcopy from
-# January 2017 to 2026: a list every five sessions, 15 picks, bought at the
-# next session's open, held for the period, left early on a close under the
-# exit line. Price returns, before costs and tax. research/ideas_study.py
-# reproduces every figure and research/IDEAS-STUDY.md explains them.
+# `tested` is what each recipe did when replayed: research/ideas_study.py and
+# research/fundamental_ideas_lab.py write it, research/IDEAS-STUDY.md
+# explains it, and the page prints it only for the recipe it was measured on.
 LISTS = {
-    "week": {
-        "label": "This week", "setup": "Week pick", "setup_key": "pick_week",
-        "hold_sessions": 5, "hold_days": 7, "hold_text": "about a week", "exit_pct": 7.0,
-        "mix": {"leader": 0.5, "dip": 0.5}, "calm_gate": True,
-        "idea": "Strong stocks that fell this week.",
-    },
     "month": {
-        "label": "This month", "setup": "Month pick", "setup_key": "pick_month",
+        "label": "Swing / This month", "setup": "Month pick", "setup_key": "pick_month",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 12.0,
-        "mix": {"dip21": 0.5, "high": 0.5}, "calm_gate": True, "leader_floor": LEADER_FLOOR,
-        "idea": "Market leaders that pulled back over the last month.",
+        "mix": MONTH["mix"], "recipe": "MONTH",
+        "idea": "Market leaders pulling back in industries money is moving into, with sales and margins growing.",
     },
     "results": {
         "label": "After results", "setup": "Results pick", "setup_key": "pick_results",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 12.0,
-        "mix": {"reaction": 1.0}, "calm_gate": False, "trend_gate": False, "event": "results",
-        "idea": "Companies whose stock jumped on their quarterly results.",
-    },
-    "momentum": {
-        "label": "Momentum", "setup": "Momentum pick", "setup_key": "pick_momentum",
-        "hold_sessions": 63, "hold_days": 91, "hold_text": "about 3 months", "exit_pct": 15.0,
-        "mix": {"leader": 1.0}, "calm_gate": True, "gives_way_to": "long",
-        "idea": "Strong steady uptrends, other than the long-term picks.",
+        "mix": RESULTS["mix"], "recipe": "RESULTS", "event": "results",
+        "idea": "Companies whose stock jumped on quarterly results that showed real growth.",
     },
     "long": {
-        "label": "Long term", "setup": "Long-term pick", "setup_key": "pick_long",
+        "label": "Long-term compounders", "setup": "Long-term pick", "setup_key": "pick_long",
         "hold_sessions": 252, "hold_days": 365, "hold_text": "about a year", "exit_pct": 30.0,
-        "mix": {"m12": 1 / 3, "high": 1 / 3, "trend": 1 / 3}, "calm_gate": True,
-        "idea": "Steady year-long climbers near their highs.",
+        "mix": LONG["mix"], "recipe": "LONG",
+        "idea": "High returns on capital backed by cash, little debt, a steady climb and a price under the list's ceiling.",
     },
 }
 # The setup lists. Each was asked for by name and is built as a list of its
@@ -326,15 +440,18 @@ LISTS.update({
         "idea": "Companies listed six to eighteen months, near their highs and ahead of the market.",
     },
 })
-ORDER = ("week", "month", "results", "momentum", "long")
+ORDER = ("month", "results", "long")
 SETUPS = ("short", "breakout", "technical", "quick", "flow", "emerging")
 # The two the Ideas page shows. The rest are still ranked and still answer by name.
 PRIMARY = ("short", "long")
 ALL = ORDER + SETUPS
 SETUP_KEYS = {v["setup_key"]: k for k, v in LISTS.items()}
-# Older links and the old two-way switch still ask for these.
-ALIASES = {"medium": "long", "trade": "week", "position": "momentum",
-           "invest": "long"}
+# Older links, the old two-way switch and the two lists folded into the
+# fundamental ones (December 2026) still ask for these. Each opens the list
+# that took its place, so an old link never lands on an error.
+ALIASES = {"medium": "long", "invest": "long",
+           "week": "month", "trade": "month",
+           "momentum": "long", "position": "long"}
 
 TESTED = {}     # filled from research/ideas-study.json by _load_tested()
 
@@ -371,6 +488,22 @@ def resolve(horizon):
     h = str(horizon or "").strip().lower()
     h = ALIASES.get(h, h)
     return h if h in LISTS else None
+
+
+def recipe_of(key):
+    """The live recipe dictionary (MONTH, RESULTS or LONG) of one of the three
+    fundamental lists, or None for any other list. Looked up at call time, so
+    a dictionary the lab swapped in is the one read."""
+    name = (LISTS.get(key) or {}).get("recipe")
+    return globals().get(name) if name else None
+
+
+def mix_of(key):
+    """The weights a list's score is made of, as the engine uses them now."""
+    cfg = recipe_of(key)
+    if cfg is not None:
+        return dict(cfg.get("mix") or {})
+    return dict((LISTS.get(key) or {}).get("mix") or {})
 
 
 def _finite(v):
@@ -448,6 +581,7 @@ def signals(df):
         if len(t) >= 40:
             turnover = float(np.median(t))
 
+    days = _recent_days(frame, c)
     return {
         "price": round(price, 2),
         "young": young, "sessions": int(n),
@@ -464,7 +598,10 @@ def signals(df):
         "ret_1m": float(c[-1] / c[-22] - 1.0),
         "ret_5d": float(c[-1] / c[-6] - 1.0),
         "tech": _safe_technicals(frame),
-        "days": _recent_days(frame, c),
+        "days": days,
+        # Each of those sessions' volume beside the median of the twenty
+        # before it, so the results list can say how heavily a result traded.
+        "day_vols": _recent_vols(frame, days),
         # The last SECTOR_PATH daily moves and the date of the last, so
         # sector_flow() can chain an industry's own index (sector breakout).
         "path": [round(float(x), 5) for x in (c[-SECTOR_PATH:] / c[-SECTOR_PATH - 1:-1] - 1.0)],
@@ -909,6 +1046,30 @@ def _recent_days(frame, c):
     return [(d, float(m)) for d, m in zip(dates, moves)]
 
 
+def _recent_vols(frame, days):
+    """
+    Beside each of `days`: (ISO date, that session's volume, the median volume
+    of the VOLUME_BASE_SESSIONS sessions before it), oldest first. A volume
+    the feed did not carry is None, and so is a median with fewer than
+    VOLUME_BASE_MIN volumes behind it. None for an undated frame, as `days`.
+    The date strings are the ones `days` holds, so they cost nothing twice.
+    """
+    if not days:
+        return None
+    if "Volume" not in frame.columns:
+        return [(d, None, None) for d, _m in days]
+    v = np.asarray(frame["Volume"], dtype=float)
+    n, out = len(v), []
+    for k, (d, _m) in enumerate(days):
+        t = n - len(days) + k
+        before = v[max(0, t - VOLUME_BASE_SESSIONS):t]
+        before = before[np.isfinite(before)]
+        med = float(np.median(before)) if len(before) >= VOLUME_BASE_MIN else None
+        vol = float(v[t]) if t >= 0 and np.isfinite(v[t]) else None
+        out.append((d, vol, med))
+    return out
+
+
 def _safe_technicals(frame):
     try:
         return technicals(frame)
@@ -1014,19 +1175,6 @@ def _why(key, sig, calm, ev=None):
         r3f = sig.get("ret_3m")
         if r3f is not None:
             out.append(f"{'Up' if r3f >= 0 else 'Down'} {abs(r3f) * 100:.0f}% in three months")
-    if key == "results" and ev and ev.get("filed_at"):
-        out.append(f"Results on {_short_day(ev['filed_at'])}")
-        move = ev["move"] * 100
-        out.append(f"{'Rose' if move >= 0 else 'Fell'} {abs(move):.0f}% the day they were priced")
-        g = _finite(ev.get("pat_yoy_pct"))
-        if g is not None and abs(g) < 1000:
-            out.append(f"Profit {'up' if g >= 0 else 'down'} {abs(g):.0f}% on a year ago")
-    r5 = sig.get("ret_5d")
-    if key == "week" and r5 is not None and r5 <= -0.01:
-        out.append(f"Fell {abs(r5) * 100:.0f}% this week")
-    r21 = sig.get("ret_1m")
-    if key == "month" and r21 is not None and r21 <= -0.01:
-        out.append(f"Fell {abs(r21) * 100:.0f}% this month")
     r12 = sig.get("ret_12m")
     if sig.get("young"):
         out.append(f"Listed {max(6, round((sig.get('sessions') or 0) / 21))} months")
@@ -1070,7 +1218,7 @@ def _parse_filed(value):
     return dt.datetime(day.year, day.month, day.day, hh, mm)
 
 
-def result_reactions(pool, results):
+def result_reactions(pool, results, window=RESULTS_WINDOW):
     """
     How each stock moved on the session its results were first priced in.
 
@@ -1078,8 +1226,14 @@ def result_reactions(pool, results):
     symbol to at least {"filed_at": when the filing reached the exchange}.
     The session is the first one whose close came after the filing. The move
     is the stock's close-to-close change that session, less the average
-    liquid stock's the same day. Only results priced in the last
-    RESULTS_WINDOW sessions are returned: an older one is no longer news.
+    liquid stock's the same day. Only results priced in the last `window`
+    sessions are returned (RESULTS_WINDOW for the results list: an older one
+    is no longer news; the month list looks back a month for results the
+    market sold).
+
+    Each event also carries `vol_x`, that session's volume over the median of
+    the twenty before it (None when unknown), and where the stock stands now:
+    `sma200_ratio` (price over its 200-day average) and `above_sma50`.
     """
     if not results:
         return {}
@@ -1090,7 +1244,7 @@ def result_reactions(pool, results):
     # A date most of the market traded on. One stock's stray bar is not a session.
     need = max(3, len(pool) // 2)
     sessions = sorted(d for d, ms in by_date.items() if len(ms) >= need)
-    window = set(sessions[-RESULTS_WINDOW:])
+    window = set(sessions[-max(1, int(window)):])
     if not window:
         return {}
     out = {}
@@ -1113,6 +1267,9 @@ def result_reactions(pool, results):
         if move is None or not math.isfinite(move):
             continue                       # it did not trade that session
         market = float(np.mean(by_date[d0]))
+        vol, usual = next(((v, m) for d, v, m in (g.get("day_vols") or ()) if d == d0), (None, None))
+        vol, usual = _finite(vol), _finite(usual)
+        price, s200, s50 = _finite(g.get("price")), _finite(g.get("sma200")), _finite(g.get("sma50"))
         out[sym] = {
             "filed_at": str(r.get("filed_at"))[:19], "session": d0,
             "sessions_ago": len(sessions) - 1 - k,
@@ -1120,6 +1277,9 @@ def result_reactions(pool, results):
             "quarter": r.get("quarter"),
             "pat_yoy_pct": _finite(r.get("pat_yoy_pct")),
             "revenue_yoy_pct": _finite(r.get("revenue_yoy_pct")),
+            "vol_x": (vol / usual) if (vol is not None and usual and usual > 0) else None,
+            "sma200_ratio": (price / s200) if (price is not None and s200 and s200 > 0) else None,
+            "above_sma50": (bool(price > s50) if (price is not None and s50 is not None) else None),
         }
     return out
 
@@ -1528,8 +1688,525 @@ def _emerging(sym, g, part, ctx, listed):
     return score, why, -1.0
 
 
+# ---------------------------------------------------------------------------
+# The three fundamental lists (December 2026): Swing / This month, After
+# results, Long-term compounders. Each reads the company's snapshot (its
+# filings, fund_snapshot.py) beside its chart, through MONTH, RESULTS and LONG.
+# ---------------------------------------------------------------------------
+
+# What each part of the three lists' scores is called on the page.
+FACTOR_LABELS = {
+    "pull": "Pullback over the last month and week",
+    "high": "Closeness to the 52-week high",
+    "fundmom": "Sales and margin growth last quarter",
+    "secflow": "Its industry's money flow",
+    "catalyst": "A live catalyst: deliveries or an order",
+    "reaction": "Move on the day its results were priced",
+    "volume": "Volume that day",
+    "growth": "Growth in the quarter it reported",
+    "quality": "Returns on capital, backed by cash",
+    "compounding": "Growth over three years",
+    "governance": "Pledges and who is buying",
+    "valuation": "Price against its own industry",
+    "trendq": "The year-long trend",
+}
+# The figures each block carries from the filings for the page.
+FUNDAMENTALS_SHOWN = ("quarter", "revenue_yoy_pct", "opm_yoy_chg", "pat_yoy_pct", "earnings_quality_ok",
+                      "roce_pct", "roe_pct", "cfo_to_pat", "fcf_pos_years_3y", "debt_equity_x", "pe", "peg",
+                      "pledge_pct", "f_score", "is_financial", "sector_mf_quadrant")
+WHY_MAX = 4                        # facts printed beside a pick
+TOP_HALF_SCORE = 50.0              # an industry's money-flow score at or over this is the top half
+FCF_YEARS = 3                      # the years free cash flow is counted over
+F_SCORE_TOP = 9                    # Piotroski's scale
+PROFIT_TEXT_MAX = 1000.0           # a growth figure past this is a near-zero base, not news
+UPTREND_TEXT = "Not in an uptrend: price or its 50-day average is under the 200-day average."
+VOLATILE_TEXT = "Among the most volatile fifth of liquid stocks."
+BELOW_FLOOR_TEXT = "Ranks below the list's conviction floor."
+
+
+def _num(x, dp=1):
+    """A figure as the page prints it: at most `dp` decimals, no trailing zero."""
+    s = f"{x:.{dp}f}"
+    return s.rstrip("0").rstrip(".") if "." in s else s
+
+
+def _pc(x):
+    """A size in percent: whole numbers from ten up, one decimal under it."""
+    return f"{x:.0f}" if abs(x) >= 10 else _num(x, 1)
+
+
+def _mean(xs):
+    xs = [x for x in xs if x is not None]
+    return sum(xs) / len(xs) if xs else None
+
+
+def _cap(text):
+    """The first letter in capitals, the rest as written."""
+    return text[:1].upper() + text[1:] if text else text
+
+
+def _said(pairs):
+    """The phrases whose figure is on file, joined: [(known, phrase)]."""
+    return ", ".join(text for known, text in pairs if known)
+
+
+def _fig(snap, key):
+    """One figure of a snapshot as a finite float, or None when unknown."""
+    return _finite((snap or {}).get(key))
+
+
+def _figure_pct(values):
+    """{SYMBOL: percentile} among the stocks that have the figure. A stock
+    whose figure is None is left out, and reads as NEUTRAL where it is used."""
+    have = sorted(s for s, v in values.items() if v is not None)
+    return dict(zip(have, _pct_ranks([values[s] for s in have]))) if have else {}
+
+
+def _industry_pct(values, industry):
+    """As _figure_pct, but within each NSE industry that has at least
+    INDUSTRY_PCT_MIN stocks with the figure, and against every stock for the
+    rest: a cheap bank and a cheap software company are cheap on different
+    scales."""
+    out = _figure_pct(values)
+    groups = {}
+    for s, v in values.items():
+        if v is not None and industry.get(s):
+            groups.setdefault(industry[s], []).append(s)
+    for members in groups.values():
+        if len(members) >= INDUSTRY_PCT_MIN:
+            out.update(_figure_pct({s: values[s] for s in members}))
+    return out
+
+
+def _snapshot_pcts(syms, snaps, sectors):
+    """
+    The filings' figures the month and long-term lists rank on, each as a
+    percentile among the established stocks that have it. Lenders are kept
+    out of the manufacturer's measures (return on capital, cash conversion,
+    debt), and their return on equity is ranked among lenders when there are
+    enough of them, else among every company that has one.
+    """
+    fin = {s: bool((snaps.get(s) or {}).get("is_financial")) for s in syms}
+
+    def col(key, lenders=None, sign=1.0):
+        out = {}
+        for s in syms:
+            if lenders is not None and fin[s] != lenders:
+                continue
+            v = _fig(snaps.get(s), key)
+            out[s] = None if v is None else sign * v
+        return out
+    pct = {k: _figure_pct(col(k)) for k in ("revenue_yoy_pct", "opm_yoy_chg", "rev_cagr_3y", "pat_cagr_3y",
+                                             "revenue_ttm_yoy_pct", "pat_ttm_yoy_pct", "opm_trend_2y")}
+    pct["roce_pct"] = _figure_pct(col("roce_pct", lenders=False))
+    pct["cfo_to_pat"] = _figure_pct(col("cfo_to_pat", lenders=False))
+    pct["neg_de"] = _figure_pct(col("debt_equity_x", lenders=False, sign=-1.0))
+    lenders = col("roe_pct", lenders=True)
+    if sum(v is not None for v in lenders.values()) >= INDUSTRY_PCT_MIN:
+        pct["roe_fin"] = _figure_pct(lenders)
+    else:
+        pct["roe_fin"] = {s: p for s, p in _figure_pct(col("roe_pct")).items() if fin[s]}
+    pct["neg_peg"] = _industry_pct(col("peg", sign=-1.0), sectors)
+    pct["neg_ev_ebitda"] = _industry_pct(col("ev_ebitda", lenders=False, sign=-1.0), sectors)
+    return pct
+
+
+def _breakdown(mix, values, details):
+    """
+    The weighted parts of a score: for each part of `mix` its weight, what it
+    read (0-100), the points it adds and a line on what it measured. The
+    points add up to the score, which is returned beside them (out of 100). A
+    part weighted zero adds nothing and is left out; one with nothing to read
+    is NEUTRAL.
+    """
+    rows, total = [], 0.0
+    for k, w in (mix or {}).items():
+        w = _finite(w) or 0.0
+        if w <= 0:
+            continue
+        v = _finite(values.get(k))
+        v = NEUTRAL if v is None else min(1.0, max(0.0, v))
+        pts = w * v * 100.0
+        total += pts
+        rows.append({"factor": k, "label": FACTOR_LABELS.get(k, k), "weight": round(w, 4),
+                     "value": round(v * 100.0, 1), "points": round(pts, 2), "detail": details.get(k) or ""})
+    return rows, total
+
+
+def _sold_text(ev):
+    return (f"Its results were sold: {ev['move'] * 100:+.1f}% the day they were priced, against "
+            f"{ev['market_move'] * 100:+.1f}% for the average stock.")
+
+
+def _sales_margin(snap, margin="margin"):
+    """"Sales +28%, margin +3.4 pts", from what the quarter has."""
+    rev, opm = _fig(snap, "revenue_yoy_pct"), _fig(snap, "opm_yoy_chg")
+    out = []
+    if rev is not None and abs(rev) < PROFIT_TEXT_MAX:
+        out.append(f"Sales {rev:+.0f}%")
+    if opm is not None:
+        out.append(f"{margin if out else margin.capitalize()} {opm:+.1f} pts")
+    return ", ".join(out) or None
+
+
+def _high_text(g):
+    nh = _finite(g.get("near_high"))
+    if nh is None:
+        return None
+    gap = (1 - nh) * 100
+    return "At its 52-week high" if gap < 1 else f"{gap:.0f}% below its 52-week high"
+
+
+def _catalyst(snap, cfg):
+    """The month list's live catalyst in words, or None: deliveries that
+    surged on a falling week (someone taking stock off sellers), or an order
+    large against the company's value."""
+    if (snap or {}).get("delivery_spike") is True:
+        return "Heavy deliveries on a falling week"
+    order = _fig(snap, "order_win_pct_mcap")
+    if order is not None and order >= cfg["catalyst_order_pct"]:
+        return f"An order worth {_pc(order)}% of its market value"
+    return None
+
+
+def _month(sym, g, part, is_calm, snap, ctx):
+    """
+    Swing / This month: a market leader in a strong industry that pulled
+    back, with its last quarter growing. Returns {"score", "why_not",
+    "exact", "breakdown", "why"}; the gates are checked in the order the page
+    explains them, and the first that fails is the reason.
+    """
+    cfg = MONTH
+    row = ctx["flow_by"].get(ctx["sectors"].get(sym))
+    pct = ctx["snap_pct"]
+    pull_mix = {k: w for k, w in (cfg.get("pull_mix") or {}).items() if (_finite(w) or 0) > 0}
+    weight = sum(pull_mix.values())
+    pull = sum(part[k] * w for k, w in pull_mix.items()) / weight if weight else NEUTRAL
+    fund = _mean([pct["revenue_yoy_pct"].get(sym), pct["opm_yoy_chg"].get(sym)])
+    catalyst = _catalyst(snap, cfg)
+    values = {"pull": pull, "high": part["high"], "fundmom": fund,
+              "secflow": (row["score"] / 100.0) if row else None,
+              "catalyst": 1.0 if catalyst else NEUTRAL}
+    r21, r5 = _finite(g.get("ret_1m")), _finite(g.get("ret_5d"))
+    growth = _sales_margin(snap)
+    details = {
+        "pull": (f"{(r21 or 0) * 100:+.1f}% over the last month and {(r5 or 0) * 100:+.1f}% over the last "
+                 "five sessions"),
+        "high": _high_text(g) or "Its 52-week high is not known",
+        "fundmom": ((_sales_margin(snap, "operating margin") + " on a year ago") if growth else
+                    "No recent quarter on file: counted as the middle of the field"),
+        "secflow": (f"{row['sector']} ranks {row['rank']} of {row['of']} industries on money flow" if row else
+                    "Its industry could not be ranked on money flow: counted as the middle"),
+        "catalyst": catalyst or "No delivery surge or large order on record: counted as the middle",
+    }
+    breakdown, score = _breakdown(cfg["mix"], values, details)
+
+    floor = cfg["leader_floor"]
+    pat, pat_yoy, pledge = _fig(snap, "pat_cr"), _fig(snap, "pat_yoy_pct"), _fig(snap, "pledge_pct")
+    ev = ctx["events_month"].get(sym)
+    why = None
+    if not g["uptrend"]:
+        why = UPTREND_TEXT
+    elif not is_calm:
+        why = VOLATILE_TEXT
+    elif part["leader"] < floor:
+        why = f"Not a market leader: its leader score is under the top {100 - floor * 100:.0f}% of liquid stocks."
+    elif cfg["sector_gate"] and row is None:
+        why = "Its industry could not be ranked on money flow."
+    elif cfg["sector_gate"] and row["score"] < cfg["sector_floor"]:
+        why = (f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: "
+               + ("the bottom half." if cfg["sector_floor"] == TOP_HALF_SCORE else
+                  f"under the list's floor of {cfg['sector_floor']:.0f}."))
+    elif cfg["profit_guard"] and pat is not None and pat <= 0:
+        why = "Made a loss in its last quarter."
+    elif cfg["profit_guard"] and pat_yoy is not None and pat_yoy < 0:
+        why = f"Profit fell {_pc(abs(pat_yoy))}% on a year ago in its last quarter."
+    elif cfg["result_guard"] and ev and ev["reaction"] < cfg["bad_reaction"]:
+        why = _sold_text(ev)
+    elif pledge is not None and pledge > cfg["pledge_max"]:
+        why = f"Promoters have pledged {_pc(pledge)}% of the company."
+    elif score < cfg["min_score"] * 100.0:
+        why = BELOW_FLOOR_TEXT
+
+    facts = []
+    if r21 is not None and r21 <= -0.01:
+        facts.append(f"Pulled back {abs(r21) * 100:.0f}% this month")
+    elif r5 is not None and r5 <= -0.01:
+        facts.append(f"Pulled back {abs(r5) * 100:.0f}% this week")
+    if growth:
+        facts.append(growth)
+    if row:
+        facts.append(f"{row['sector']}: top half on money flow" if row["score"] >= TOP_HALF_SCORE else
+                     f"{row['sector']}: ranked {row['rank']} of {row['of']} on money flow")
+    if _high_text(g):
+        facts.append(_high_text(g))
+    if catalyst:
+        facts.append(catalyst)
+    return {"score": score, "why_not": why, "exact": score, "breakdown": breakdown, "why": facts[:WHY_MAX]}
+
+
+def _reported(ev, snap):
+    """The snapshot, if its latest quarter is the one this result reported:
+    the fundamentals tables can lag the exchange by a day, and judging a
+    fresh result on the quarter before it would judge the wrong numbers.
+    A snapshot or result with no filing time is taken as matching."""
+    if not snap or not ev:
+        return None
+    filed, held = _parse_filed(ev.get("filed_at")), _parse_filed(snap.get("filed_at"))
+    if filed and held and (filed - held).days > RESULT_MATCH_DAYS:
+        return None
+    q_ev, q_snap = ev.get("quarter"), snap.get("quarter")
+    if q_ev and q_snap and str(q_ev).strip() != str(q_snap).strip():
+        return None
+    return snap
+
+
+def _result_quality(q, cfg):
+    """Why a reported quarter is not real growth, or None. Each test is made
+    only where its figure is on file, except the profit itself: a result
+    whose profit is unknown cannot be shown to be real. A lender's other
+    income and cash flow are its business, so those two tests are for
+    everyone else."""
+    fin = bool((q or {}).get("is_financial"))
+    rev = _fig(q, "revenue_yoy_pct")
+    if rev is not None and rev < cfg["rev_min"]:
+        if rev < 0:
+            return f"Sales fell {_pc(abs(rev))}% on a year ago; the list needs {_pc(cfg['rev_min'])}% growth."
+        return f"Sales grew {_pc(rev)}% on a year ago; the list needs {_pc(cfg['rev_min'])}%."
+    pat = _fig(q, "pat_cr")
+    if pat is None:
+        return "The figures it reported are not in the fundamentals tables yet."
+    if pat <= 0:
+        return "Made a loss in the quarter it reported."
+    pat_yoy = _fig(q, "pat_yoy_pct")
+    if pat_yoy is not None and pat_yoy <= 0:
+        return "Profit did not grow on a year ago."
+    if not fin:
+        core, ebitda_yoy = _fig(q, "core_ebitda_cr"), _fig(q, "ebitda_yoy_pct")
+        if (core is not None and core <= 0) or (ebitda_yoy is not None and ebitda_yoy <= 0):
+            return "Operating profit did not grow."
+        oi = _fig(q, "other_income_share_pct")
+        if oi is not None and oi > cfg["other_income_max"]:
+            return f"Other income was {_pc(oi)}% of profit before tax: not the business's own earnings."
+    exc, pbt = _fig(q, "exceptional_cr"), _fig(q, "pbt_cr")
+    if exc is not None and pbt and pbt > 0 and exc > cfg["exceptional_max"] * pbt:
+        return f"An exceptional gain made up {_pc(exc / pbt * 100)}% of profit before tax."
+    cfo = _fig(q, "cfo_cr")
+    if not fin and cfo is not None and cfo <= 0:
+        return "Its last full year's operations used cash."
+    return None
+
+
+def _results_list(events, reaction, snapshot):
+    """
+    The After results list's entry for every company whose result was priced
+    in the window: {SYMBOL: entry}, and how many passed every test. Ranked
+    among those companies only, the comparison the study made. When fewer
+    than RESULTS["min_qualified"] pass, there is no list this season.
+    """
+    cfg = RESULTS
+    if not events or not reaction:
+        return {}, 0
+    reported = {s: _reported(events[s], snapshot.get(s)) for s in events}
+    pct = {"volume": _figure_pct({s: _finite(events[s].get("vol_x")) for s in events}),
+           "revenue_yoy_pct": _figure_pct({s: _fig(reported[s], "revenue_yoy_pct") for s in events}),
+           "opm_yoy_chg": _figure_pct({s: _fig(reported[s], "opm_yoy_chg") for s in events})}
+    out = {}
+    for s, ev in events.items():
+        q = reported[s]
+        rev, prev = _fig(q, "revenue_yoy_pct"), _fig(q, "prev_revenue_yoy_pct")
+        growth = _mean([pct["revenue_yoy_pct"].get(s), pct["opm_yoy_chg"].get(s)])
+        faster = rev is not None and prev is not None and rev > prev
+        if growth is not None and faster:
+            growth = min(1.0, growth + cfg["accel_bonus"])
+        values = {"reaction": reaction.get(s), "volume": pct["volume"].get(s), "growth": growth}
+        vol_x, day = _finite(ev.get("vol_x")), _short_day(ev["session"])
+        details = {
+            "reaction": (f"{ev['move'] * 100:+.1f}% on {day}, the first session after its results reached the "
+                         f"exchange; the average liquid stock moved {ev['market_move'] * 100:+.1f}%. Against the "
+                         f"{len(events)} companies priced on results in the last {RESULTS_WINDOW} sessions"),
+            "volume": (f"{vol_x:.1f} times its usual volume that day" if vol_x is not None else
+                       "Its volume that day is not known: counted as the middle"),
+            "growth": (((_sales_margin(q, "operating margin") or "") + " on a year ago"
+                        + (", sales growing faster than the quarter before" if faster else ""))
+                       if _sales_margin(q) else "Its quarter's growth is not on file: counted as the middle"),
+        }
+        breakdown, score = _breakdown(cfg["mix"], values, details)
+        why = _result_quality(q, cfg) if cfg["quality_gate"] else None
+        if why is None and ev["move"] > cfg["chase_max"]:
+            why = f"Already rose {ev['move'] * 100:.0f}% the day results were priced: the list does not chase."
+        if why is None and cfg["floor"] == "sma200_85":
+            ratio = _finite(ev.get("sma200_ratio"))
+            if ratio is not None and ratio < RESULTS_SMA200_FLOOR:
+                why = f"More than {(1 - RESULTS_SMA200_FLOOR) * 100:.0f}% under its 200-day average."
+        if why is None and cfg["floor"] == "sma50" and ev.get("above_sma50") is False:
+            why = "Under its 50-day average."
+
+        move = ev["move"] * 100
+        filed_day = _short_day(ev["filed_at"])
+        facts = [f"Results on {filed_day}: {'rose' if move >= 0 else 'fell'} {abs(move):.0f}% "
+                 + ("that day" if filed_day == day else f"on {day}")]
+        if vol_x is not None:
+            facts.append(f"Volume {vol_x:.1f}× usual")
+        ebitda_yoy = _fig(q, "ebitda_yoy_pct")
+        line = _said([(rev is not None and abs(rev or 0) < PROFIT_TEXT_MAX, f"Sales {rev or 0:+.0f}%"),
+                      (ebitda_yoy is not None, "operating profit " + ("up" if (ebitda_yoy or 0) > 0 else "down"))])
+        if line:
+            facts.append(_cap(line))
+        pat_yoy = _fig(q, "pat_yoy_pct")
+        if pat_yoy is None:
+            pat_yoy = _finite(ev.get("pat_yoy_pct"))
+        if pat_yoy is not None and abs(pat_yoy) < PROFIT_TEXT_MAX:
+            facts.append(f"Profit {'up' if pat_yoy >= 0 else 'down'} {abs(pat_yoy):.0f}% on a year ago")
+        out[s] = {"score": score, "why_not": why, "exact": score, "breakdown": breakdown, "why": facts[:WHY_MAX]}
+    passed = [s for s, e in out.items() if e["why_not"] is None]
+    if len(passed) < cfg["min_qualified"]:
+        for s in passed:
+            out[s]["why_not"] = (f"Fewer than {cfg['min_qualified']} companies passed every test this "
+                                 "results season.")
+    return out, len(passed)
+
+
+def _long_floor(snap, fin, cfg):
+    """Why a company fails the long list's return, cash or debt floors, or
+    None. A lender is judged on its return on equity alone: its debt is its
+    stock in trade and its cash flow follows its lending."""
+    if fin:
+        roe = _fig(snap, "roe_pct")
+        if roe is not None and roe < cfg["roe_min_fin"]:
+            return f"Return on equity {_pc(roe)}%: a lender needs {_pc(cfg['roe_min_fin'])}%."
+        return None
+    roce, cfo = _fig(snap, "roce_pct"), _fig(snap, "cfo_cr")
+    c2p, de = _fig(snap, "cfo_to_pat"), _fig(snap, "debt_equity_x")
+    if roce is not None and roce < cfg["roce_min"]:
+        return f"Return on capital {_pc(roce)}%: the list needs {_pc(cfg['roce_min'])}%."
+    if cfo is not None and cfo <= 0:
+        return "Operations used cash last year."
+    if c2p is not None and c2p < cfg["cfo_to_pat_min"]:
+        return (f"Cash from operations was {_num(c2p, 2)}× profit: the list needs "
+                f"{_num(cfg['cfo_to_pat_min'], 2)}×.")
+    if de is not None and de > cfg["de_max"]:
+        return f"Debt is {_num(de)}× equity: the list allows {_num(cfg['de_max'])}×."
+    return None
+
+
+def _long(sym, g, part, is_calm, snap, ctx):
+    """
+    Long-term compounders: returns on capital backed by cash, growth over
+    three years, clean governance and a fair price, in a calm climb. Returns
+    {"score", "why_not", "exact", "breakdown", "why"}.
+    """
+    cfg = LONG
+    pct = ctx["snap_pct"]
+    fin = bool((snap or {}).get("is_financial"))
+    fpos = _fig(snap, "fcf_pos_years_3y")
+    if fin:
+        quality = pct["roe_fin"].get(sym)
+    else:
+        quality = _mean([pct["roce_pct"].get(sym), pct["cfo_to_pat"].get(sym),
+                         None if fpos is None else fpos / FCF_YEARS, pct["neg_de"].get(sym)])
+    compounding = _mean([pct[k].get(sym) for k in ("rev_cagr_3y", "pat_cagr_3y", "revenue_ttm_yoy_pct",
+                                                    "pat_ttm_yoy_pct", "opm_trend_2y")])
+    pledge, pchg, inst = _fig(snap, "pledge_pct"), _fig(snap, "promoter_chg_4q"), _fig(snap, "fii_dii_chg_1q")
+    governance = _mean([None if pledge is None else
+                        (1.0 if pledge == 0 else max(0.0, 1.0 - pledge / cfg["pledge_scale"])),
+                        None if pchg is None else (1.0 if pchg >= 0 else 0.0),
+                        None if inst is None else (1.0 if inst >= 0 else 0.0)])
+    valuation = _mean([pct["neg_peg"].get(sym)] + ([] if fin else [pct["neg_ev_ebitda"].get(sym)]))
+    trendq = (part["m12"] + part["high"] + part["trend"]) / 3.0
+    values = {"quality": quality, "compounding": compounding, "governance": governance,
+              "valuation": valuation, "trendq": trendq}
+
+    roce, roe, c2p, de = (_fig(snap, k) for k in ("roce_pct", "roe_pct", "cfo_to_pat", "debt_equity_x"))
+    rev3, pat3 = _fig(snap, "rev_cagr_3y"), _fig(snap, "pat_cagr_3y")
+    pe, peg, ev_e = _fig(snap, "pe"), _fig(snap, "peg"), _fig(snap, "ev_ebitda")
+    eps, f = _fig(snap, "eps_ttm"), _fig(snap, "f_score")
+
+    q_line = (_said([(roe is not None, f"return on equity {_pc(roe or 0)}%")]) if fin else
+              _said([(roce is not None, f"return on capital {_pc(roce or 0)}%"),
+                     (c2p is not None, f"cash from operations {_num(c2p or 0)}× profit"),
+                     (fpos is not None, f"free cash flow in {fpos or 0:.0f} of the last {FCF_YEARS} years"),
+                     (de is not None, f"debt {_num(de or 0)}× equity")]))
+    c_line = _said([(rev3 is not None, f"sales {rev3 or 0:+.0f}% a year"),
+                    (pat3 is not None, f"profit {pat3 or 0:+.0f}% a year over three years")])
+    g_line = _said([(pledge is not None, "no shares pledged" if pledge == 0 else f"{_pc(pledge or 0)}% pledged"),
+                    (pchg is not None, f"promoters {pchg or 0:+.1f} pts over the year"),
+                    (inst is not None, f"institutions {inst or 0:+.1f} pts over the quarter")])
+    v_line = _said([(pe is not None, f"P/E {pe or 0:.0f}"), (peg is not None, f"PEG {_num(peg or 0, 2)}"),
+                    (ev_e is not None, f"EV/EBITDA {ev_e or 0:.0f}")])
+    r12 = _finite(g.get("ret_12m"))
+    t_line = _said([(r12 is not None, f"{(r12 or 0) * 100:+.0f}% over 12 months"),
+                    (_high_text(g) is not None, (_high_text(g) or "").lower()),
+                    (_finite(g.get("trend")) is not None, f"straightness {_finite(g.get('trend')) or 0:.0f}/100")])
+    details = {
+        "quality": _cap(q_line) or "Not on file: counted as the middle of the field",
+        "compounding": _cap(c_line) or "No three-year record on file: counted as the middle",
+        "governance": _cap(g_line) or "Pledges and holdings are not on file: counted as the middle",
+        "valuation": (v_line + ", against its own industry") if v_line else
+                     "No valuation on file: counted as the middle",
+        "trendq": _cap(t_line) or "Its year is not on record",
+    }
+    breakdown, score = _breakdown(cfg["mix"], values, details)
+
+    floor_why = _long_floor(snap, fin, cfg) if cfg["floors"] else None
+    priced_out = (cfg["valuation_ceiling"] and pe is not None and pe > cfg["pe_max"]
+                  and not (peg is not None and peg <= cfg["peg_escape"]
+                           and pat3 is not None and pat3 >= cfg["cagr_escape"]))
+    why = None
+    if not g["price"] > g["sma200"]:
+        why = "Under its 200-day average."
+    elif not is_calm:
+        why = VOLATILE_TEXT
+    elif eps is not None and eps <= 0:
+        why = "Lost money over the last four quarters."
+    elif f is not None and f < cfg["f_score_min"]:
+        why = f"F-score {f:.0f} of {F_SCORE_TOP}: the list needs {cfg['f_score_min']:.0f}."
+    elif pledge is not None and pledge > cfg["pledge_max"]:
+        why = f"Promoters have pledged {_pc(pledge)}% of the company."
+    elif floor_why:
+        why = floor_why
+    elif priced_out:
+        why = f"P/E of {pe:.0f}: priced past the list's ceiling of {cfg['pe_max']:.0f}."
+    elif score < cfg["min_score"] * 100.0:
+        why = BELOW_FLOOR_TEXT
+
+    facts = []
+    if fin and roe is not None:
+        facts.append(f"ROE {_pc(roe)}%")
+    elif not fin and (roce is not None or c2p is not None):
+        facts.append(_cap(_said([(roce is not None, f"ROCE {_pc(roce or 0)}%"),
+                                 (c2p is not None, f"cash flow {_num(c2p or 0)}× profit")])))
+    if rev3 is not None:
+        facts.append(f"Sales {rev3:+.0f}% a year for 3 years")
+    if pledge is not None:
+        facts.append("No shares pledged" if pledge == 0 else f"Promoters pledged {_pc(pledge)}%")
+    if pe is not None:
+        facts.append(f"P/E {pe:.0f}" + (f", PEG {_num(peg)}" if peg is not None else ""))
+    if r12 is not None and len(facts) < WHY_MAX:
+        facts.append(f"Up {r12 * 100:.0f}% in a year" if r12 >= 0 else f"Down {abs(r12) * 100:.0f}% in a year")
+    if _high_text(g) and len(facts) < WHY_MAX:
+        facts.append(_high_text(g))
+    return {"score": score, "why_not": why, "exact": score, "breakdown": breakdown, "why": facts[:WHY_MAX]}
+
+
+def next_results_season(day):
+    """(the next results season's first day, whether one is running now).
+    Companies report from about the tenth of the month after a quarter ends,
+    for about fifty days."""
+    day = day or dt.date.today()
+    if isinstance(day, dt.datetime):
+        day = day.date()
+    for year in (day.year - 1, day.year):
+        for m, d in RESULTS_SEASON_STARTS:
+            start = dt.date(year, m, d)
+            if start <= day <= start + dt.timedelta(days=RESULTS_SEASON_DAYS):
+                return start, True
+    starts = sorted(dt.date(y, m, d) for y in (day.year, day.year + 1) for m, d in RESULTS_SEASON_STARTS)
+    return next(s for s in starts if s > day), False
+
+
 def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=None,
-         institutional=None):
+         institutional=None, snapshot=None):
     """
     Score every candidate against the whole liquid universe, for every list.
 
@@ -1547,6 +2224,16 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
     money-flow list's tested names and never chooses them. A candidate may
     carry `listed_sessions`, how long it has traded, when its frame is
     shorter than its history.
+
+    `snapshot` maps a symbol to its fundamentals snapshot (fund_snapshot.build
+    with a price, plus the live-only facts: scan.fundamental_snapshot() live,
+    the lab's point-in-time equivalent in a replay). The three fundamental
+    lists read it, with prices, `results` and `sectors`, and nothing else;
+    the setup lists never read it and keep reading `fundamentals` exactly as
+    they always have. A company with no snapshot, or a figure it has not
+    filed, is the middle of the field on that part and skips the check that
+    needs it.
+
     Returns {SYMBOL: block}. A stock outside
     the universe gets no block: it was not compared, which is different from
     being compared and failing a gate.
@@ -1593,7 +2280,8 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
 
     # Results priced in the last ten sessions, ranked among themselves: the
     # comparison the study made was with other companies that had just reported.
-    events = result_reactions(pool, {str(k).upper(): v for k, v in (results or {}).items()})
+    filings = {str(k).upper(): v for k, v in (results or {}).items()}
+    events = result_reactions(pool, filings)
     reaction = {}
     if len(events) >= RESULTS_MIN_POOL:
         syms = sorted(events)
@@ -1606,6 +2294,18 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
     flow_rows = sector_flow(pool, sectors)
     flow_by = {r["sector"]: r for r in flow_rows}
     flow_top = [r["sector"] for r in flow_rows[:FLOW_SECTORS]]
+
+    # What the three fundamental lists read beside the chart: each company's
+    # filings (an all-empty snapshot is no snapshot), their figures as
+    # percentiles among the established, the month list's month of results
+    # and the After results list, built for every reporter at once because
+    # it is empty unless enough of them pass.
+    snaps = {str(k).upper(): v for k, v in (snapshot or {}).items() if isinstance(v, dict) and v}
+    tabs = {"sectors": sectors, "flow_by": flow_by,
+            "snap_pct": _snapshot_pcts([s for s, _g in pool], snaps, sectors),
+            "events_month": (result_reactions(pool, filings, window=MONTH["result_lookback"])
+                             if MONTH.get("result_guard") else {})}
+    after_results, qualified = _results_list(events, reaction, snaps)
 
     # The market the setups are measured against: the Nifty 500 when the scan
     # could read it, else the median liquid stock.
@@ -1674,10 +2374,10 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
         part["leader"] = (m12[i] + m6[i] + high[i] + trend[i]) / 4.0
         is_calm = calm[i] >= CALM_FLOOR
         ev = events.get(sym)
+        snap = snaps.get(sym) or {}
         lists = {}
         for key, spec in LISTS.items():
-            why_not = None
-            floor = spec.get("leader_floor")
+            why_not, tab = None, None
             if key == "emerging":
                 # Companies listed six to eighteen months (the younger ones
                 # placed against the established universe), in a Stage-2
@@ -1687,13 +2387,16 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
                 score, why_not, exact[(sym, key)] = _emerging(sym, g, part, ctx, age)
                 part[key] = part["leader"]
             elif young and key not in YOUNG_LISTS:
-                # Tested and not admitted: on these lists the younger picks
-                # trailed the average stock in at least one half.
+                # Tested and not admitted: the lists that read a year of
+                # prices and filings, where the younger picks trailed the
+                # average stock in at least one half.
                 score = 0.0
+                elsewhere = ", ".join([LISTS[k]["label"].lower() for k in YOUNG_LISTS] + ["emerging"])
                 why_not = ("Listed under a year. This list needs twelve months of prices; "
-                           f"younger companies are on {', '.join(LISTS[k]['label'].lower() for k in YOUNG_LISTS)} "
-                           "and emerging.")
+                           f"younger companies are on {elsewhere}.")
                 exact[(sym, key)] = -1.0
+                if spec.get("recipe"):
+                    tab = {"breakdown": [], "why": None}
             elif spec.get("kind") == "setup":
                 if key == "short":
                     score, why_not, exact[(sym, key)] = _short(sym, g, part, sectors, flow_by,
@@ -1701,25 +2404,21 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
                 else:
                     score, why_not, exact[(sym, key)] = _setup(key, sym, g, part, is_calm, ctx)
                 part[key] = score / 100.0
-            elif spec.get("event") == "results":
-                score = (part["reaction"] or 0.0) * 100.0
-                if ev is None:
-                    why_not = f"No results priced in the last {RESULTS_WINDOW} sessions."
-                elif part["reaction"] is None:
-                    why_not = (f"Fewer than {RESULTS_MIN_POOL} liquid companies have had results "
-                               f"priced in the last {RESULTS_WINDOW} sessions.")
-                # Ordered on the move itself; the percentile is only how it prints.
-                exact[(sym, key)] = ev["reaction"] if ev else -1.0
+            elif key == "results":
+                tab = after_results.get(sym)
+                if tab is None:
+                    # Not ranked: nothing priced, or too few reporters to rank among.
+                    tab = {"score": 0.0, "exact": -1.0, "breakdown": [], "why": None,
+                           "why_not": (f"No results priced in the last {RESULTS_WINDOW} sessions." if ev is None
+                                       else f"Fewer than {RESULTS_MIN_POOL} liquid companies have had results "
+                                            f"priced in the last {RESULTS_WINDOW} sessions.")}
+                score, why_not, exact[(sym, key)] = tab["score"], tab["why_not"], tab["exact"]
+            elif key == "month":
+                tab = _month(sym, g, part, is_calm, snap, tabs)
+                score, why_not, exact[(sym, key)] = tab["score"], tab["why_not"], tab["exact"]
             else:
-                score = sum(part[k] * w for k, w in spec["mix"].items()) * 100.0
-                if spec.get("trend_gate", True) and not g["uptrend"]:
-                    why_not = "Not in an uptrend: price or its 50-day average is under the 200-day average."
-                elif spec["calm_gate"] and not is_calm:
-                    why_not = "Among the most volatile fifth of liquid stocks."
-                elif floor is not None and part["leader"] < floor:
-                    why_not = (f"Not a market leader: its leader score is under the top "
-                               f"{100 - floor * 100:.0f}% of liquid stocks.")
-                exact[(sym, key)] = score
+                tab = _long(sym, g, part, is_calm, snap, tabs)
+                score, why_not, exact[(sym, key)] = tab["score"], tab["why_not"], tab["exact"]
             fact = ev
             if key == "short":
                 srow = flow_by.get(sectors.get(sym))
@@ -1738,7 +2437,10 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
                 fact = {"listed": _finite(listed.get(sym)) or g.get("sessions")}
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
                           "why_not": why_not, "rank": None,
-                          "why": _why(key, g, calm[i], fact)}
+                          "why": (tab or {}).get("why") or _why(key, g, calm[i], fact)}
+            if tab is not None:
+                # The weighted parts of the score, which add up to it.
+                lists[key]["breakdown"] = tab["breakdown"]
         blocks[sym] = {
             "recipe": RECIPE,
             "universe": len(pool),
@@ -1785,15 +2487,19 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
                 "label": fundamentals[sym].get("quarter")}),
             "sector_flow": flow_by.get(sectors.get(sym)),
             # The result this stock was last priced on, if it was in the last
-            # ten sessions, with how many companies it was ranked among.
+            # ten sessions, with how many companies it was ranked among and
+            # how many of them passed every test of the After results list.
             "results": (None if ev is None else {
                 "filed_at": ev["filed_at"], "session": ev["session"],
                 "sessions_ago": ev["sessions_ago"], "quarter": ev.get("quarter"),
                 "move_pct": round(ev["move"] * 100, 1),
                 "market_move_pct": round(ev["market_move"] * 100, 1),
                 "reaction_pct": round(ev["reaction"] * 100, 1),
+                "vol_x": None if ev.get("vol_x") is None else round(ev["vol_x"], 2),
                 "pat_yoy_pct": ev.get("pat_yoy_pct"), "revenue_yoy_pct": ev.get("revenue_yoy_pct"),
-                "reported": len(events)}),
+                "reported": len(events), "qualified": qualified}),
+            # What its filings say, as the page shows it beside a pick.
+            "fundamentals": ({k: snap.get(k) for k in FUNDAMENTALS_SHOWN} if snap else None),
             "lists": lists,
         }
     # A list that gives way is ranked after the list it gives way to, so it
@@ -1816,6 +2522,23 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
         # and ranking on that would settle every near-tie alphabetically.
         ordered = sorted((s for s in blocks if blocks[s]["lists"][key]["eligible"]),
                          key=lambda s: (-exact[(s, key)], s))
+        # The three fundamental lists hold at most `sector_cap` stocks of one
+        # NSE industry: a strong industry would otherwise fill a list with
+        # stocks that rise and fall together. A stock with no industry on
+        # NSE's list is not capped.
+        cap = int((recipe_of(key) or {}).get("sector_cap") or 0)
+        if cap > 0:
+            held, kept = {}, []
+            for s in ordered:
+                industry = sectors.get(s)
+                if industry and held.get(industry, 0) >= cap:
+                    blocks[s]["lists"][key].update(
+                        eligible=False, why_not=f"{cap} stocks from its industry rank higher on this list.")
+                    continue
+                if industry:
+                    held[industry] = held.get(industry, 0) + 1
+                kept.append(s)
+            ordered = kept
         for n, sym in enumerate(ordered, 1):
             blocks[sym]["lists"][key]["rank"] = n
     return blocks

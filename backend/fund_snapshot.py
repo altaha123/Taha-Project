@@ -61,6 +61,10 @@ YEAR_SPAN_DAYS = (265, 285)
 # Two annual periods a year apart, and four three years apart.
 ONE_YEAR_DAYS = (340, 390)
 THREE_YEAR_DAYS = (1060, 1130)
+# Two quarter-ends one after the other (a quarter is 90 days, give or take).
+QUARTER_APART_DAYS = (80, 100)
+# How many quarters in a row "growing in each of the last four quarters" reads.
+RUN_QUARTERS = 4
 
 # Earnings quality: what a real profit looks like.
 OTHER_INCOME_MAX_PCT = 35.0      # other income as a share of profit before tax
@@ -176,6 +180,26 @@ def _year_ago(rows, row):
     return None
 
 
+def _core_ebitda(row):
+    """
+    EBITDA without exceptional items. The stored EBITDA is worked out from
+    profit after exceptional items (pbt + finance cost + depreciation - other
+    income), so a one-off gain sits inside it; the business's own EBITDA
+    leaves it out. The stored figure when no exceptional line was filed, and
+    None when there is no EBITDA at all.
+    """
+    ebitda, exc = _f((row or {}).get("ebitda_cr")), _f((row or {}).get("exceptional_cr"))
+    if ebitda is None:
+        return None
+    return ebitda - exc if exc is not None else ebitda
+
+
+def _in_a_row(rows):
+    """True when each row's quarter ended one quarter after the next one's."""
+    return all(_apart(a.get("period_end"), b.get("period_end"), QUARTER_APART_DAYS)
+               for a, b in zip(rows, rows[1:]))
+
+
 def _ttm(rows, start):
     """Sum of four consecutive quarters from rows[start], or None per line."""
     four = rows[start:start + 4]
@@ -207,19 +231,28 @@ def _quarters(rows, asof, fin):
         out[k] = _r(_f(top.get(k)))
     for k in ("revenue_cr", "pat_cr", "ebitda_cr", "exceptional_cr", "pbt_cr", "other_income_cr"):
         out[k] = _r(_f(top.get(k)))
-    # The stored EBITDA is worked out from profit after exceptional items
-    # (pbt + finance cost + depreciation - other income), so a one-off gain
-    # sits inside it. The business's own EBITDA leaves it out.
-    exc = _f(top.get("exceptional_cr"))
-    out["core_ebitda_cr"] = (_r(out["ebitda_cr"] - exc) if (out["ebitda_cr"] is not None and exc is not None)
-                             else out["ebitda_cr"])
+    # The stored EBITDA includes exceptional items; the business's own leaves
+    # them out (_core_ebitda).
+    out["core_ebitda_cr"] = _r(_core_ebitda(top))
     ago = _year_ago(rows[1:], top)
     out["opm_yoy_chg"] = None
     if ago is not None and _f(top.get("opm_pct")) is not None and _f(ago.get("opm_pct")) is not None:
         out["opm_yoy_chg"] = _r(_f(top["opm_pct"]) - _f(ago["opm_pct"]))
     out["pat_yoy_cr_prev"] = _r(_f((ago or {}).get("pat_cr")))
+    # The year-ago quarter's revenue and EBITDA without exceptional items, as
+    # figures: a growth rate is only worked out between two positive numbers,
+    # so an EBITDA that rose from a loss has none, yet it did rise.
+    out["revenue_yoy_cr_prev"] = _r(_f((ago or {}).get("revenue_cr")))
+    out["core_ebitda_yoy_cr_prev"] = _r(_core_ebitda(ago)) if ago is not None else None
+    # Revenue growth in each of the latest four quarters, newest first, and
+    # only where the four are quarters in a row: "up in each of the last four
+    # quarters" is never read across a gap. An entry is None where that
+    # quarter's growth is unknown.
+    run = rows[:RUN_QUARTERS]
+    out["revenue_yoy_4q"] = ([_r(_f(r.get("revenue_yoy_pct"))) for r in run]
+                             if len(run) == RUN_QUARTERS and _in_a_row(run) else None)
     # The quarter before, for acceleration: is growth speeding up?
-    prev = rows[1] if len(rows) > 1 and _apart(top.get("period_end"), rows[1].get("period_end"), (80, 100)) else None
+    prev = rows[1] if len(rows) > 1 and _in_a_row(rows[:2]) else None
     out["prev_revenue_yoy_pct"] = _r(_f((prev or {}).get("revenue_yoy_pct")))
     out["prev_pat_yoy_pct"] = _r(_f((prev or {}).get("pat_yoy_pct")))
     prev_chg = None
