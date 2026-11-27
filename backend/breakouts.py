@@ -64,8 +64,10 @@ costs no extra request:
     ★ SELECT  fewer, stronger calls spread across the session. The BOS_*
               variables. On top of the Classic tests:
       - HELD      the break must still be through the level on the next
-                  pass (BOS_CONFIRM_PASSES, 40 seconds), so one wick through
-                  the level at 09:31 is not a call;
+                  pass (BOS_CONFIRM_PASSES), and a pass only counts once
+                  BOS_CONFIRM_MIN_GAP_SEC (15 s) have gone since the last one
+                  that did, so one wick through the level at 09:31 is not a
+                  call, and neither is an extra pass a second later;
       - OWN VOLUME  the last five minutes are compared with what THIS stock
                   trades in those five minutes (its own profile, built from
                   its last five sessions), not with one curve for every stock;
@@ -197,6 +199,10 @@ TAPE = max(60, _i("BO_TAPE", 1200))
 # What the Select lane switched on, here for Classic: every one off, which
 # is today's behaviour. Each can be turned on for Classic too.
 CONFIRM_PASSES = _i("BO_CONFIRM_PASSES", 1)       # passes a break must hold before it is a call
+# A pass counts towards holding a break only this many seconds after the one
+# that last counted: an extra pass a second after the loop's (the owner's
+# "Scan once now", a cron tick) is not a second look at the break.
+CONFIRM_MIN_GAP_SEC = _f("BO_CONFIRM_MIN_GAP_SEC", 15.0)
 USE_PROFILE = _b("BO_USE_PROFILE", False)         # the stock's own 5-minute volume profile
 MIN_RPOS = _f("BO_MIN_RPOS", 0.0)                 # share of the day's range below the price (0 = off)
 MIN_RPOS_VWAP = _f("BO_MIN_RPOS_VWAP", 0.0)       # the same for a VWAP pullback, which sits lower
@@ -255,6 +261,7 @@ SELECT = {
     "MAX_PER_SECTOR": _i("BOS_MAX_PER_SECTOR", 2),
     "MAX_PER_SECTOR_PASS": _i("BOS_MAX_PER_SECTOR_PASS", 1),
     "CONFIRM_PASSES": _i("BOS_CONFIRM_PASSES", 2),
+    "CONFIRM_MIN_GAP_SEC": _f("BOS_CONFIRM_MIN_GAP_SEC", 15.0),   # seconds between passes that count
     "USE_PROFILE": _b("BOS_USE_PROFILE", True),
     "MIN_RPOS": _f("BOS_MIN_RPOS", 0.72),
     "MIN_RPOS_VWAP": _f("BOS_MIN_RPOS_VWAP", 0.50),
@@ -768,7 +775,8 @@ def _cfg(name):
          "MIN_RISK": MIN_RISK, "MAX_RISK": MAX_RISK, "RR": RR, "ROOM_R": ROOM_R,
          "REGIME": REGIME, "MIN_SCORE": MIN_SCORE, "SHORTS": SHORTS,
          "START_MIN": START_MIN, "END_MIN": END_MIN,
-         "CONFIRM_PASSES": CONFIRM_PASSES, "USE_PROFILE": USE_PROFILE,
+         "CONFIRM_PASSES": CONFIRM_PASSES, "CONFIRM_MIN_GAP_SEC": CONFIRM_MIN_GAP_SEC,
+         "USE_PROFILE": USE_PROFILE,
          "MIN_RPOS": MIN_RPOS, "MIN_RPOS_VWAP": MIN_RPOS_VWAP, "MAX_VWAP_EXT": MAX_VWAP_EXT,
          "MAX_BOOK_AGAINST": MAX_BOOK_AGAINST, "BOOK_REJECT": BOOK_REJECT,
          "SECTOR_AGAINST": SECTOR_AGAINST, "PDH_STRICT": PDH_STRICT,
@@ -841,7 +849,10 @@ def _new_day(today, feed):
             "vw": np.full((n, TAPE), np.nan, dtype=np.float32),
             "orb": {}, "orb_done": False, "seen": set(), "hod": {}, "lod": {},
             "lanes": {}, "sectors": {}, "passes": 0, "last": None,
-            "saved_t": 0.0, "saved_at": None, "restored": None}
+            "saved_t": 0.0, "saved_at": None, "restored": None,
+            # Checks that failed on one stock (bad data, a bug): counted for
+            # the page, while the pass goes on with every other stock.
+            "errors": {"n": 0, "last": None, "at": None}}
 
 
 def _lane(d, name):
@@ -861,8 +872,17 @@ def _day(today, feed, now=None):
     levels from memory."""
     d = _mem["day"]
     if d is not None and d["day"] == today and d["asof"] == feed.get("asof"):
-        if d.get("feed") is feed or d["syms"] == list(feed["levels"].keys()):
+        if d.get("feed") is feed:
+            return d
+        if d["syms"] == list(feed["levels"].keys()):
+            # The same stocks, their levels rebuilt: whatever is new on a
+            # stock's ladder is checked against where its price already is.
+            before = _ladder_levels(d.get("feed"))
             d["feed"] = feed
+            try:
+                _new_levels(d, before, feed)
+            except Exception:
+                pass
             return d
     nd = _new_day(today, feed)
     src = d if (d is not None and d["day"] == today) else _load_day(today)
@@ -870,9 +890,83 @@ def _day(today, feed, now=None):
         try:
             _carry(nd, src, (now or now_ist()).timestamp())
         except Exception:
-            nd = _new_day(today, feed)
+            nd, src = _new_day(today, feed), None
+    if src is not None:
+        try:
+            # What the day traded before: the old feed in memory, or the
+            # ladders the checkpoint kept (None from an older checkpoint).
+            before = _ladder_levels(src["feed"]) if src.get("feed") else src.get("ladders")
+            _new_levels(nd, before, feed)
+        except Exception:
+            pass
     _mem["day"] = nd
     return nd
+
+
+def _ladder_levels(feed):
+    """{SYMBOL: [up levels, down levels]}: the prices a feed's ladders trade."""
+    out = {}
+    for sym, lv in ((feed or {}).get("levels") or {}).items():
+        try:
+            out[sym] = [sorted({float(x["l"]) for x in lv.get("up") or ()}),
+                        sorted({float(x["l"]) for x in lv.get("dn") or ()})]
+        except (TypeError, ValueError, KeyError, AttributeError):
+            continue
+    return out
+
+
+def _last_px(d, r):
+    """The last price the tape has for row `r`, or None."""
+    n = int(d.get("n") or 0)
+    if r is None or n <= 0:
+        return None
+    row = d["px"][r, :n]
+    hit = np.flatnonzero(np.isfinite(row))
+    return float(row[hit[-1]]) if hit.size else None
+
+
+def _old_news(d, sym, side, levels, bufs):
+    """A level the day learns of after the session started (the levels
+    rebuilt at 10:40, an opening range backfilled from candles) may have been
+    crossed long before. Where the tape's last price is already through it,
+    it is dead in every lane, as a first look at the stock would have found
+    it: not a fresh break. A stock with no price on the tape gets that first
+    look on its next pass. `bufs` is {lane: BUFFER_PCT}."""
+    px = _last_px(d, d["row"].get(sym))
+    if px is None:
+        d["seen"].discard(sym)
+        return 0
+    sign = 1 if side == "UP" else -1
+    n = 0
+    for name, buf in bufs.items():
+        L = _lane(d, name)
+        armed = L["armed"].get((sym, side)) or {}
+        for lvl in levels:
+            if lvl not in armed and sign * (px - lvl * (1 + sign * buf / 100)) >= 0:
+                L["dead"].add((sym, side, lvl))
+                n += 1
+    return n
+
+
+def _new_levels(d, before, feed):
+    """The levels a stock's ladder gained over `before` ({SYMBOL: [up, dn]},
+    what the day traded until now), each checked by _old_news. With `before`
+    None nothing is known to be new, and nothing is marked."""
+    if before is None:
+        return 0
+    bufs = {name: _cfg(name)["BUFFER_PCT"] for name in LANES}
+    n = 0
+    for sym, (up, dn) in _ladder_levels(feed).items():
+        old = before.get(sym)
+        for side, levels, k in (("UP", up, 0), ("DOWN", dn, 1)):
+            try:
+                had = {float(x) for x in old[k]} if old else set()
+            except (TypeError, ValueError, IndexError, KeyError):
+                had = set()                  # unreadable: every level is checked
+            new = [lvl for lvl in levels if lvl not in had]
+            if new:
+                n += _old_news(d, sym, side, new, bufs)
+    return n
 
 
 def _carry(nd, src, t_now):
@@ -904,6 +998,8 @@ def _carry(nd, src, t_now):
     nd["lanes"] = src.get("lanes") or {}
     nd["saved_t"] = float(src.get("saved_t") or 0.0)
     nd["saved_at"] = src.get("saved_at")
+    if isinstance(src.get("errors"), dict):
+        nd["errors"] = dict(src["errors"])
     if src.get("from_disk"):
         gap = max(0.0, (t_now - nd["saved_t"]) / 60.0)
         # After a long blind gap a stock may have broken out while nobody
@@ -918,11 +1014,14 @@ def _carry(nd, src, t_now):
 
 
 def _lane_blob(L):
-    return {"armed": [[s, sd, float(lvl), float(e["t"]), int(e["n"]), e.get("trig")]
+    # Each armed level: [symbol, side, level, armed at, passes, trigger, last pass counted].
+    return {"armed": [[s, sd, float(lvl), float(e["t"]), int(e["n"]), e.get("trig"),
+                       float(e.get("c") or e["t"])]
                       for (s, sd), m in L["armed"].items() for lvl, e in m.items()],
             "dead": [[s, sd, float(lvl)] for s, sd, lvl in L["dead"]],
             "late": [[s, sd, sorted(float(x) for x in v)] for (s, sd), v in L["late"].items() if v],
-            "rconf": [[s, sd, float(e["l"]), int(e["n"]), int(e["p"])] for (s, sd), e in L["rconf"].items()],
+            "rconf": [[s, sd, float(e["l"]), int(e["n"]), int(e["p"]), float(e.get("c") or 0.0)]
+                      for (s, sd), e in L["rconf"].items()],
             "emitted": list(L["emitted"])[-200:],
             "gates": {code: [list(k) for k in v] for code, v in L["gates"].items()}}
 
@@ -930,14 +1029,21 @@ def _lane_blob(L):
 def _lane_from(blob):
     L = {"armed": {}, "dead": set(), "late": {}, "rconf": {},
          "waiting": {}, "emitted": [], "gates": {}, "since": {}}
-    for s, sd, lvl, t0, n, trig in blob.get("armed") or []:
-        L["armed"].setdefault((s, sd), {})[float(lvl)] = {"t": float(t0), "n": int(n), "trig": trig}
+    # A checkpoint written before the last-counted time was kept has six
+    # fields an armed level and five a range; the time then is the arming.
+    for row in blob.get("armed") or []:
+        s, sd, lvl, t0, n, trig = row[:6]
+        tc = row[6] if len(row) > 6 and row[6] is not None else t0
+        L["armed"].setdefault((s, sd), {})[float(lvl)] = {"t": float(t0), "n": int(n), "trig": trig,
+                                                          "c": float(tc)}
     for s, sd, lvl in blob.get("dead") or []:
         L["dead"].add((s, sd, float(lvl)))
     for s, sd, lv in blob.get("late") or []:
         L["late"][(s, sd)] = {float(x) for x in lv}
-    for s, sd, lvl, n, p in blob.get("rconf") or []:
-        L["rconf"][(s, sd)] = {"l": float(lvl), "n": int(n), "p": int(p)}
+    for row in blob.get("rconf") or []:
+        s, sd, lvl, n, p = row[:5]
+        tc = row[5] if len(row) > 5 and row[5] is not None else 0.0
+        L["rconf"][(s, sd)] = {"l": float(lvl), "n": int(n), "p": int(p), "c": float(tc)}
     L["emitted"] = [e for e in blob.get("emitted") or [] if isinstance(e, dict)]
     for code, v in (blob.get("gates") or {}).items():
         L["gates"][code] = {tuple(k) for k in v}
@@ -958,7 +1064,10 @@ def _save_day(d, now):
             "hod": {s: [float(v[0]), float(v[1])] for s, v in d["hod"].items()},
             "lod": {s: [float(v[0]), float(v[1])] for s, v in d["lod"].items()},
             "saved_t": d["saved_t"], "saved_at": now.strftime("%H:%M:%S"),
-            "lanes": {name: _lane_blob(L) for name, L in d["lanes"].items()}}
+            "lanes": {name: _lane_blob(L) for name, L in d["lanes"].items()},
+            # The levels the day was trading, so a restart onto levels rebuilt
+            # meanwhile can tell which of them are new (_new_levels).
+            "ladders": _ladder_levels(d.get("feed"))}
     tmp = DAY_FILE + ".tmp"
     try:
         raw = json.dumps(meta).encode("utf-8")
@@ -995,6 +1104,7 @@ def _load_day(today):
                    orb_done=meta.get("orb_done"), seen=meta.get("seen"), hod=meta.get("hod"),
                    lod=meta.get("lod"), saved_t=meta.get("saved_t"), saved_at=meta.get("saved_at"),
                    from_disk=True,
+                   ladders=meta.get("ladders") if isinstance(meta.get("ladders"), dict) else None,
                    lanes={name: _lane_from(b) for name, b in (meta.get("lanes") or {}).items()})
         return src
     except Exception:
@@ -1183,6 +1293,7 @@ def set_orb(day, mapping, now=None):
     n = 0
     with _lock:
         d = _day(today, feed, now)
+        bufs = {name: _cfg(name)["BUFFER_PCT"] for name in LANES}
         for sym, v in mapping.items():
             try:
                 hi, lo = float(v[0]), float(v[1])
@@ -1191,6 +1302,10 @@ def set_orb(day, mapping, now=None):
             if sym in d["row"] and hi > lo > 0 and sym not in d["orb"]:
                 d["orb"][sym] = (hi, lo)
                 n += 1
+                # Learned after the fact: a range the price has already left
+                # is old news, as it would have been to a first look.
+                _old_news(d, sym, "UP", [hi], bufs)
+                _old_news(d, sym, "DOWN", [lo], bufs)
         d["orb_done"] = True
     return n
 
@@ -1244,9 +1359,11 @@ def _hod_trig(d, f, sign, mso, i, t, t_now):
             "also": [], "set": t_set, "pause": int(pause)}
 
 
-def _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct):
+def _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct, since=None):
     """A pullback to VWAP that held, in a stock trending with the day and
-    stronger than the index, now breaking its 15-minute high (low)."""
+    stronger than the index, now breaking its 15-minute high (low). After a
+    reclaim that was called, or that ran without its volume, `since` is when
+    that one was armed: the next needs a pullback of its own, after it."""
     vwap = f["vwap"]
     if not vwap or not (VWAP_FROM_MIN <= mso <= VWAP_TO_MIN):
         return None
@@ -1255,6 +1372,8 @@ def _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct):
         return None
     r = f["r"]
     jl = int(np.searchsorted(t, t_now - VWAP_LOOK_MIN * 60))
+    if since:
+        jl = max(jl, int(np.searchsorted(t, since, side="right")))
     px_s = d["px"][r, jl:i].astype(float)
     vw_s = d["vw"][r, jl:i].astype(float)
     ok = np.isfinite(px_s) & np.isfinite(vw_s) & (vw_s > 0)
@@ -1275,15 +1394,31 @@ def _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct):
             "also": []}
 
 
-def _range_held(L, slot, edge, passes):
-    """Consecutive passes a tight-range break has held at (about) one edge."""
+def _range_held(L, slot, edge, passes, t_now=None, gap=0.0):
+    """Consecutive passes a tight-range break has held at (about) one edge.
+    A pass counts only `gap` seconds after the one that last counted; a pass
+    in between that still holds keeps the run going without adding to it."""
     rc = L["rconf"].get(slot)
     if rc and rc["p"] == passes - 1 and abs(rc["l"] / edge - 1) <= 0.0015:
-        rc["n"] += 1
+        if t_now is None or t_now - float(rc.get("c") or 0.0) >= gap:
+            rc["n"] += 1
+            rc["c"] = t_now
         rc["p"] = passes
     else:
-        rc = L["rconf"][slot] = {"l": float(edge), "n": 1, "p": passes}
+        rc = L["rconf"][slot] = {"l": float(edge), "n": 1, "p": passes, "c": t_now}
     return rc["n"]
+
+
+def _called(prior):
+    """(kind, level) of every call a lane already made on one stock and side
+    today: one setup is called once."""
+    out = set()
+    for p in prior or ():
+        try:
+            out.add((str(p.get("kind") or "")[3:], round(float(p.get("level")), 2)))
+        except (TypeError, ValueError, AttributeError):
+            continue
+    return out
 
 
 def _reentry_ok(prior, win):
@@ -1377,6 +1512,17 @@ def _history(c, L, fired, log, today):
     return rows, fm
 
 
+def _fault(d, where, err, now):
+    """One check failed. It is counted, and the last one kept in words, for
+    status(); the pass carries on."""
+    e = d.get("errors")
+    if not isinstance(e, dict):
+        e = d["errors"] = {"n": 0, "last": None, "at": None}
+    e["n"] = int(e.get("n") or 0) + 1
+    e["last"] = f"{where}: {type(err).__name__}: {str(err)[:120]}"
+    e["at"] = now.strftime("%H:%M:%S")
+
+
 def _pass(d, feed, snap, now, mso, i, t, t_now, index_pct, fired, log, active):
     today = d["day"]
     j5 = int(np.searchsorted(t, t_now - 300))
@@ -1401,52 +1547,63 @@ def _pass(d, feed, snap, now, mso, i, t, t_now, index_pct, fired, log, active):
         uni = set(order[:int(c["UNIVERSE"])]) if int(c["UNIVERSE"]) < len(order) else None
         lanes.append((c, L, hist, fm, uni, {}, []))
 
+    # Each stock, and each side of it in each lane, is checked on its own: a
+    # quote or a level that trips a check up costs that one check (counted
+    # in status()), never the pass for every other stock and both lanes.
     for sym, lv in feed["levels"].items():
         q = snap.get(sym)
         r = d["row"].get(sym)
         if not q or r is None:
             continue
-        px, cum, pc = _num(q, "ltp"), _num(q, "volume"), _num(q, "prev_close")
-        if px <= 0 or pc <= 0 or cum <= 0:
+        try:
+            px, cum, pc = _num(q, "ltp"), _num(q, "volume"), _num(q, "prev_close")
+            if px <= 0 or pc <= 0 or cum <= 0:
+                continue
+            atr = float(lv.get("atr") or 2.0)
+            med = float(lv["v"])
+            move = (px / pc - 1) * 100
+            pace = cum / (med * share_day)
+            v0 = float(d["vol"][r, j5]) if share5 > 0 else float("nan")
+            surge = ((cum - v0) / (med * share5)) if (share5 > 0 and np.isfinite(v0) and cum >= v0) else None
+            lo15, hi15 = _span(d["px"][r, j15:i + 1])
+            rl, rh = _span(d["px"][r, jw:je]) if range_ready else (None, None)
+            hi_d, lo_d = (_num(q, "high") or px), (_num(q, "low") or px)
+            sec = lv.get("sector")
+            sm = d["sectors"].get(sec) if sec else None
+            f = {"sym": sym, "r": r, "px": px, "cum": cum, "pc": pc, "opn": _num(q, "open") or pc,
+                 "vwap": _num(q, "vwap") or None, "first": sym not in d["seen"], "atr": atr,
+                 "med": med, "move": move, "pace": pace, "surge": surge,
+                 "lo15": lo15, "hi15": hi15, "rl": rl, "rh": rh,
+                 "tight": bool(rh and (rh - rl) / px * 100 <= max(RANGE_ATR * atr, 0.25)),
+                 "rpos": min(1.0, max(0.0, (px - lo_d) / max(hi_d - lo_d, px * 0.002))),
+                 "sector": sec, "sector_pct": sm[0] if sm else None,
+                 "mf": mflow.get(sec.strip().lower()) if sec else None,
+                 "bq": _num(q, "buy_qty"), "sq": _num(q, "sell_qty"),
+                 "p_pace": None, "p_surge": None}
+            xy = prof.get(sym)
+            if xy is not None:
+                # The stock's own curve: what it trades by now, and in these five
+                # minutes, on a normal day. Floored at a third of the generic
+                # expectation, so a near-empty lunch bucket in five sessions of
+                # history cannot turn a trickle into a "surge".
+                ed = float(np.interp(mso, xy[0], xy[1]))
+                if ed > 0:
+                    f["p_pace"] = cum / max(ed, 0.3 * med * share_day)
+                    if share5 > 0 and np.isfinite(v0) and cum >= v0:
+                        ew = ed - float(np.interp(max(mso - el5, 0.0), xy[0], xy[1]))
+                        f["p_surge"] = (cum - v0) / max(ew, 0.3 * med * share5, 1.0)
+        except Exception as e:
+            _fault(d, sym, e, now)
             continue
-        atr = float(lv.get("atr") or 2.0)
-        med = float(lv["v"])
-        move = (px / pc - 1) * 100
-        pace = cum / (med * share_day)
-        v0 = float(d["vol"][r, j5]) if share5 > 0 else float("nan")
-        surge = ((cum - v0) / (med * share5)) if (share5 > 0 and np.isfinite(v0) and cum >= v0) else None
-        lo15, hi15 = _span(d["px"][r, j15:i + 1])
-        rl, rh = _span(d["px"][r, jw:je]) if range_ready else (None, None)
-        hi_d, lo_d = (_num(q, "high") or px), (_num(q, "low") or px)
-        sec = lv.get("sector")
-        sm = d["sectors"].get(sec) if sec else None
-        f = {"sym": sym, "r": r, "px": px, "cum": cum, "pc": pc, "opn": _num(q, "open") or pc,
-             "vwap": _num(q, "vwap") or None, "first": sym not in d["seen"], "atr": atr,
-             "med": med, "move": move, "pace": pace, "surge": surge,
-             "lo15": lo15, "hi15": hi15, "rl": rl, "rh": rh,
-             "tight": bool(rh and (rh - rl) / px * 100 <= max(RANGE_ATR * atr, 0.25)),
-             "rpos": min(1.0, max(0.0, (px - lo_d) / max(hi_d - lo_d, px * 0.002))),
-             "sector": sec, "sector_pct": sm[0] if sm else None,
-             "mf": mflow.get(sec.strip().lower()) if sec else None,
-             "bq": _num(q, "buy_qty"), "sq": _num(q, "sell_qty"),
-             "p_pace": None, "p_surge": None}
-        xy = prof.get(sym)
-        if xy is not None:
-            # The stock's own curve: what it trades by now, and in these five
-            # minutes, on a normal day. Floored at a third of the generic
-            # expectation, so a near-empty lunch bucket in five sessions of
-            # history cannot turn a trickle into a "surge".
-            ed = float(np.interp(mso, xy[0], xy[1]))
-            if ed > 0:
-                f["p_pace"] = cum / max(ed, 0.3 * med * share_day)
-                if share5 > 0 and np.isfinite(v0) and cum >= v0:
-                    ew = ed - float(np.interp(max(mso - el5, 0.0), xy[0], xy[1]))
-                    f["p_surge"] = (cum - v0) / max(ew, 0.3 * med * share5, 1.0)
         for c, L, hist, fm, uni, W, rows in lanes:
             if uni is not None and sym not in uni:
                 continue
             for sign in ((1, -1) if c["SHORTS"] else (1,)):
-                a = _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, now)
+                try:
+                    a = _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, now)
+                except Exception as e:
+                    _fault(d, f"{sym} {'UP' if sign > 0 else 'DOWN'} {c['name']}", e, now)
+                    continue
                 if a is not None:
                     rows.append(a)
 
@@ -1455,11 +1612,22 @@ def _pass(d, feed, snap, now, mso, i, t, t_now, index_pct, fired, log, active):
         rows = _pace(c, L, rows, W, hist, win)
         for a in rows:
             L["emitted"].append({"symbol": a["symbol"], "direction": a["direction"],
-                                 "kind": a["kind"], "window": a["window"],
+                                 "kind": a["kind"], "level": a.get("level"), "window": a["window"],
                                  "sector": a.get("sector"), "time": a["time"], "date": a["date"]})
         _since(L, W, now)
         L["waiting"] = W
         out.extend(rows)
+    # A Classic call Select did not make: what held Select back on the same
+    # stock and side this pass, for the owner's line under the card. Its
+    # `shadow` covers only Select's quality filters, and an empty one must
+    # not read as "Select would have taken it". (Should Select call it on a
+    # later pass, the two pair and the note is moot.)
+    held = next((W for c, L, hist, fm, uni, W, rows in lanes if c["name"] == "select"), None)
+    if held:
+        for a in out:
+            w = held.get((a["symbol"], a["direction"])) if a["engine"] == "classic" else None
+            if w:
+                a["select_wait"] = {"code": w.get("code"), "why": w.get("why")}
     return out
 
 
@@ -1485,18 +1653,33 @@ def _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, no
             ladder.append({"l": orb[0] if sign > 0 else orb[1],
                            "k": "ORB" if sign > 0 else "ORB_DN", "s": SIG["ORB"], "also": []})
     armed = L["armed"].get(slot)
+    late = L["late"].get(slot, ())
+    called = _called(fm.get(slot))
     # A day-made level armed on an earlier pass stays a candidate until the
-    # price falls back inside it; a new one of the same kind is not looked
-    # for meanwhile, so a stock that keeps rising does not keep resetting it.
+    # price falls back inside it. While it can still fire, a new one of the
+    # same kind is not looked for, so a stock that keeps rising does not keep
+    # resetting it. One that ran without its volume (late) or was called
+    # already holds nothing back: the next setup of its kind is a new one
+    # (a fresh day high needs its own 30-minute pause; a VWAP reclaim, a
+    # pullback of its own after the spent one).
     held = [e["trig"] for e in (armed or {}).values() if e.get("trig")]
-    kinds = {x["k"] for x in held}
+    kinds, since = set(), {}
+    for lvl, e in (armed or {}).items():
+        x = e.get("trig")
+        if not x:
+            continue
+        if lvl in late or (x["k"], round(lvl, 2)) in called:
+            since[x["k"]] = max(since.get(x["k"], 0.0), float(e["t"]))
+        else:
+            kinds.add(x["k"])
     dyn = []
     if c["HOD"] and ("HOD" if sign > 0 else "LOD") not in kinds:
         x = _hod_trig(d, f, sign, mso, i, t, t_now)
         if x:
             dyn.append(x)
-    if c["VWAP"] and ("VWAP" if sign > 0 else "VWAP_DN") not in kinds:
-        x = _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct)
+    vk = "VWAP" if sign > 0 else "VWAP_DN"
+    if c["VWAP"] and vk not in kinds:
+        x = _vwap_trig(d, f, sign, mso, i, t, t_now, index_pct, since=since.get(vk))
         if x:
             dyn.append(x)
     cands = list(ladder)
@@ -1526,8 +1709,8 @@ def _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, no
         key = (sym, side, x["l"])
         armed = L["armed"].setdefault(slot, {})
         day_made = x["k"] in DYNAMIC
-        if key in L["dead"] or x["l"] in L["late"].get(slot, ()):
-            pass
+        if key in L["dead"] or x["l"] in L["late"].get(slot, ()) or (x["k"], round(x["l"], 2)) in called:
+            pass                               # dead, chased, or this very setup already called
         elif not day_made and sign * (pc - x["l"]) > 0:
             L["dead"].add(key)                 # through it before today
         elif x["l"] not in armed:
@@ -1536,10 +1719,15 @@ def _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, no
             if gapped or (f["first"] and mso > c["START_MIN"] + 4):
                 L["dead"].add(key)             # opened through it, or broke before we looked
             else:
-                armed[x["l"]] = {"t": t_now, "n": 1, "trig": x if day_made else None}
+                armed[x["l"]] = {"t": t_now, "n": 1, "trig": x if day_made else None, "c": t_now}
                 trig = x
         else:
-            armed[x["l"]]["n"] += 1
+            e = armed[x["l"]]
+            # Held again, but it only counts as another pass once the one
+            # that last counted is CONFIRM_MIN_GAP_SEC behind.
+            if t_now - float(e.get("c") or e["t"]) >= c["CONFIRM_MIN_GAP_SEC"]:
+                e["n"] += 1
+                e["c"] = t_now
             trig = x
         if trig is not None:
             entry = armed[x["l"]]
@@ -1557,7 +1745,8 @@ def _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, no
     if trig is None:
         trig = {"l": round(edge, 2), "k": "RANGE" if sign > 0 else "RANGE_DN",
                 "s": SIG["RANGE"], "also": []}
-        passes = _range_held(L, slot, edge, d["passes"]) if c["CONFIRM_PASSES"] > 1 else 1
+        passes = (_range_held(L, slot, edge, d["passes"], t_now, c["CONFIRM_MIN_GAP_SEC"])
+                  if c["CONFIRM_PASSES"] > 1 else 1)
     else:
         passes = entry["n"]
     level, kind = trig["l"], trig["k"]
@@ -1593,6 +1782,10 @@ def _side(c, L, d, lv, f, sign, mso, i, t, t_now, index_pct, fm, win, sel, W, no
                         rvol=round(surge if surge is not None else pace, 1), need=need)
     # SIDE
     vwap = f["vwap"]
+    if not vwap and kind in ("VWAP", "VWAP_DN"):
+        # A VWAP reclaim is measured from VWAP and its stop sits across it:
+        # a quote that came without one waits for the next that has it.
+        return wait("novwap", "no VWAP on this quote")
     if vwap and sign * (px - vwap) < 0:
         return wait("vwap", "wrong side of VWAP")
     ext = sign * (px - vwap) / vwap * 100 if vwap else None
@@ -1965,6 +2158,7 @@ def status(now=None):
         orbs = len(d["orb"]) if d else 0
         saved_at = (d or {}).get("saved_at")
         restored = (d or {}).get("restored")
+        errs = dict((d or {}).get("errors") or {})
         pace = pacing(now=now)
     return {
         "enabled": ENABLED,
@@ -1997,6 +2191,9 @@ def status(now=None):
                          for sec, m, n in sectors],
         "money_flow": {"ready": bool(mflow.get("map")), "day": mflow.get("day"),
                        "sectors": len(mflow.get("map") or {})},
+        # Checks that failed on one stock today (the pass went on without
+        # it), and the last one in words.
+        "errors": {"count": int(errs.get("n") or 0), "last": errs.get("last"), "at": errs.get("at")},
     }
 
 
