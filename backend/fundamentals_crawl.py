@@ -46,12 +46,30 @@ GIVE_UP_AFTER = 6            # consecutive failed companies that end a run
 
 
 def universe():
-    """The NSE EQ list, via the scanner that already maintains it."""
+    """The scan's universe, via the scanner that already maintains it: NSE
+    main board, NSE SME and the BSE-only companies."""
     try:
         import scan
         return [s for s in scan.universe() if s]
     except Exception:
         return []
+
+
+def for_source(symbols, source):
+    """
+    The part of the universe a sweep can read. The exchange sweep (source
+    "nse") reads NSE's filings and so leaves out the BSE-only companies, which
+    file with BSE alone: asking NSE for them would spend a request per company
+    on an answer known to be empty. The Yahoo sweeps cover everyone, since
+    Yahoo carries a BSE listing as CODE.BO.
+    """
+    if source != "nse":
+        return list(symbols)
+    try:
+        import listings
+        return [s for s in symbols if not listings.is_bse_code(s)]
+    except Exception:
+        return list(symbols)
 
 
 def _d(raw):
@@ -257,7 +275,11 @@ YF_FRAMES = [
 
 def _ticker(sym):
     import yfinance as yf
-    return yf.Ticker("%s.NS" % sym)
+    try:
+        import listings
+        return yf.Ticker(listings.yahoo_ticker(sym))
+    except Exception:
+        return yf.Ticker("%s.NS" % sym)
 
 
 def crawl_yf_symbol(symbol, **_kw):
@@ -367,9 +389,9 @@ def run(limit=DEFAULT_LIMIT, symbols=None, pause=PAUSE, source="nse"):
     if symbols:
         queue = [s.strip().upper() for s in symbols if s]
     elif source == "yfinance-profile":
-        queue = store.profile_due(universe(), limit=limit)
+        queue = store.profile_due(for_source(universe(), source), limit=limit)
     else:
-        queue = store.due_symbols(universe(), limit=limit, source=source)
+        queue = store.due_symbols(for_source(universe(), source), limit=limit, source=source)
     if not queue:
         out["stopped_early"] = "nothing due"
         return out

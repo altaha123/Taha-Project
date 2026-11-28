@@ -155,10 +155,30 @@ def finish_login(request_token: str) -> dict:
 # ---------------------------------------------------------------------------
 # Instruments: Kite names an equity by exchange and trading symbol, which is
 # the NSE symbol this site already uses. No instrument file is needed.
+#
+# A company listed on BSE alone is keyed here by its scrip code, and Kite
+# names it on BSE by BSE's own short symbol, which listings.py keeps beside
+# the code. A code whose symbol is not known is not sent at all: guessing a
+# trading symbol is how an order lands on a different company.
 # ---------------------------------------------------------------------------
+
+def _bse_code(symbol) -> bool:
+    try:
+        import listings
+        return listings.is_bse_code(symbol)
+    except Exception:
+        return False
+
 
 def instrument(symbol: str):
     s = str(symbol or "").strip().upper()
+    if _bse_code(s):
+        try:
+            import listings
+            t = (listings.info(s) or {}).get("t") or ""
+        except Exception:
+            t = ""
+        return t if re.fullmatch(r"[A-Z0-9&\-]{1,30}", t) else None
     return s if re.fullmatch(r"[A-Z0-9&\-]{1,30}", s) else None
 
 
@@ -213,7 +233,7 @@ def _row(o: dict) -> dict:
 def place(sess: dict, o: dict) -> dict:
     data = {
         "tradingsymbol": o["security_id"],
-        "exchange": "NSE",
+        "exchange": "BSE" if _bse_code(o.get("symbol")) else "NSE",
         "transaction_type": o["side"],
         "order_type": o["type"],              # MARKET, LIMIT, SL, SL-M: Kite's own names
         "quantity": str(int(o["qty"])),

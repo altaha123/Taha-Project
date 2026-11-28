@@ -1445,7 +1445,7 @@
   // The cache key carries a version because the rows it holds are normalised
   // now. A browser holding yesterday's raw payload under the old key would
   // otherwise keep feeding the broken shape back in for a day.
-  var UNI_KEY = 'altaha-universe-v2';
+  var UNI_KEY = 'altaha-universe-v3';
 
   /* /universe answers with {"s": "RELIANCE", "n": "Reliance Industries Limited"}.
      This read it as r.symbol / r.name / r[0] / r[1] — none of which exist on
@@ -1462,7 +1462,11 @@
       var s = String(r.s || r.symbol || r.ticker || r[0] || '').trim().toUpperCase();
       if (!s) continue;
       var n = String(r.n || r.name || r.company || r[1] || '').trim();
-      out.push({ s: s, n: n || s, x: String(r.x || r.exchange || 'NSE').toUpperCase() });
+      var row = { s: s, n: n || s, x: String(r.x || r.exchange || 'NSE').toUpperCase() };
+      // A BSE-only company is keyed by its scrip code; `t` is BSE's short
+      // symbol for it, which is what someone types.
+      if (r.t) row.t = String(r.t).toUpperCase();
+      out.push(row);
     }
     return out;
   }
@@ -1496,8 +1500,12 @@
      names with "itc" in the middle of a word. Same ladder premium-plus.js
      scores with, so the two search boxes agree on what the best answer is. */
   function score(r, q) {
-    var s = r.s, n = (r.n || '').toUpperCase();
+    var s = r.s, n = (r.n || '').toUpperCase(), t = r.t || '';
     if (s === q) return 1000;
+    // An NSE symbol outranks a BSE-only company using the same letters
+    // (ZEAL on NSE, Zeal Aqua's ZEAL on BSE): 1000 against 900.
+    if (t && t === q) return 900;
+    if (t && t.indexOf(q) === 0) return 550 - t.length;
     if (s.indexOf(q) === 0) return 600 - s.length;
     if (n.indexOf(q) === 0) return 400 - n.length / 10;
     if (n.indexOf(' ' + q) > -1) return 300;
@@ -1582,7 +1590,7 @@
         });
         return out;
       }
-      match(q).slice(0, 6).forEach(function (r) { out.push({ kind: 'stock', id: r.s, s: r.s, n: r.n, x: r.x, head: 'Stocks' }); });
+      match(q).slice(0, 6).forEach(function (r) { out.push({ kind: 'stock', id: r.s, s: r.s, n: r.n, x: r.x, t: r.t, head: 'Stocks' }); });
       matchTools(q).forEach(function (t) { var tr = toolRow(t); tr.head = 'Tools'; out.push(tr); });
       out.push({ kind: 'screen', id: 'screen', head: 'Do', q: q });
       if (/portf|holding|my stock/i.test(q)) out.push({ kind: 'tool', id: 'portfolio/portfolio', head: 'Do',
@@ -1596,9 +1604,10 @@
         // A row remembered from an earlier visit carries no exchange; it was
         // picked from this same list, which is the NSE's.
         return '<b class="' + cls + ' stock" role="option" data-i="' + i + '">' +
-          logoTag(r.s, r.n, !r.x || r.x === 'NSE' || r.x === 'BSE') +
-          '<span class="s">' + mark(r.s, q) + '</span>' +
-          '<span class="n">' + mark(r.n || '', q) + '</span>' +
+          // Logos are keyed by NSE symbol; a scrip code has none to find.
+          logoTag(r.s, r.n, !r.x || r.x === 'NSE' || r.x === 'NSE SME') +
+          '<span class="s">' + mark(r.t || r.s, q) + '</span>' +
+          '<span class="n">' + mark(r.n || '', q) + (r.t ? ' · ' + esc(r.s) : '') + '</span>' +
           '<span class="x">' + esc(r.x || 'NSE') + '</span></b>';
       }
       if (r.kind === 'screen') {

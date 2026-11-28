@@ -189,7 +189,7 @@
   function seedRow(r) { var i = r.indexOf(' '); return { s: r.slice(0, i), n: r.slice(i + 1) }; }
 
   var UNIVERSE = SEED.slice();
-  var CACHE_KEY = 'altaha-universe-v1';
+  var CACHE_KEY = 'altaha-universe-v2';
 
   function loadUniverse() {
     try {
@@ -221,8 +221,12 @@
     var out = [];
     for (var i = 0; i < UNIVERSE.length; i++) {
       var r = UNIVERSE[i];
-      var s = r.s, n = (r.n || '').toUpperCase(), sc = 0;
+      var s = r.s, n = (r.n || '').toUpperCase(), t = r.t || '', sc = 0;
       if (s === q) sc = 1000;
+      // `t` is a BSE-only company's own symbol (it is keyed by scrip code).
+      // Below an NSE symbol of the same letters: ZEAL on NSE is not Zeal Aqua.
+      else if (t && t === q) sc = 900;
+      else if (t && t.indexOf(q) === 0) sc = 550 - t.length;
       else if (s.indexOf(q) === 0) sc = 600 - s.length;
       else if (n.indexOf(q) === 0) sc = 400 - n.length / 10;
       else if (n.indexOf(' ' + q) > -1) sc = 300;
@@ -279,9 +283,11 @@
       var logos = window.AltahaLogo;
       list.innerHTML = rows.map(function (r, i) {
         return '<div class="tah-item' + (logos ? ' has-lg' : '') + '" role="option" aria-selected="false" id="' + list.id + '-' + i + '" data-i="' + i + '">' +
-               (logos ? logos.tag(r.s, r.n, !r.us) : '') +
-               '<span class="tah-sym">' + highlight(r.s, q) + '</span>' +
-               '<span class="tah-name">' + highlight(r.n || '', q) + '</span></div>';
+               (logos ? logos.tag(r.s, r.n, !r.us && !/^\d{6}$/.test(r.s)) : '') +
+               '<span class="tah-sym">' + highlight(r.t || r.s, q) + '</span>' +
+               '<span class="tah-name">' + highlight(r.n || '', q) + (r.t ? ' · ' + esc(r.s) : '') + '</span>' +
+               // The board, for anything that is not NSE's main board.
+               (r.x && r.x !== 'NSE' ? '<span class="tah-x">' + esc(r.x) + '</span>' : '') + '</div>';
       }).join('');
       if (!rows.length) list.innerHTML = '<div class="tah-empty" role="status">No matching stocks. Try a company name or symbol.</div>';
       else if (logos) logos.hydrate(list);

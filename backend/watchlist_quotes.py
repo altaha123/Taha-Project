@@ -153,10 +153,19 @@ def _never_backwards(sym, row, now):
     return row
 
 
+def _yahoo_ticker(sym):
+    """534708 -> 534708.BO for a BSE-only company, TCS -> TCS.NS."""
+    try:
+        import listings
+        return listings.yahoo_ticker(sym)
+    except Exception:
+        return f"{sym}.NS"
+
+
 def _yahoo(symbols) -> dict:
     if yf is None or pd is None or not symbols:
         return {}
-    tickers = [f"{s}.NS" for s in symbols]
+    tickers = [_yahoo_ticker(s) for s in symbols]
     try:
         raw = yf.download(tickers, period="3mo", interval="1d", progress=False,
                           auto_adjust=True, threads=False)      # see ythreads.py

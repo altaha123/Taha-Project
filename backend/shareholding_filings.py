@@ -273,7 +273,11 @@ def _safe_doc_url(value):
     if p.scheme != "https" or p.username or not p.netloc:
         return None
     host = p.netloc.lower().split(":")[0]
-    if host != "nseindia.com" and not host.endswith(".nseindia.com"):
+    # NSE moved its filing archive to nsearchives.nseindia.in during 2026:
+    # every shareholding document in the index, main board and SME, is served
+    # from there now, and refusing it emptied every company's filing list.
+    # That one host is allowed by name, not the whole .in domain.
+    if host not in ("nseindia.com", "nsearchives.nseindia.in") and not host.endswith(".nseindia.com"):
         return None
     return str(value)
 
@@ -312,6 +316,14 @@ def is_quarter_end(iso: str) -> bool:
     return (d.month, d.day) in ((3, 31), (6, 30), (9, 30), (12, 31))
 
 
+def _nse_indexes(sym):
+    try:
+        import listings
+        return listings.nse_indexes(sym)
+    except Exception:
+        return ["equities"]
+
+
 def index(symbol: str, force=False):
     """
     Every shareholding filing NSE holds for this symbol, newest first.
@@ -336,15 +348,25 @@ def index(symbol: str, force=False):
                 _index_cache[sym] = (time.time() - INDEX_TTL + STALE_RETRY, rows)
         return rows
 
-    r = _get(NSE_MASTER, params={"index": "equities", "symbol": sym})
-    if r is None:
-        return last_known()
-    try:
-        body = r.json()
-    except Exception:
-        return last_known()
-    if not isinstance(body, list):
-        return last_known()
+    # NSE files an SME company under index=sme and answers index=equities
+    # for it with an empty list (listings.nse_indexes). A BSE-only company has
+    # nothing here at all.
+    indexes = _nse_indexes(sym)
+    if not indexes:
+        return []
+    body = None
+    for idx in indexes:
+        r = _get(NSE_MASTER, params={"index": idx, "symbol": sym})
+        if r is None:
+            return last_known()
+        try:
+            body = r.json()
+        except Exception:
+            return last_known()
+        if not isinstance(body, list):
+            return last_known()
+        if body:
+            break
 
     rows = []
     for raw in body:

@@ -7,7 +7,7 @@
   var delta = function (n) { return finite(n) ? (n > 0 ? '+' : '') + n.toFixed(2) + ' pp' : 'Comparison unavailable'; };
   var kinds = ['Mutual fund', 'Insurance', 'Pension fund', 'Institution', 'Foreign institution', 'Foreign portfolio investor'];
   function source(url, text) {
-    try { var u = new URL(url); if (u.protocol !== 'https:' || !/(^|\.)nseindia\.com$/.test(u.hostname)) return ''; }
+    try { var u = new URL(url); if (u.protocol !== 'https:' || !(/(^|\.)nseindia\.com$/.test(u.hostname) || u.hostname === 'nsearchives.nseindia.in')) return ''; }
     catch (_) { return ''; }
     return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(text || 'Exchange filing ↗') + '</a>';
   }

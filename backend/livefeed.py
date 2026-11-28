@@ -58,6 +58,24 @@ HEADER_LEN = 8                 # code(1) + msg_len(2) + segment(1) + security_id
 MAX_PER_MESSAGE = 100          # Dhan's cap per subscribe message
 
 EXCHANGE_SEGMENT = "NSE_EQ"
+# The segment byte Dhan puts at offset 3 of every packet, by segment name. A
+# company listed on BSE alone streams on BSE_EQ, and its security id (its BSE
+# scrip code) can be the same number as an unrelated NSE id, so a price is
+# matched to a symbol by segment AND id, never by id alone.
+SEGMENT_CODES = {"NSE_EQ": 1, "BSE_EQ": 4}
+
+
+def _segment(sym):
+    try:
+        import listings
+        return listings.dhan_segment(sym)
+    except Exception:
+        return EXCHANGE_SEGMENT
+
+
+def _key(segment, sid):
+    """One wire identity: '1:2885' is NSE_EQ id 2885, '4:534708' BSE_EQ."""
+    return f"{SEGMENT_CODES.get(segment, 1)}:{sid}"
 
 # How long a symbol stays subscribed after the last viewer leaves. Avoids
 # thrashing the subscription when someone flips between two stocks.
@@ -81,9 +99,9 @@ class _Feed:
     def __init__(self):
         self.prices = {}           # symbol -> {"ltp": float, "at": epoch}
         self.watch = {}            # symbol -> last-wanted epoch (for linger)
-        self.sid_to_sym = {}       # Dhan securityId -> symbol
-        self.sym_to_sid = {}
-        self.subscribed = set()    # securityIds currently live on the socket
+        self.sid_to_sym = {}       # "segment-code:securityId" -> symbol (see _key)
+        self.sym_to_sid = {}       # symbol -> "segment-code:securityId"
+        self.subscribed = set()    # keys currently live on the socket
         self.ws = None
         self.task = None
         self.mode = "idle"         # "websocket" | "rest" | "idle"
@@ -99,7 +117,7 @@ class _Feed:
         now = time.time()
         resolved = []
         for s in symbols:
-            sym = (s or "").upper().replace(".NS", "").strip()
+            sym = (s or "").upper().replace(".NS", "").replace(".BO", "").strip()
             if not sym:
                 continue
             self.watch[sym] = now
@@ -109,9 +127,9 @@ class _Feed:
                 except Exception:
                     sid = None
                 if sid:
-                    sid = str(sid)
-                    self.sym_to_sid[sym] = sid
-                    self.sid_to_sym[sid] = sym
+                    k = _key(_segment(sym), sid)
+                    self.sym_to_sid[sym] = k
+                    self.sid_to_sym[k] = sym
             if sym in self.sym_to_sid:
                 resolved.append(sym)
         self._wake.set()
@@ -121,7 +139,7 @@ class _Feed:
         """Latest known price for each symbol, or None."""
         out = {}
         for s in symbols:
-            sym = (s or "").upper().replace(".NS", "").strip()
+            sym = (s or "").upper().replace(".NS", "").replace(".BO", "").strip()
             p = self.prices.get(sym)
             if p:
                 out[sym] = {"ltp": p["ltp"], "age": round(time.time() - p["at"], 1)}
@@ -263,8 +281,9 @@ class _Feed:
                     "RequestCode": REQ_SUBSCRIBE_TICKER,
                     "InstrumentCount": len(chunk),
                     "InstrumentList": [
-                        {"ExchangeSegment": EXCHANGE_SEGMENT, "SecurityId": sid}
-                        for sid in chunk
+                        {"ExchangeSegment": "BSE_EQ" if k.startswith("4:") else EXCHANGE_SEGMENT,
+                         "SecurityId": k.split(":", 1)[1]}
+                        for k in chunk
                     ],
                 }
                 await ws.send(json.dumps(msg))
@@ -293,6 +312,7 @@ class _Feed:
             try:
                 code = buf[pos]
                 msg_len = struct.unpack_from("<h", buf, pos + 1)[0]
+                seg = buf[pos + 3]
                 sid = struct.unpack_from("<i", buf, pos + 4)[0]
             except Exception:
                 return
@@ -311,7 +331,7 @@ class _Feed:
                     ltp = struct.unpack_from("<f", buf, pos + 8)[0]
                 except Exception:
                     ltp = None
-                sym = self.sid_to_sym.get(str(sid))
+                sym = self.sid_to_sym.get(f"{seg}:{sid}")
                 if sym and ltp and ltp > 0 and code == FEED_TICKER:
                     self.prices[sym] = {"ltp": round(float(ltp), 2), "at": now}
 
@@ -387,7 +407,7 @@ async def sse_quotes(tickers: str):
     `{"ltp": ...}` for a single symbol and `{"SYM": {"ltp": ...}}` for several,
     which is the contract this honours.
     """
-    syms = [s.strip().upper().replace(".NS", "")
+    syms = [s.strip().upper().replace(".NS", "").replace(".BO", "")
             for s in (tickers or "").split(",") if s.strip()]
     syms = syms[:50]
     if not syms:

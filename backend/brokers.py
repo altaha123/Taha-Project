@@ -571,6 +571,14 @@ def _num(v, what):
     return round(f, 2)
 
 
+def _lot(sym) -> int:
+    try:
+        import listings
+        return int(listings.lot_size(sym) or 1)
+    except Exception:
+        return 1
+
+
 def clean_order(raw: dict, market_price=None) -> dict:
     """The order as the broker will get it, or ValueError with the sentence
     the ticket shows. Pure: the tests drive every rule through here."""
@@ -591,6 +599,12 @@ def clean_order(raw: dict, market_price=None) -> dict:
     qty = int(qf)
     if qty > MAX_QTY:
         raise ValueError(f"At most {MAX_QTY:,} shares in one order.")
+    # An SME share trades only in the exchange's lot; any other quantity is
+    # refused by the exchange, so it is refused here first, in words.
+    lot = _lot(sym)
+    if lot > 1 and qty % lot:
+        raise ValueError(f"{sym} trades in lots of {lot:,} shares. Choose a multiple of "
+                         f"{lot:,}, such as {max(lot, qty - qty % lot):,}.")
     otype = str(raw.get("type") or "").upper()
     if otype not in TYPES:
         raise ValueError("Choose Market, Limit, SL or SL-M.")

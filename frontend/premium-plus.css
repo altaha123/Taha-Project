@@ -78,6 +78,13 @@
   font-size: var(--fs-small); color: var(--text-muted); letter-spacing: normal;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* The board, shown only when it is not NSE's main board: NSE SME, BSE,
+   BSE SME. Same chip as the header search's exchange label. */
+.tah-x {
+  flex: 0 0 auto; margin-left: auto; font: 600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing: var(--ls-label); color: var(--text-muted); border: 1px solid var(--border);
+  border-radius: var(--r-xs); padding: 3px 4px; white-space: nowrap;
+}
 .tah b { color: var(--text-primary); font-weight: 600; }
 html[data-theme="dark"] .tah b { color: var(--text-primary); }
 

@@ -67,3 +67,10 @@ research/.ideas-data/
 # production and is filled by backend/backfill_money_flow.py anywhere else.
 altaha_money_flow.db
 altaha_money_flow.db-*
+
+# The exchange lists behind the universe (listings.py). Cache, never source:
+# rebuilt from NSE and the Dhan instrument master once a day.
+listings_master.json
+listings_master.json.tmp
+listings_nse_sme.json
+listings_nse_sme.json.tmp

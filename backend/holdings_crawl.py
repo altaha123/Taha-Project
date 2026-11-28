@@ -48,13 +48,22 @@ GIVE_UP_AFTER = 8            # consecutive failures that end a run early
 
 
 def universe():
-    """The NSE EQ list, via the scanner that already maintains it."""
+    """
+    The scan's NSE companies, main board and SME, via the scanner that already
+    maintains the list. The ledger is read from NSE's shareholding filings, so
+    the BSE-only companies (keyed by six-digit scrip code) are left out: NSE
+    holds no filing for them, and asking would cost a request each.
+    """
     try:
         import scan
         syms = scan.universe()
-        return [s for s in syms if s]
     except Exception:
         return []
+    try:
+        import listings
+        return [s for s in syms if s and not listings.is_bse_code(s)]
+    except Exception:
+        return [s for s in syms if s]
 
 
 def crawl_symbol(symbol, quarters=DEFAULT_QUARTERS):

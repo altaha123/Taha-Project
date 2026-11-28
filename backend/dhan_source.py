@@ -30,6 +30,23 @@ import requests
 
 import market_calendar
 
+try:
+    import listings
+except Exception:                                   # pragma: no cover
+    listings = None
+
+
+def _segment(symbol):
+    """NSE_EQ, or BSE_EQ for a BSE-only company's six-digit scrip code
+    (listings.py has why those are keyed by code)."""
+    if listings is not None:
+        return listings.dhan_segment(symbol)
+    return "NSE_EQ"
+
+
+def _bare(symbol):
+    return str(symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+
 BASE = "https://api.dhan.co/v2"
 IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
 SCRIP_URLS = [
@@ -153,7 +170,13 @@ def _pick(cols, *names):
 
 def load_scrip(force=False) -> dict:
     """
-    Return {SYMBOL: securityId} for NSE equity.
+    Return {SYMBOL: securityId} for NSE equity, plus {CODE: CODE} for every
+    BSE equity share.
+
+    One map holds both because their keys cannot meet: no NSE symbol is all
+    digits, and a BSE-only company is keyed by its six-digit scrip code, which
+    is also its Dhan security id. The segment a key belongs to is decided by
+    its shape (_segment), never by which part of the file it came from.
 
     Streamed line-by-line and parsed with the csv module rather than pandas:
     the master file carries ~150k rows across all segments, and loading it into
@@ -189,13 +212,28 @@ def load_scrip(force=False) -> dict:
                             "sm_symbol_name", "symbol_name", "sem_custom_symbol")
                 i_sid = col("security_id", "sem_smst_security_id", "securityid")
                 i_ins = col("instrument", "sem_instrument_name", "instrument_type")
+                i_typ = col("sem_exch_instrument_type", "instrument_type")
+                if i_typ == i_ins:
+                    i_typ = None
                 if i_sym is None or i_sid is None:
                     continue
 
                 m = {}
                 for row in reader:
                     try:
-                        if i_seg is not None and row[i_seg].strip().upper() not in ("NSE", "NSE_EQ", "E"):
+                        exch = row[i_seg].strip().upper() if i_seg is not None else "NSE"
+                        if exch in ("BSE", "BSE_EQ"):
+                            # BSE equity shares only, keyed by scrip code: the
+                            # EQUITY instrument also covers BSE's bonds and ETFs.
+                            if i_ins is not None and "EQUITY" not in row[i_ins].strip().upper():
+                                continue
+                            if i_typ is not None and row[i_typ].strip().upper() != "ES":
+                                continue
+                            code = str(int(float(row[i_sid])))
+                            if len(code) == 6 and code not in m:
+                                m[code] = code
+                            continue
+                        if exch not in ("NSE", "NSE_EQ", "E"):
                             continue
                         if i_ins is not None and "EQUITY" not in row[i_ins].strip().upper():
                             continue
@@ -219,8 +257,7 @@ def load_scrip(force=False) -> dict:
 
 
 def security_id(symbol: str):
-    base = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
-    return load_scrip().get(base)
+    return load_scrip().get(_bare(symbol))
 
 
 # ---------------------------------------------------------------------------
@@ -313,7 +350,7 @@ def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
     today = _india_today()
     body = {
         "securityId": sid,
-        "exchangeSegment": "NSE_EQ",
+        "exchangeSegment": _segment(symbol),
         "instrument": "EQUITY",
         "expiryCode": 0,
         "fromDate": str(today - dt.timedelta(days=days)),
@@ -433,7 +470,7 @@ def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
     today = _india_today()
     body = {
         "securityId": sid,
-        "exchangeSegment": "NSE_EQ",
+        "exchangeSegment": _segment(symbol),
         "instrument": "EQUITY",
         "interval": str(interval),
         "fromDate": str(today - dt.timedelta(days=days)),
@@ -510,10 +547,10 @@ def _throttle_quote():
         _last_quote["at"] = time.time()
 
 
-def _quote_call(path: str, ids: list) -> dict:
-    """POST a batch of security IDs to a marketfeed endpoint."""
+def _quote_call(path: str, ids: list, segment: str = "NSE_EQ") -> dict:
+    """POST a batch of security IDs on one segment to a marketfeed endpoint."""
     _throttle_quote()
-    body = {"NSE_EQ": [int(i) for i in ids]}
+    body = {segment: [int(i) for i in ids]}
     try:
         r = requests.post(f"{BASE}/marketfeed/{path}", json=body, headers=_headers(), timeout=25)
         if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
@@ -525,7 +562,7 @@ def _quote_call(path: str, ids: list) -> dict:
     except Exception:
         return {}
     data = payload.get("data") or payload
-    seg = data.get("NSE_EQ") if isinstance(data, dict) else None
+    seg = data.get(segment) if isinstance(data, dict) else None
     return seg or {}
 
 
@@ -538,17 +575,25 @@ def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
     if not configured():
         return {}
     scrip = load_scrip()
-    pairs = [(s, scrip.get(s.upper().replace(".NS", ""))) for s in symbols]
+    pairs = [(s, scrip.get(_bare(s))) for s in symbols]
     pairs = [(s, sid) for s, sid in pairs if sid]
     if not pairs:
         return {}
-    by_id = {str(sid): s for s, sid in pairs}
+    # One call per segment: an NSE id and a BSE code can be the same number
+    # for two different companies, so the answer is read back per segment.
+    by_seg = {}
+    for s, sid in pairs:
+        by_seg.setdefault(_segment(s), []).append((s, sid))
 
     out = {}
-    ids = [sid for _, sid in pairs]
-    for i in range(0, len(ids), BULK_MAX):
-        chunk = ids[i:i + BULK_MAX]
-        seg = _quote_call(mode, chunk)
+    batches = []
+    for segment, seg_pairs in by_seg.items():
+        ids = [sid for _, sid in seg_pairs]
+        lookup = {str(sid): s for s, sid in seg_pairs}
+        for i in range(0, len(ids), BULK_MAX):
+            batches.append((segment, ids[i:i + BULK_MAX], lookup))
+    for segment, chunk, by_id in batches:
+        seg = _quote_call(mode, chunk, segment)
         for sid, row in (seg or {}).items():
             sym = by_id.get(str(sid))
             if not sym or not isinstance(row, dict):
@@ -754,6 +799,8 @@ def underlying_ref(symbol: str):
     if s in INDEX_UNDERLYING:
         ref = INDEX_UNDERLYING[s]
         return ref["scrip"], ref["seg"]
+    if _segment(s) != "NSE_EQ":
+        return None, None          # options trade on NSE underlyings only
     sid = security_id(s)
     return (int(sid), "NSE_EQ") if sid else (None, None)
 

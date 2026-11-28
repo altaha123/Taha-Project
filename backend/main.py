@@ -37,6 +37,7 @@ except Exception:
 import io
 import csv
 import scan as scanner
+import listings
 from scan_preview import ScanPreview
 import announcements as ann
 import ideas as ideas_engine
@@ -846,9 +847,12 @@ def datasource():
 @app.get("/universe")
 def universe_list():
     """
-    Symbol and company name for every NSE equity, for the search typeahead.
+    Symbol and company name for every company the site covers, for the
+    search typeahead: NSE main board and SME, and the companies listed on BSE
+    alone (keyed by scrip code, with their BSE symbol as `t`). `x` is the
+    board, one of listings.BOARDS.
 
-    Roughly 2,000 rows / ~90 KB. The client caches it in localStorage for a
+    Roughly 5,200 rows / ~300 KB. The client caches it in localStorage for a
     day, so this is fetched once per user per day rather than once per
     keystroke. Cache-Control lets any CDN in front of this do the same.
 
@@ -864,6 +868,28 @@ def universe_list():
         {"rows": rows, "count": len(rows)},
         headers={"Cache-Control": "public, max-age=86400"},
     )
+
+
+@app.get("/universe/status")
+def universe_status():
+    """What each list behind the universe holds: NSE SME rows, the BSE master
+    and how old it is, and which BSE groups the scan skips."""
+    try:
+        return listings.status()
+    except Exception as e:
+        return {"error": str(e)[:160]}
+
+
+def _listing_of(sym):
+    """listings.describe() for an Indian ticker (.NS, .BO or a BSE scrip
+    code), None for anything else: a bare US ticker is not an NSE listing."""
+    raw = str(sym or "").strip().upper()
+    if not (raw.endswith((".NS", ".BO")) or listings.is_bse_code(raw)):
+        return None
+    try:
+        return listings.describe(raw)
+    except Exception:
+        return None
 
 
 def _rss_mb():
@@ -4392,19 +4418,24 @@ def altaha_special_refresh(days_back: int = 420,
 
 
 @app.get("/leaderboard")
-def leaderboard(limit: int = 5):
+def leaderboard(limit: int = 5, board: str = "main"):
+    """The scan's top names. board=main (the default) is NSE and BSE main
+    board; board=sme is the NSE SME and BSE SME list, ranked apart."""
     p = _state["payload"]
     if not p:
         return {"available": False, "status": _state["status"],
                 "message": "No ranking generated yet."}
+    sme = str(board or "").lower() == "sme"
     return {
+        "board": "sme" if sme else "main",
+        "scored_by_board": p.get("scored_by_board"),
         "available": True,
         "status": _state["status"],
         "scanned_at": p.get("scanned_at"),
         "universe_size": p.get("universe_size"),
         "scored": p.get("scored"),
         "methodology": p.get("methodology"),
-        "rankings": p.get("rankings", [])[: max(1, min(limit, 25))],
+        "rankings": (p.get("sme_rankings") if sme else p.get("rankings", []) or [])[: max(1, min(limit, 25))],
         "disclaimer": DISCLAIMER,
     }
 
@@ -4553,9 +4584,10 @@ def _analyse_holding(item, cached=None):
     # The initial quote/scan valuation survives a history or scoring failure.
     row = dict(cached or _pf_row(item))
     try:
-        sym, t, hist = resolve(item["symbol"] + ".NS")
-        if not sym.endswith(".NS"):
-            raise ValueError("Only INR NSE listings are supported")
+        import listings as _listings      # a BSE-only company is CODE.BO
+        sym, t, hist = resolve(_listings.ticker_key(item["symbol"]))
+        if not sym.endswith((".NS", ".BO")):
+            raise ValueError("Only INR NSE and BSE listings are supported")
         price = PI.number(hist["Close"].iloc[-1])
         if price is not None and price > 0 and row.get("price_source") != "Dhan quote (exchange time unavailable)":
             row.update(price=price, value=round(item["qty"]*price,2), error=None,
@@ -6731,6 +6763,9 @@ def analyze(ticker: str, horizon: str = "position"):
         "ticker": sym,
         "name": info.get("longName") or info.get("shortName") or sym.replace(".NS", "").replace(".BO", ""),
         "exchange": "NSE" if sym.endswith(".NS") else ("BSE" if sym.endswith(".BO") else info.get("exchange", "US")),
+        # The board, and for an SME company the lot it trades in: the page
+        # labels the listing and says a quantity must be a multiple of the lot.
+        "listing": _listing_of(sym),
         "currency": currency,
         "price": tech["price"],
         "atr_pct": tech["atr_pct"],
