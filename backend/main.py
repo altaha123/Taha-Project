@@ -853,6 +853,11 @@ def datasource():
             "token": dhan.token_info(), "calendar": calendar}
 
 
+# Bumped whenever the shape or coverage of /universe changes; the pages ask at
+# /universe?v=N and save only a list with v >= N. 4: NSE SME and BSE-only rows.
+UNIVERSE_VERSION = 4
+
+
 @app.get("/universe")
 def universe_list():
     """
@@ -873,9 +878,16 @@ def universe_list():
         rows = scanner.universe_with_names()
     except Exception:
         rows = []
+    # An hour, not a day. A day was how a browser that asked before the SME
+    # and BSE boards were deployed kept the NSE-only list until midnight: the
+    # page asks again, the browser answers from its own copy. The pages also
+    # ask at a versioned address (/universe?v=N), which no old copy can answer.
     return JSONResponse(
-        {"rows": rows, "count": len(rows)},
-        headers={"Cache-Control": "public, max-age=86400"},
+        # `v` is the list's version. The pages save a list only when it is at
+        # least the version they were built for, so a page deployed before
+        # this server cannot keep an older list for the day.
+        {"rows": rows, "count": len(rows), "v": UNIVERSE_VERSION},
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 

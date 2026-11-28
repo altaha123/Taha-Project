@@ -1450,7 +1450,15 @@
   // The cache key carries a version because the rows it holds are normalised
   // now. A browser holding yesterday's raw payload under the old key would
   // otherwise keep feeding the broken shape back in for a day.
-  var UNI_KEY = 'altaha-universe-v3';
+  /* The company list, and the address it is asked for at. Both carry a
+     version. /universe used to be cached by the browser for a day, so a page
+     that asked before the SME and BSE boards were deployed kept the
+     NSE-only list (and wrote it into localStorage) for the rest of the day:
+     Vilas Transcore could not be found. A new address cannot be answered
+     from that old copy, and a new key drops the old saved one. Bump both
+     together whenever the shape or the coverage of the list changes. */
+  var UNI_KEY = 'altaha-universe-v4';
+  var UNI_PATH = '/universe?v=4';
 
   /* /universe answers with {"s": "RELIANCE", "n": "Reliance Industries Limited"}.
      This read it as r.symbol / r.name / r[0] / r[1] — none of which exist on
@@ -1490,8 +1498,11 @@
       }
     } catch (e) {}
     try { localStorage.removeItem('altaha-universe'); } catch (e) {}
-    get('/universe', 12000).then(function (d) {
+    get(UNI_PATH, 12000).then(function (d) {
       UNIVERSE = normalise((d && d.rows) || []);
+      // Used for this visit either way, but saved for the day only when the
+      // server is at least as new as this page (see the note above UNI_KEY).
+      if (!(d && d.v >= 4)) return;
       try {
         localStorage.setItem(UNI_KEY, JSON.stringify({
           day: new Date().toISOString().slice(0, 10), rows: UNIVERSE
