@@ -1,6 +1,6 @@
 # Altaha Screener — Where Logic Meets Validations
 
-Type any Indian (NSE/BSE) or US stock symbol. Get a 0–100 composite score built from a
+Type any Indian (NSE main board, NSE SME or BSE) or US stock symbol. Get a 0–100 composite score built from a
 validated technical engine (EMA structure, Hull MA, RSI, MACD, ADX, Supertrend, 52-week
 position) and a fundamental engine (full 9-point Piotroski F-Score, ROCE, leverage,
 growth, valuation). Every score expands into an audit trail: inputs → formula → points.
@@ -633,6 +633,63 @@ not read `stock.html` from the site; it retries each minute.
 
 `backend/tests/test_company_pages.py` and
 `frontend/tests/company-page-browser.cjs` pin all of the above.
+
+---
+
+## Which companies are covered — NSE, NSE SME and BSE
+
+The universe is four boards, about 5,450 companies (Nov 2026). Each is
+labelled wherever it appears: the search boxes, the stock page and every scan row.
+
+| Board | Where the list comes from | Key | Roughly |
+|---|---|---|---|
+| **NSE** (main board) | NSE's `EQUITY_L.csv`, series EQ | NSE symbol, `TCS` | 2,420 |
+| **NSE SME** (Emerge) | NSE's `SME_EQUITY_L.csv`, series SM and ST | NSE symbol, `AAKAAR` | 580 |
+| **BSE** (BSE only) | Dhan's instrument master, BSE equity shares whose ISIN is not on NSE | BSE scrip code, `500012` | 1,880 |
+| **BSE SME** (BSE only) | the same, groups M, MT and MS | BSE scrip code, `534708` | 570 |
+
+`backend/listings.py` holds the rules; the points that matter:
+
+- **A company on both exchanges is covered once**, under its NSE symbol.
+  NSE and BSE listings are matched by ISIN, so a dual listing is never added
+  a second time.
+- **A BSE-only company is keyed by its six-digit scrip code**, not BSE's
+  short symbol. No NSE symbol is all digits, while seven BSE-only companies
+  use a symbol NSE gives to a different company (BSE's ZEAL is Zeal Aqua,
+  NSE's ZEAL is Zeal Global). The short symbol is kept beside the code, so
+  you can search by either one or by the name.
+  It is also what Yahoo knows the listing by (`ANDHRAPET.BO`; Yahoo has
+  nothing under `500012.BO`). Dhan's BSE security id *is* the scrip code.
+- **SME companies are scored, not picked.** They get the same 0–100 score as
+  everything else, so a 70 means the same on either board. They are left out
+  of the Ideas lists, breakout alerts and sector money flow, which read
+  52-week highs and volume surges: on a stock that trades in lots of 1,200
+  and can move 20% on a few trades, those signals mean the least. The
+  scan ranks them in a list of their own (`/leaderboard?board=sme`).
+  SME names may take at most 12% of the depth pass (`SCAN_SME_SHARE`).
+- **SME companies report every six months.** The quarterly factors only
+  accept a three-month period, so a half-year profit is never read as one
+  quarter's. NSE files SME results and shareholding under `index=sme`.
+  The results reader and the shareholding reader ask for that index, and
+  never ask NSE about a BSE-only company.
+- **Lots.** An SME share trades only in whole lots. The stock page says how
+  many shares a lot is, and the order ticket and the server both refuse a
+  quantity that is not a multiple of it.
+- **BSE-only fundamentals** come from Yahoo (annual statements, through the
+  Yahoo sweep of the fundamentals crawl), because those companies file with
+  BSE, not NSE. Their quarterly XBRL factors and the holdings ledger are not
+  filled for them yet.
+- **The scan skips BSE groups Z and ZP** (companies BSE has flagged for not
+  meeting listing or depository rules; `BSE_SCAN_SKIP_GROUPS`). They are
+  still searchable and scored when someone opens one.
+- **Cost.** One bulk quote call per segment drops the illiquid names before
+  any history is read. Untraded BSE-only and SME names are dropped there
+  too, so most of the 3,000 additions cost no request at all.
+
+Switches: `UNIVERSE_SME=0` or `UNIVERSE_BSE=0` takes a board back out.
+`GET /universe/status` shows what each list holds and how old the BSE list is.
+The lists are saved to the data disk and read from the source once a day:
+`listings_master.json` and `listings_nse_sme.json`.
 
 ---
 

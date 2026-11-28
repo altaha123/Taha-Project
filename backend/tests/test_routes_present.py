@@ -293,6 +293,7 @@ POST    /tracker/remove
 GET     /tracker/stats
 POST    /tracker/update
 GET     /universe
+GET     /universe/status
 GET     /unsubscribe
 POST    /unsubscribe
 GET     /watchlist/featured

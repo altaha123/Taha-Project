@@ -241,12 +241,20 @@ def _returns_dhan(symbols, sessions):
     return out, bench, None
 
 
+def _yahoo_ticker(sym):
+    try:
+        import listings
+        return listings.yahoo_ticker(sym)
+    except Exception:
+        return f"{sym}.NS"
+
+
 def _returns_yahoo(symbols, sessions):
     """Fallback only. One batched download for the whole basket."""
     if yf is None or pd is None or not symbols:
         return None, None, "Yahoo unavailable on this server"
 
-    tickers = [f"{s}.NS" for s in symbols]
+    tickers = [_yahoo_ticker(s) for s in symbols]
     try:
         raw = yf.download(tickers, period="3mo", interval="1d",
                           progress=False, auto_adjust=True,

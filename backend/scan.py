@@ -44,6 +44,7 @@ except Exception:
     dhan = None
 
 from engine import technical_score, fundamental_score, composite
+import listings
 import archetypes as A
 import profiles as PR
 import multifactor
@@ -234,6 +235,12 @@ CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
 # the leaders' share to two-thirds, so the technical cohort keeps the 65
 # places it had.
 LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "130") or 130)
+# The most of the depth pass the SME boards may take. They are scored on the
+# same scale as everything else but ranked in a list of their own, and without
+# a cap a day when a few dozen thinly traded SME names spike would push main
+# board names out of the analysed cohort that the pick lists are built from.
+SME_PHASE2_SHARE = float(os.environ.get("SCAN_SME_SHARE", "0.12") or 0.12)
+SME_TOP = 30               # SME rows kept in their own ranked list
 LEADER_SHARE = 0.67
 # NSE's industry for each company in its Nifty Total Market index: the sector
 # map the money-flow list is measured on. Read fresh each scan; the copy
@@ -468,13 +475,61 @@ def fetch_nse_list():
     return fb, f"Fallback curated list ({len(fb)} symbols), NSE list unreachable from this server"
 
 
+def _nse_isins():
+    """ISINs on NSE's main-board list: what tells a BSE company that is also
+    on NSE from one that is listed on BSE alone."""
+    text = _nse_list_text()
+    if not text:
+        return set()
+    try:
+        df = pd.read_csv(io.StringIO(text))
+        df.columns = [c.strip().upper() for c in df.columns]
+        col = next((c for c in df.columns if "ISIN" in c), None)
+        return {str(v).strip().upper() for v in df[col]} if col else set()
+    except Exception:
+        return set()
+
+
+def fetch_universe():
+    """
+    Every company the scan covers, as (symbols, source_label): NSE's main
+    board, then NSE SME, then the companies listed on BSE alone, keyed by
+    scrip code (listings.py has why). A company on both exchanges appears
+    once, under its NSE symbol.
+
+    Either addition is skipped, never fatal, when its list cannot be read,
+    and the label says what was and was not included.
+    """
+    syms, source = fetch_nse_list()
+    seen = set(syms)
+    parts = [source]
+    sme = [r for r in listings.nse_sme() if r["s"] not in seen]
+    if listings.INCLUDE_SME:
+        parts.append(f"NSE SME ({len(sme)})" if sme else "NSE SME list unreachable")
+    for r in sme:
+        seen.add(r["s"])
+    known = _nse_isins() | {r.get("isin") for r in sme if r.get("isin")}
+    bse = [r for r in listings.bse_only(known) if listings.scan_eligible(r) and r["s"] not in seen]
+    if listings.INCLUDE_BSE:
+        parts.append(f"BSE-only ({len(bse)})" if bse else "BSE list unreachable")
+    out = list(syms) + [r["s"] for r in sme] + [r["s"] for r in bse]
+    return out, "; ".join(parts)
+
+
 def universe():
-    return fetch_nse_list()[0]
+    return fetch_universe()[0]
 
 
 # ---------------------------------------------------------------------------
 # Phase 1 — bulk prices, liquidity filter, technical scores
 # ---------------------------------------------------------------------------
+
+def _thin_board(s):
+    try:
+        return listings.is_bse_code(s) or listings.is_sme(s)
+    except Exception:
+        return False
+
 
 def prefilter_by_quote(symbols, state, progress):
     """
@@ -506,6 +561,12 @@ def prefilter_by_quote(symbols, state, progress):
         px, vol = row.get("ltp") or row.get("close"), row.get("volume")
         if px and vol and (float(px) * float(vol)) < HARD_FLOOR * 0.5:
             dropped += 1            # generous margin: one day isn't 60-day average
+        elif px and not vol and _thin_board(s):
+            # A BSE-only or SME company that has not traded at all today. On
+            # the main board a day with no trades is rare enough to look at;
+            # on these boards it is most of the list, and each one let through
+            # costs a history request to learn it is below the floor anyway.
+            dropped += 1
         else:
             keep.append(s)
     return keep, dropped
@@ -542,7 +603,7 @@ def phase1(symbols, progress, state, chunk_size=None):
                        f"of its {MEM_LIMIT_MB} MB limit. Depth analysis continues on "
                        "what cleared so far.")
             break
-        tickers = [f"{s}.NS" for s in chunk]
+        tickers = [listings.yahoo_ticker(s) for s in chunk]
         use_dhan = dhan is not None and dhan.configured() and dhan.is_live().get("ok")
         data = None
         if not use_dhan:
@@ -567,7 +628,7 @@ def phase1(symbols, progress, state, chunk_size=None):
 
         for s in chunk:
             state["done"] += 1
-            t = f"{s}.NS"
+            t = listings.yahoo_ticker(s)
             try:
                 if use_dhan:
                     df = dhan.daily_ohlcv(s)
@@ -623,6 +684,25 @@ def phase1(symbols, progress, state, chunk_size=None):
 # Phase 2 — fundamentals + archetypes for the strongest candidates
 # ---------------------------------------------------------------------------
 
+def _listing_fields(s):
+    try:
+        d = listings.describe(s)
+    except Exception:
+        return {"board": listings.NSE, "exchange": "NSE"}
+    out = {"board": d["board"], "exchange": d["exchange"]}
+    if d.get("sme"):
+        out["sme"] = True
+    if (d.get("lot") or 1) > 1:
+        out["lot"] = d["lot"]
+    if d.get("bse_symbol"):
+        out["bse_symbol"] = d["bse_symbol"]
+    return out
+
+
+def _is_sme_row(r):
+    return bool(r.get("sme")) or r.get("board") in listings.SME_BOARDS
+
+
 def deep_score(cand, selection="ranked"):
     """
     Full analysis of one candidate.
@@ -634,7 +714,8 @@ def deep_score(cand, selection="ranked"):
     """
     time.sleep(random.uniform(0.15, 0.5))
     s = cand["symbol"]
-    t = yf.Ticker(f"{s}.NS")
+    ticker = listings.ticker_key(s)                 # the site's name for it
+    t = yf.Ticker(listings.yahoo_ticker(s))         # Yahoo's (listings.py)
 
     # Phase 1 deliberately discarded the technical payload to save memory;
     # recompute it here for the shortlist only.
@@ -658,7 +739,7 @@ def deep_score(cand, selection="ranked"):
     held = None
     try:
         from data_source import stored_statements
-        held = stored_statements(f"{s}.NS")
+        held = stored_statements(ticker)
     except Exception:
         held = None
     try:
@@ -708,7 +789,8 @@ def deep_score(cand, selection="ranked"):
     # is missing is a day of evidence that cannot be recovered later.
     extra, quality_meta = {}, {}
     try:
-        quarters = xbrl.scoring_statements(s)
+        # NSE holds no filings for a BSE-only company; asking costs a request.
+        quarters = [] if listings.is_bse_code(s) else xbrl.scoring_statements(s)
     except Exception:
         quarters = []
     try:
@@ -753,7 +835,10 @@ def deep_score(cand, selection="ranked"):
         "market_cap": info.get("marketCap"),
         "trailing_eps": info.get("trailingEps"),
         "tech_checks": checks,
-        "symbol": s, "ticker": f"{s}.NS",
+        "symbol": s, "ticker": ticker,
+        # Which board the company trades on (listings.BOARDS), and for an SME
+        # company its lot: a quantity on one has to be a multiple of it.
+        **_listing_fields(s),
         "name": info.get("longName") or info.get("shortName") or s,
         "price": tech["price"],
         "composite": v["score"], "label": v["label"], "tone": v["tone"],
@@ -1454,6 +1539,14 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         r["label"], r["tone"] = p["label"], p["tone"]
         r["rankable"] = True
     rows = sorted(scored, key=lambda r: (-r["position_score"], r["symbol"]))
+    # SME companies are scored with everyone and listed apart: the headline
+    # ranking is the main boards, and the SME boards have a list of their own.
+    main_rows = [r for r in rows if not _is_sme_row(r)]
+    sme_rows = [r for r in rows if _is_sme_row(r)]
+    boards = {}
+    for r in rows:
+        b = r.get("board") or listings.NSE
+        boards[b] = boards.get(b, 0) + 1
     return {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
                       + (" (partial, scan in progress)" if partial else ""),
@@ -1470,14 +1563,17 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "control_cohort": n_control,
         "missing_fundamentals": n_missing_fund,
         "methodology": ("Altaha Score v4: peer percentiles, eight pillars, business-model priors, "
-                        "confidence shrinkage. Analysed cohort includes technical candidates and random controls; "
-                        "it is not the complete NSE universe."),
+                        "confidence shrinkage. Analysed cohort includes technical candidates and random controls "
+                        "from NSE (main board and SME) and the companies listed on BSE alone; it is not the "
+                        "complete universe. SME companies are scored on the same scale and ranked in their own list."),
         "methodology_version": "v4",
         "factor_universe": rows,
         "sector_flow": list(_SECTOR_FLOW),
         "breakout_watch": list(_WATCH),
         "short_watch": list(_SHORT_WATCH),
-        "rankings": rows[:STORE_TOP],
+        "rankings": main_rows[:STORE_TOP],
+        "sme_rankings": sme_rows[:SME_TOP],
+        "scored_by_board": boards,
         "skipped": failed,
         # Set when the scan ended itself rather than finishing. A short list
         # then means the scan stopped early, not that the market had nothing
@@ -1609,7 +1705,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
     if names is not None:
         symbols, source = list(names), f"Provided list ({len(names)} symbols)"
     else:
-        symbols, source = fetch_nse_list()
+        symbols, source = fetch_universe()
     _note_attempt(phase="phase 1: bulk prices and technical scores",
                   universe=len(symbols))
 
@@ -1630,9 +1726,16 @@ def run_scan(progress=None, names=None, checkpoint=None):
 
     cands, ill, nod, stopped = phase1(symbols, progress, state, chunk_size)
     ill += prefiltered
+    # The pick lists, breakout alerts and sector money flow are main-board
+    # lists. An SME company trades in lots and can move a fifth on a handful
+    # of trades, so it would read as a leader on the very signals (52-week
+    # highs, volume surges) that mean least on it. It is scored all the same,
+    # and ranked against the other SME names (_build_payload).
+    main_cands = [c for c in cands if not listings.is_sme(c["symbol"])]
+    sme_cands = [c for c in cands if listings.is_sme(c["symbol"])]
     # Rank the leaders against the whole liquid universe while phase 1's
     # inputs are still held, then drop the inputs: the block is all a row needs.
-    blocks = rank_leaders(cands)
+    blocks = rank_leaders(main_cands)
     # Every sector's standing on money flow, once, for the page's table.
     flow_table = {}
     for b in blocks.values():
@@ -1655,7 +1758,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
         try:
             meta = {sym: {"sector": b.get("sector"), "leader": b.get("score")}
                     for sym, b in blocks.items()}
-            breakouts.ingest({str(c["symbol"]).upper(): c.get("bo") for c in cands}, meta=meta)
+            breakouts.ingest({str(c["symbol"]).upper(): c.get("bo") for c in main_cands}, meta=meta)
         except Exception:
             pass
     for c in cands:
@@ -1669,12 +1772,15 @@ def run_scan(progress=None, names=None, checkpoint=None):
     # Was: deep = cands[:n2] — top N by technical score only.
     # Now: ranked names PLUS a stratified random control group, so the data
     # this scan records can actually be analysed later. See pick_phase2_cohort.
-    cohort, n_ranked, n_control_planned = pick_phase2_cohort(cands, n2)
+    n_sme = min(len(sme_cands), int(n2 * SME_PHASE2_SHARE))
+    cohort, n_ranked, n_control_planned = pick_phase2_cohort(main_cands, n2 - n_sme)
+    if n_sme:
+        cohort += pick_phase2_cohort(sme_cands, n_sme)[0]
     deep = cohort
     state["total"] = len(symbols) + len(deep)      # exact now that we know
 
     n_candidates = len(cands)
-    del cands
+    del cands, main_cands, sme_cands
     gc.collect()
 
     rows, failed = [], []
@@ -1829,6 +1935,28 @@ def universe_with_names():
         # the universe is — just without company names.
         rows = [{"s": x, "n": x, "x": "NSE"}
                 for x in sorted({y for y in FALLBACK.split() if y})]
+
+    # The SME boards and the BSE-only companies, so a search finds them. Every
+    # BSE-only company is offered, including the groups the scan skips: a
+    # page scored on request is still worth having for a company someone owns.
+    # `t` is a BSE-only company's own short symbol, which the search box also
+    # matches, and `lot` the exchange lot where it is more than one share.
+    try:
+        seen = {r["s"] for r in rows}
+        sme = [r for r in listings.nse_sme() if r["s"] not in seen]
+        known = _nse_isins() | {r.get("isin") for r in sme if r.get("isin")}
+        for r in sme + listings.bse_only(known):
+            if r["s"] in seen:
+                continue
+            seen.add(r["s"])
+            row = {"s": r["s"], "n": r.get("n") or r["s"], "x": r["x"]}
+            if r.get("t"):
+                row["t"] = r["t"]
+            if r.get("lot"):
+                row["lot"] = r["lot"]
+            rows.append(row)
+    except Exception:
+        pass
 
     rows.sort(key=lambda r: r["s"])
     _names_cache["at"] = time.time()

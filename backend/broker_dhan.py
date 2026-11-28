@@ -199,6 +199,14 @@ def finish_login(token_id: str) -> dict:
 # Instruments
 # ---------------------------------------------------------------------------
 
+def _segment(symbol):
+    try:
+        import listings
+        return listings.dhan_segment(symbol)
+    except Exception:
+        return "NSE_EQ"
+
+
 def instrument(symbol: str):
     """Dhan's securityId for an NSE equity symbol, from the instrument master
     dhan_source.py already keeps (the file is public; no token is used)."""
@@ -255,7 +263,9 @@ def place(sess: dict, o: dict) -> dict:
         "dhanClientId": sess["client_id"],
         "correlationId": o["correlation_id"],
         "transactionType": o["side"],
-        "exchangeSegment": "NSE_EQ",
+        # BSE_EQ for a company listed on BSE alone (its key is the scrip
+        # code, which is also its Dhan security id); NSE_EQ for the rest.
+        "exchangeSegment": _segment(o["symbol"]),
         "productType": o["product"],
         "orderType": TYPE_OUT[o["type"]],
         "validity": o["validity"],

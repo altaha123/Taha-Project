@@ -111,7 +111,7 @@ def _api(url, params):
     return nse_http.rows(body) if body is not None else []
 
 
-def _integrated_filings(sym):
+def _integrated_filings(sym, index="equities"):
     """
     Filings under SEBI's Integrated Filing regime — everything since the
     December 2024 quarter, and the only place recent results now appear.
@@ -123,7 +123,7 @@ def _integrated_filings(sym):
     supersedes the original.
     """
     out = []
-    for row in _api(NSE_INTEGRATED, {"index": "equities", "symbol": sym,
+    for row in _api(NSE_INTEGRATED, {"index": index, "symbol": sym,
                                      "period": "Quarterly"}):
         kind = str(row.get("type") or "")
         if "financ" not in kind.lower():
@@ -149,7 +149,7 @@ def _integrated_filings(sym):
     return out
 
 
-def _legacy_filings(sym, period="Quarterly"):
+def _legacy_filings(sym, period="Quarterly", index="equities"):
     """
     Filings under the pre-Integrated regime. Historical only — nothing has
     been added here since the December 2024 quarter — but it is where the
@@ -157,7 +157,7 @@ def _legacy_filings(sym, period="Quarterly"):
     is still needed and not merely kept for sentiment.
     """
     out = []
-    for row in _api(NSE_RESULTS, {"index": "equities", "symbol": sym,
+    for row in _api(NSE_RESULTS, {"index": index, "symbol": sym,
                                   "period": period}):
         url = (row.get("xbrl") or "").strip()
         if not url.lower().endswith(".xml"):
@@ -203,11 +203,34 @@ def filings(symbol, period="Quarterly", retain_versions=False):
         except Exception:
             return []
 
+    # NSE files an SME company under index=sme, and an index=equities request
+    # for one comes back empty; a BSE-only company (a six-digit scrip code)
+    # has no NSE filings at all. listings.nse_indexes gives the order to ask.
+    #
+    # An SME company reports every six months. Its filings are read exactly
+    # like a main-board company's: every quarterly consumer checks a period's
+    # length (fundamentals._is_quarterly, factors.known_quarters,
+    # fundamentals_crawl.build_rows), so a half-year is kept as a balance
+    # sheet and a year-to-date figure and is never summed as a quarter.
+    try:
+        import listings
+        indexes = listings.nse_indexes(sym)
+    except Exception:
+        indexes = ["equities"]
+    sources = []
+    for idx in indexes:
+        if idx == "equities":
+            sources = [safely(_integrated_filings, sym), safely(_legacy_filings, sym, period)]
+        else:
+            sources = [safely(_integrated_filings, sym, idx),
+                       safely(_legacy_filings, sym, period, idx)]
+        if any(sources):
+            break
+
     merged, seen = [], set()
     # Integrated first so that where the two regimes overlap, the newer filing
     # wins the deduplication.
-    for src in (safely(_integrated_filings, sym),
-                safely(_legacy_filings, sym, period)):
+    for src in sources:
         for row in src:
             end = _dparse(row.get("to"))
             key = ((end, bool(row.get("consolidated")), row.get("filed_at"), row.get("xbrl"))

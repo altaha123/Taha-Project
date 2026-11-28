@@ -772,6 +772,9 @@ def test_an_empty_answer_is_not_believed_for_six_hours(monkeypatch, tmp_path):
     aged out, six hours later."""
     monkeypatch.setattr(sf, "CACHE_DIR", str(tmp_path))
     monkeypatch.setattr(sf, "_index_cache", {})
+    # A main-board company in a process that knows the SME list: one index,
+    # one request per answer (an unknown symbol also tries index=sme).
+    monkeypatch.setattr(sf, "_nse_indexes", lambda sym: ["equities"])
     answers, asked = [[], MASTER], []
 
     def get(*a, **k):

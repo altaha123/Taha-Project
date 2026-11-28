@@ -262,7 +262,7 @@
         h = head() +
           seg('side', [['BUY', 'Buy'], ['SELL', 'Sell']], T.side) +
           '<div class="bk-grid">' +
-            '<label class="bk-f"><span>Quantity</span><input name="qty" inputmode="numeric" autocomplete="off" value="' + esc(T.qty) + '" placeholder="Shares"></label>' +
+            '<label class="bk-f"><span>Quantity</span><input name="qty" inputmode="numeric" autocomplete="off" value="' + esc(T.qty) + '" placeholder="' + ((Number(T.stock.lot) || 1) > 1 ? 'Lots of ' + Number(T.stock.lot).toLocaleString('en-IN') : 'Shares') + '"></label>' +
             (T.type === 'LIMIT' || T.type === 'SL'
               ? '<label class="bk-f"><span>' + (T.type === 'SL' ? 'Limit price' : 'Price') + '</span><input name="price" inputmode="decimal" autocomplete="off" value="' + esc(T.price) + '"></label>' : '') +
             (T.type === 'SL' || T.type === 'SL-M'
@@ -312,6 +312,11 @@
   function check() {
     var q = Number(T.qty);
     if (!(q >= 1) || Math.floor(q) !== q) return 'Enter a whole number of shares.';
+    // An SME share trades only in the exchange's lot. The server refuses any
+    // other quantity too; this says so before the order is sent.
+    var lot = Number(T.stock.lot) || 1;
+    if (lot > 1 && q % lot) return 'This stock trades in lots of ' + lot.toLocaleString('en-IN') +
+      ' shares. Choose a multiple of ' + lot.toLocaleString('en-IN') + '.';
     if ((T.type === 'LIMIT' || T.type === 'SL') && !(Number(T.price) > 0)) return 'Enter the price.';
     if ((T.type === 'SL' || T.type === 'SL-M') && !(Number(T.trigger) > 0)) return 'Enter the trigger price.';
     if (T.type === 'MARKET' && !(Number(T.stock.price) > 0)) return 'The price is not loaded yet. Use a limit order.';
@@ -394,7 +399,7 @@
       var live = document.getElementById('px');
       var m = live && /([\d,]+\.?\d*)/.exec(live.textContent || '');
       if (m) { var n = Number(m[1].replace(/,/g, '')); if (n > 0) price = n; }
-      open({ symbol: d.symbol, name: d.name, price: price, source: 'stock' });
+      open({ symbol: d.symbol, name: d.name, price: price, source: 'stock', lot: d.lot || 1 });
     });
     px.appendChild(b);
   }

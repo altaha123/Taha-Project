@@ -16,6 +16,7 @@ import time
 import pandas as pd
 import yfinance as yf
 
+import listings
 import market_calendar
 import settled_bars
 
@@ -80,6 +81,13 @@ class NotFound(Exception):
     pass
 
 
+def _yahoo_name(sym):
+    """Yahoo's name for a candidate ticker. Only a BSE-only company's differs
+    (534708.BO is SHANTIGURU.BO there); anything else, a bare US ticker
+    included, is asked for exactly as written."""
+    return listings.yahoo_ticker(sym) if listings.is_bse_code(sym) else sym
+
+
 def resolve(raw: str):
     """
     Resolve a symbol to (sym, yfinance_ticker, price_history).
@@ -105,19 +113,29 @@ def resolve(raw: str):
     # Indian listing must win a collision. The bare symbol is kept as a last
     # resort rather than dropped, so a genuinely foreign ticker still
     # resolves. Explicit suffixes and ^INDEX symbols are used exactly as given.
+    #
+    # A six-digit number is a BSE scrip code: the key of a company listed on
+    # BSE alone (listings.py). It is only ever a .BO ticker; no NSE symbol
+    # and no US ticker is all digits.
     if "." in raw or raw.startswith("^"):
         candidates = [raw]
+    elif listings.is_bse_code(raw):
+        candidates = [listings.ticker_key(raw)]
     else:
         candidates = [f"{raw}.NS", f"{raw}.BO", raw]
 
     # Dhan first, for Indian equities only
-    if dhan is not None and dhan.configured():
+    if dhan is not None and dhan.configured() and (
+            "." not in raw or raw.endswith((".NS", ".BO"))):
         base = raw.replace(".NS", "").replace(".BO", "")
         if not raw.startswith("^"):
-            key = f"px::{base}.NS"
+            # A dual-listed company asked for by its BSE ticker is still read
+            # from its NSE listing, as it always was; only a scrip code is BSE.
+            tk = listings.ticker_key(base)
+            key = f"px::{tk}"
             cached = _cget(key)
             if cached is not None:
-                return f"{base}.NS", yf.Ticker(f"{base}.NS"), cached
+                return tk, yf.Ticker(listings.yahoo_ticker(tk)), cached
             try:
                 df = dhan.daily_ohlcv(base)
             except Exception:
@@ -127,16 +145,19 @@ def resolve(raw: str):
                 # A refetch can add a session or correct one. It can never
                 # take the newest one away: settled_bars.py has the night
                 # this was found on.
-                df = settled_bars.keep(f"{base}.NS", df)
+                df = settled_bars.keep(tk, df)
                 _cput(key, df, MISSING_TODAY_TTL if df.attrs.get("today_missing") else _px_ttl())
-                return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
+                return tk, yf.Ticker(listings.yahoo_ticker(tk)), df
 
     for sym in candidates:
         cached = _cget(f"px::{sym}")
         if cached is not None:
-            return sym, yf.Ticker(sym), cached
+            return sym, yf.Ticker(_yahoo_name(sym)), cached
         try:
-            t = yf.Ticker(sym)
+            # `sym` is the site's name for the listing and what is returned;
+            # Yahoo is asked by its own name, which differs for a BSE-only
+            # company (534708.BO here, SHANTIGURU.BO there).
+            t = yf.Ticker(_yahoo_name(sym))
             h = t.history(period="1y", auto_adjust=True)
             if h is not None and len(h) >= 60:
                 h = h.dropna(subset=["Close"])
@@ -410,10 +431,11 @@ def stored_statements(sym: str, today=None):
     None whenever any of the three is missing or the income statement's newest
     year looks overdue, so the caller reads Yahoo live instead. Never raises.
     """
-    # Only an NSE listing: the store is keyed by the bare NSE symbol, and a
-    # bare ticker here is a US one — AGI is Alamos Gold, not AGI Greenpac.
+    # Only an NSE listing, or a BSE-only company by its scrip code: the store
+    # is keyed by the bare NSE symbol or the code, and a bare ticker here is a
+    # US one — AGI is Alamos Gold, not AGI Greenpac.
     raw = (sym or "").strip().upper()
-    if not raw.endswith(".NS"):
+    if not (raw.endswith(".NS") or (raw.endswith(".BO") and listings.is_bse_code(raw))):
         return None
     base = raw[:-3]
     try:

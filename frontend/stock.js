@@ -276,7 +276,12 @@
        company's own address the server has already written this row, with
        the sector as a link to its page, and it is left as it is. */
     if (!(SSR && $('tags').children.length)) {
-      var tags = [(d.exchange ? d.exchange + ': ' : '') + base];
+      // A company listed on BSE alone is keyed by its scrip code; BSE's own
+      // short symbol is what a reader knows it by, so it leads.
+      var L = d.listing || {};
+      var label = L.bse_symbol ? L.bse_symbol + ' (' + base + ')' : base;
+      var tags = [(d.exchange ? d.exchange + ': ' : '') + label];
+      if (L.sme) tags.push(L.board + ' · lot of ' + Number(L.lot || 1).toLocaleString('en-IN') + ' shares');
       if (d.profile && d.profile.sector) tags.push(d.profile.sector);
       if (d.profile && d.profile.industry) tags.push(d.profile.industry);
       $('tags').innerHTML = tags.map(function (t) {
@@ -302,7 +307,8 @@
     try {
       window.dispatchEvent(new CustomEvent('altaha-stock', { detail: {
         symbol: base, name: d.name || base, price: d.price,
-        currency: d.currency, exchange: d.exchange } }));
+        currency: d.currency, exchange: d.exchange,
+        lot: (d.listing && d.listing.lot) || 1 } }));
     } catch (e) {}
   }
 
@@ -1130,8 +1136,9 @@
   function streamStart() {
     if (LIVE.es || LIVE.retry || !BASE || typeof EventSource === 'undefined') return;
     if (!liveHours() || document.visibilityState === 'hidden') return;
-    // The feed is the NSE's. A US listing has no live price here.
-    if (DATA && DATA.exchange && DATA.exchange !== 'NSE') return;
+    // The feed carries NSE and BSE (a BSE-only company streams on BSE). A US
+    // listing has no live price here.
+    if (DATA && DATA.exchange && DATA.exchange !== 'NSE' && DATA.exchange !== 'BSE') return;
     var es;
     try { es = new EventSource(API + '/stream/quotes?tickers=' + encodeURIComponent(BASE)); }
     catch (e) { return; }

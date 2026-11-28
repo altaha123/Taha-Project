@@ -6,7 +6,7 @@
   var LABELS = {promoter:'Promoters', fii:'Foreign institutions', dii:'Domestic institutions', public_non_institutional:'Non-institutional'};
   function text(s, max) { return String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').slice(0, max || 180); }
   function numeric(n, min, max) { return typeof n === 'number' && isFinite(n) && n >= min && n <= max ? Math.round(n * 100) / 100 : null; }
-  function source(s) { try { var u = new URL(s); return u.protocol === 'https:' && /(^|\.)nseindia\.com$/.test(u.hostname) ? u.href.slice(0, 1000) : ''; } catch (_) { return ''; } }
+  function source(s) { try { var u = new URL(s); return u.protocol === 'https:' && (/(^|\.)nseindia\.com$/.test(u.hostname) || u.hostname === 'nsearchives.nseindia.in') ? u.href.slice(0, 1000) : ''; } catch (_) { return ''; } }
   function pct(n) { return n == null ? 'Unavailable' : n.toFixed(2) + '%'; }
   function pp(n) { return n == null ? 'Comparison unavailable' : (n > 0 ? '+' : '') + n.toFixed(2) + ' pp'; }
   function normalize(raw) {
