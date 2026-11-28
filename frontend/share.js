@@ -409,8 +409,37 @@
         if (out.length + 2 + tail.length <= LIMIT) out += "\n\n" + tail;
         return out;
       }
+    },
+
+    /* One Research Deck article (research-deck.html). The card is the cover
+       photo beside the title. `v` is the article's version, in the address for
+       the reason `period` is on a results card: X caches a card by URL, and an
+       article edited after posting must not keep showing the old one. The
+       post is the owner's own words — the title, then the summary as far as
+       it fits — so nothing is composed here beyond trimming. */
+    research: {
+      png: function (d) { return "/og/research.png" + qs({ slug: slug(d), v: d.version }); },
+      page: function (d) { return "/share/research/" + encodeURIComponent(slug(d)) + qs({ v: d.version }); },
+      file: function (d) { return "altaha-research-" + slug(d) + ".png"; },
+      title: function (d) { return String(d.title || "Altaha research"); },
+      text: function (d) {
+        var LIMIT = 240;
+        var title = cut(String(d.title || "Research from Altaha").replace(/\s+/g, " ").trim(), 150);
+        var tags = (d.tickers || []).slice(0, 3).map(function (t) { return "$" + clean(t); })
+          .filter(function (t) { return t.length > 1; }).join(" ");
+        var room = LIMIT - title.length - 2 - (tags ? tags.length + 2 : 0);
+        var sum = String(d.summary || "").replace(/\s+/g, " ").trim();
+        sum = room > 24 ? cut(sum, room) : "";
+        var out = title + (sum ? "\n\n" + sum : "");
+        if (tags && out.length + 2 + tags.length <= LIMIT) out += "\n\n" + tags;
+        return out;
+      }
     }
   };
+
+  function slug(d) {
+    return String((d && d.slug) || "").toLowerCase().replace(/[^a-z0-9\-]/g, "").slice(0, 90);
+  }
 
   function orderId(d) {
     return String((d && (d.id || d.key)) || "").toLowerCase().replace(/[^0-9a-f]/g, "").slice(0, 24);
@@ -769,7 +798,9 @@
     concall: "The call as its brief tells it: the headline and the summary, written " +
              "by a model from the transcript the company filed, and marked as such.",
     wow: "The order as the company filed it, and its size against the company\u2019s " +
-         "market cap. Two published numbers and the division between them."
+         "market cap. Two published numbers and the division between them.",
+    research: "The article’s cover photo beside its title. Post the link and X draws " +
+              "this card under it; the full article opens on a tap."
   };
 
   function open(d) {

@@ -117,6 +117,12 @@ const cases = [
   { d: ORDER,
     link: "https://site.example/share/wow/PACEDIGITK?id=6eed6d67e567",
     card: "https://site.example/og/wow.png?ticker=PACEDIGITK&id=6eed6d67e567" },
+  { d: { kind: "research", slug: "capital-goods-order-books", version: 3,
+         title: "Capital goods: why the order book matters this year",
+         summary: "Order inflows have doubled in two years. Execution, not demand, is the constraint.",
+         tickers: ["LT", "SIEMENS"] },
+    link: "https://site.example/share/research/capital-goods-order-books?v=3",
+    card: "https://site.example/og/research.png?slug=capital-goods-order-books&v=3" },
 ];
 
 for (const c of cases) {
@@ -263,3 +269,15 @@ for (const t of [text, ...cases.map(c => S.compose(c.d))]) {
 
 console.log("share.js: all assertions passed");
 console.log("--- composed post ---\n" + text + "\n" + url);
+
+/* ── a research post fits on X with its link, however long the article ─── */
+
+for (const d of [{ kind: "research", slug: "x", version: 1 },
+                 { kind: "research", slug: "x", version: 1, title: "T ".repeat(200),
+                   summary: "S ".repeat(400), tickers: ["A", "B", "C", "D"] }]) {
+  const t = S.compose(d);
+  assert.ok(t.length <= 240, "a research post leaves no room for the link: " + t.length);
+  assert.ok(!/undefined|NaN|null/.test(t), "a research post leaked a raw value:\n" + t);
+}
+assert.ok(S.compose(cases[cases.length - 1].d).includes("$LT"),
+  "the research post drops the stocks it is about");
