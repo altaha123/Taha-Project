@@ -293,6 +293,11 @@
           tip: 'How great investors pick, and where they agree', kw: 'lenses philosophy coffee can moat qglp convergence agree several styles' },
         { href: 'forum.html', g: 'talk', label: 'Forum', icon: 'users', hint: 'Discuss stocks and the market with other investors',
           tip: 'Discuss stocks with other investors', kw: 'forum discussion discuss community talk chat ask question questions members opinion thread threads stock discussion' },
+        /* The Research Deck: the owner's own articles, photos and charts, each
+           with a card that X unfurls. A page of its own (research-deck.html)
+           so every article has an address to post. */
+        { href: 'research-deck.html', g: 'talk', label: 'Research Deck', icon: 'document', hint: 'Our research notes, charts and photos, ready to share on X',
+          tip: 'Our research notes, ready to share', kw: 'research deck article articles notes report reports analysis thesis write up blog photos charts share x twitter' },
         { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
         { tab: 'funds', g: 'own', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },

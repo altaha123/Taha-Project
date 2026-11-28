@@ -433,6 +433,15 @@ try:
 except Exception as _e:                                      # pragma: no cover
     print(f"[forum] not loaded: {type(_e).__name__}: {_e}", flush=True)
 
+# The Research Deck: articles and photos only the owner publishes, each with a
+# share page and a card X unfurls (research_deck.py). Its own database file at
+# the top of DATA_DIR, so the nightly backup carries the photos too.
+try:
+    import research_routes
+    app.include_router(research_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[research] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Ask AI on the query screener: Claude writes and checks queries in the
 # screener's syntax. Admin key only, closed when ADMIN_KEY is unset, and off
 # until ANTHROPIC_API_KEY is set. Same guard as the two above.

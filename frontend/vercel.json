@@ -16,6 +16,7 @@
     { "source": "/pro", "destination": "/pro.html" },
     { "source": "/pricing", "destination": "/pro.html" },
     { "source": "/forum", "destination": "/forum.html" },
+    { "source": "/research-deck", "destination": "/research-deck.html" },
     { "source": "/broker", "destination": "/broker.html" },
     { "source": "/broker/", "destination": "/broker.html" },
     { "source": "/broker/:token", "destination": "/broker.html" },
