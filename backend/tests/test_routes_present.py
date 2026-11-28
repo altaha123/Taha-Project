@@ -17,7 +17,7 @@ route that arrives fails until somebody adds its line on purpose.
 What is in the list, and what is not:
 
   * The routers main.py mounts inside try/except (advisor_routes,
-    wealth_routes, query_ai_routes, forum_routes) ARE in it. They are guarded
+    wealth_routes, query_ai_routes, forum_routes, research_routes) ARE in it. They are guarded
     so that a feature which fails to import costs that feature and not the
     site, and that guard is exactly what makes losing one silent: the app
     starts, prints one line and answers 404. All four import in a test run with no keys set
@@ -69,6 +69,10 @@ POST    /admin/moneyflow/run
 GET     /admin/pro-waitlist
 GET     /admin/query/ai
 POST    /admin/query/ai
+GET     /admin/research
+POST    /admin/research/delete
+POST    /admin/research/media
+POST    /admin/research/save
 POST    /admin/weekly/topics
 GET     /adviser
 GET     /advisors
@@ -209,6 +213,7 @@ GET     /og/concall.png
 GET     /og/holding.png
 GET     /og/idea.png
 GET     /og/record.png
+GET     /og/research.png
 GET     /og/results.png
 GET     /og/stock.png
 GET     /og/wow.png
@@ -231,6 +236,9 @@ GET     /portfolio/status
 POST    /pro/waitlist
 GET     /pro/waitlist/me
 GET     /quote
+GET     /research/articles
+GET     /research/articles/{slug}
+GET     /research/media/{media_id}
 GET     /results
 GET     /results/calendar
 GET     /scan/start
@@ -246,6 +254,7 @@ GET     /share/concall/{ticker}
 GET     /share/holding/{ticker}
 GET     /share/idea/{ticker}
 GET     /share/record
+GET     /share/research/{slug}
 GET     /share/results/{ticker}
 GET     /share/wow/{ticker}
 GET     /share/{ticker}
@@ -327,7 +336,8 @@ GET     /wow-orders
 """
 
 # The routers main.py carries on without if they fail to import.
-GUARDED_ROUTERS = ("advisor_routes", "wealth_routes", "query_ai_routes", "forum_routes")
+GUARDED_ROUTERS = ("advisor_routes", "wealth_routes", "query_ai_routes", "forum_routes",
+                   "research_routes")
 
 
 def served_routes(app) -> set:

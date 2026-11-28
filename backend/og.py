@@ -1449,3 +1449,112 @@ def wow_card(r: dict, threshold: float = 10.0) -> bytes:
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
     return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Research Deck cards
+#
+# One article the owner published: its cover photo on the right, the title and
+# as much of the summary as fits on the left, the mark above both. The photo is
+# the owner's own upload, cropped to its panel from the centre, so a chart
+# screenshot keeps its middle and a portrait keeps its face.
+#
+# The card says what the article says and nothing more. The footer names it as
+# research from Altaha and carries the same "not investment advice" line as
+# every other card; the article itself is where its reasoning and its
+# disclaimer live.
+# ---------------------------------------------------------------------------
+
+RESEARCH_PANEL = (W - 64 - 440, 150, W - 64, H - 112)   # x0, y0, x1, y1
+
+
+def _cover_panel(img, cover_bytes, box, radius=18):
+    """Paste `cover_bytes` cropped to fill `box` with rounded corners.
+    Returns False, drawing nothing, when the bytes are not an image."""
+    from PIL import Image, ImageDraw, ImageOps
+    try:
+        src = Image.open(io.BytesIO(cover_bytes))
+        src.load()
+        src = src.convert("RGB")
+    except Exception:
+        return False
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    fitted = ImageOps.fit(src, (w, h), Image.LANCZOS, centering=(0.5, 0.5))
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
+    img.paste(fitted, (x0, y0), mask)
+    ImageDraw.Draw(img).rounded_rectangle([x0, y0, x1 - 1, y1 - 1], radius=radius,
+                                          outline=RULE, width=1)
+    return True
+
+
+def research_card(a: dict, cover_bytes: bytes = None) -> bytes:
+    """
+    One Research Deck article.
+
+    a: title, summary, tickers, published_at — the fields research_deck.get()
+       returns. cover_bytes: the stored cover photo, or None.
+    """
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (W, H), PAPER)
+    d = ImageDraw.Draw(img)
+    _shell(d, img)
+
+    has_cover = bool(cover_bytes) and _cover_panel(img, cover_bytes, RESEARCH_PANEL)
+    d = ImageDraw.Draw(img)
+    right = (RESEARCH_PANEL[0] - 44) if has_cover else (W - 64)
+    width = right - 64
+
+    # What this is, top right, where every other card says what it is.
+    tag = "RESEARCH DECK"
+    tw = _tracked_width(d, tag, mono(20, True), 3)
+    _tracking(d, (W - 64 - tw, 60), tag, mono(20, True), GOLD, 3)
+    day = _call_day(a.get("published_at"))
+    if day:
+        sub = f"PUBLISHED {day}"
+        sw = _tracked_width(d, sub, mono(14), 2.2)
+        _tracking(d, (W - 64 - sw, 96), sub, mono(14), MUTE, 2.2)
+
+    # The stocks it is about, as the line above the title.
+    tickers = [str(t).upper() for t in (a.get("tickers") or []) if t][:4]
+    y = 168
+    if tickers:
+        line = " · ".join(tickers)
+        kf = mono(17, True)
+        while tickers and _tracked_width(d, line, kf, 2.4) > width:
+            tickers = tickers[:-1]
+            line = " · ".join(tickers) + " …"
+        _tracking(d, (64, y), line, kf, INK, 2.4)
+        y += 40
+    else:
+        y += 6
+
+    title = " ".join(str(a.get("title") or "").split())
+    sizes = (60, 54, 48, 43, 38) if has_cover else HEADLINE_SIZES
+    size, lines = sizes[-1], []
+    for size in sizes:
+        lines = _wrap(d, title, size, width)
+        if len(lines) <= HEADLINE_LINES:
+            break
+    lines = _clip(d, lines, HEADLINE_LINES, size, width)
+    lead = round(size * 1.1)
+    baseline = y + round(size * 0.82)
+    for line in lines:
+        _prose(d, 62, baseline, line, size, INK)
+        baseline += lead
+    bottom = baseline - lead + round(size * 0.24)
+
+    summary = " ".join(str(a.get("summary") or "").split())
+    top = bottom + 22
+    room = int((H - 92 - 20 - top) // SUMMARY_LEAD)
+    baseline = top + round(SUMMARY_SIZE * 0.82)
+    for line in _whole_sentences(d, summary, SUMMARY_SIZE, width, room):
+        _prose(d, 64, baseline, line, SUMMARY_SIZE, INK_2)
+        baseline += SUMMARY_LEAD
+
+    _footer(d, "RESEARCH FROM ALTAHA")
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()
