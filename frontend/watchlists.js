@@ -41,7 +41,7 @@
   var UNSENT_KEY = 'altaha-watchlists-unsent-v2';
   var GAME_KEY = 'altaha-watchgame-v1';
   var VIEW_KEY = 'altaha-watchlists-view-v1';
-  var UNI_KEY = 'altaha-universe-v2';
+  var UNI_KEY = 'altaha-universe-v4';        // shared with shell.js (see its note)
   var MAX_LISTS = 20, MAX_SYMBOLS = 100, MAX_NAME = 40;
   var COLORS = ['gold', 'green', 'blue', 'rose', 'violet', 'slate'];
   var EMOJI = ['⭐', '🚀', '💎', '🔥', '🌱', '🏦', '⚡', '🛢️', '💊', '🏗️', '🎯', '🧠', '🐘', '🍀', '🎲', '👀'];
@@ -365,13 +365,14 @@
   function universe() {
     if (S.uni) return Promise.resolve(S.uni);
     var cached = readJSON(UNI_KEY, null);
-    if (cached && Array.isArray(cached.rows) && cached.rows.length) {
+    // Today's copy only: a list saved once used to be read for ever.
+    if (cached && Array.isArray(cached.rows) && cached.rows.length && cached.day === istDate()) {
       S.uni = cached.rows;
       return Promise.resolve(S.uni);
     }
-    return get('/universe', 15000).then(function (d) {
+    return get('/universe?v=4', 15000).then(function (d) {
       S.uni = (d && d.rows) || [];
-      if (S.uni.length) writeJSON(UNI_KEY, { day: istDate(), rows: S.uni });
+      if (S.uni.length && d.v >= 4) writeJSON(UNI_KEY, { day: istDate(), rows: S.uni });
       return S.uni;
     });
   }

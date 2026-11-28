@@ -43,7 +43,7 @@
   var WATCH_KEY = 'altaha-watchlist-v1';
   var STORE_KEY = 'altaha-portfolios';
   var DRAFT_KEY = 'altaha-portfolio-draft-v1';
-  var UNI_KEY = 'altaha-universe-v2';
+  var UNI_KEY = 'altaha-universe-v4';        // written by shell.js (see its note)
 
   /* The investor styles in backend/lenses.json, in the order the lenses page
      lists them. Names only; the screens themselves are on that page. */

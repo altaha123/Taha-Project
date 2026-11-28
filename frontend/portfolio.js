@@ -253,7 +253,7 @@
      Matching happens here, against a list already on this machine, and only
      the symbols and quantities are ever sent anywhere. */
 
-  var UNI_KEY = 'altaha-universe-v2';        // shared with shell.js, same shape
+  var UNI_KEY = 'altaha-universe-v4';        // shared with shell.js, same shape (see its note)
   var NAME_NOISE = /\b(limited|ltd|private|pvt|company|co|corporation|corp|inc|plc|the)\b/g;
 
   function normName(str) {
@@ -336,11 +336,11 @@
         return Promise.resolve(cached.rows);
       }
     } catch (e) {}
-    return fetch(API + '/universe', { signal: AbortSignal.timeout(15000) })
+    return fetch(API + '/universe?v=4', { signal: AbortSignal.timeout(15000) })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         var rows = (d && d.rows) || [];
-        if (rows.length) {
+        if (rows.length && d.v >= 4) {       // an older server's list is not saved (shell.js note)
           try {
             localStorage.setItem(UNI_KEY, JSON.stringify({
               day: new Date().toISOString().slice(0, 10), rows: rows

@@ -44,7 +44,7 @@
   var API = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE
     : (window.API_BASE || 'https://taha-project.onrender.com');
   var PRIV_KEY = 'altaha-wealth-private-v1';
-  var UNI_KEY = 'altaha-universe-v2';
+  var UNI_KEY = 'altaha-universe-v4';        // shared with shell.js (see its note)
   var COLORS = ['gold', 'green', 'blue', 'rose', 'violet', 'slate'];
   /* The six series colours in their order, then the first four again at half
      strength for a book spread over more than six sectors. */
@@ -1789,9 +1789,11 @@
   function universe() {
     if (S.uni) return Promise.resolve(S.uni);
     var cached = readJSON(UNI_KEY);
-    if (cached && Array.isArray(cached.rows) && cached.rows.length) { S.uni = cached.rows; return Promise.resolve(S.uni); }
-    return fetch(API + '/universe').then(function (r) { return r.ok ? r.json() : { rows: [] }; }).then(function (d) {
+    // Today's copy only: a list saved once used to be read for ever.
+    if (cached && Array.isArray(cached.rows) && cached.rows.length && cached.day === today()) { S.uni = cached.rows; return Promise.resolve(S.uni); }
+    return fetch(API + '/universe?v=4').then(function (r) { return r.ok ? r.json() : { rows: [] }; }).then(function (d) {
       S.uni = (d && d.rows) || [];
+      if (S.uni.length && d.v >= 4)
       try { localStorage.setItem(UNI_KEY, JSON.stringify({ day: today(), rows: S.uni })); } catch (e) {}
       return S.uni;
     }).catch(function () { return []; });

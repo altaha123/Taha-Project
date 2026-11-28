@@ -3002,7 +3002,8 @@
 
   function universe(cb) {
     if (W.universe) { cb && cb(); return; }
-    var cached = sget("altaha.charts.v2.universe", null);
+    // v3: the list now carries NSE SME and BSE; see the note in shell.js.
+    var cached = sget("altaha.charts.v3.universe", null);
     if (cached && cached.at && Date.now() - cached.at < 86400000 && cached.rows && cached.rows.length) { W.universe = cached.rows; cb && cb(); return; }
     /* Everyone who asked while the list was on its way is answered when it
        lands: the first letters of a first visit arrive before it does. */
@@ -3010,9 +3011,9 @@
     if (cb) universe.wait.push(cb);
     if (universe.busy) return;
     universe.busy = true;
-    fetch(API + "/universe").then(function (r) { return r.json(); }).then(function (d) {
+    fetch(API + "/universe?v=4").then(function (r) { return r.json(); }).then(function (d) {
       W.universe = (d.rows || []).map(function (r) { return { s: r.s || r[0], n: r.n || r[1] || "" }; }).filter(function (r) { return r.s; });
-      if (W.universe.length) sset("altaha.charts.v2.universe", { at: Date.now(), rows: W.universe });
+      if (W.universe.length && d.v >= 4) sset("altaha.charts.v3.universe", { at: Date.now(), rows: W.universe });
     }).catch(function () {}).then(function () {
       universe.busy = false;
       var run = universe.wait; universe.wait = [];

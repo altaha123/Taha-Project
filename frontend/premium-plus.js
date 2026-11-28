@@ -189,7 +189,15 @@
   function seedRow(r) { var i = r.indexOf(' '); return { s: r.slice(0, i), n: r.slice(i + 1) }; }
 
   var UNIVERSE = SEED.slice();
-  var CACHE_KEY = 'altaha-universe-v2';
+  /* The company list, and the address it is asked for at. Both carry a
+     version. /universe used to be cached by the browser for a day, so a page
+     that asked before the SME and BSE boards were deployed kept the
+     NSE-only list (and wrote it into localStorage) for the rest of the day:
+     Vilas Transcore could not be found. A new address cannot be answered
+     from that old copy, and a new key drops the old saved one. Bump both
+     together whenever the shape or the coverage of the list changes. */
+  // Its own key: this file saves {at, rows}, the others {day, rows}.
+  var CACHE_KEY = 'altaha-universe-pp-v4';
 
   function loadUniverse() {
     try {
@@ -203,10 +211,11 @@
       }
     } catch (e) {}
 
-    origFetch(API + '/universe').then(function (r) { return r.json(); })
+    origFetch(API + '/universe?v=4').then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.rows || !d.rows.length) return;
         UNIVERSE = d.rows;
+        if (!(d.v >= 4)) return;          // an older server's list: this visit only
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), rows: d.rows })); }
         catch (e) { /* quota — the in-memory copy still works this session */ }
       }).catch(function () { /* seed list stands */ });
